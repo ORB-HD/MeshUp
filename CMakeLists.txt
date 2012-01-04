@@ -18,6 +18,14 @@ SET( QT_WRAP_CPP TRUE )
 FIND_PACKAGE (Qt4)
 FIND_PACKAGE (OpenGL)
 
+INCLUDE_DIRECTORIES ( glew/include )
+
+ADD_LIBRARY ( glew
+	glew/src/glew.c
+	glew/src/glewinfo.c
+	glew/src/visualinfo.c
+	)
+
 IF ( QT_FOUND )
 	ADD_DEFINITIONS (${QT_DEFINITIONS})
 
@@ -63,7 +71,7 @@ IF ( QT_FOUND )
   TARGET_LINK_LIBRARIES ( simpleqtgl
 		${QT_LIBRARIES}
 		${OPENGL_LIBRARIES}
-			
+		glew	
   )
 
 	INSTALL (TARGETS simpleqtgl

@@ -72,14 +72,4 @@ struct ModelData {
 	std::vector<MeshData> meshes;
 };
 
-Segment* find_segment (ModelData *model, const char *segment_name);
-std::vector<Segment*> find_segment_children (ModelData *model, const Segment* parent);
-
-void export_material_to_xrf (Material *material, const char *filename);
-void export_model_mesh_to_xmf (ModelData *model, const char *filename);
-void export_model_skeleton_to_xsf (ModelData *model, const char *filename);
-
-unsigned int generate_mesh_vbo (MeshData *mesh_data);
-void delete_mesh_vbo (MeshData *mesh_data);
-
 #endif

@@ -1,3 +1,5 @@
+#include "GL/glew.h"
+
 #include "ModelData.h"
 
 #include <iostream>
@@ -35,15 +37,17 @@ unsigned int MeshData::generate_vbo() {
 
 	// initialize the buffer object
 	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
-	glBufferData (GL_ARRAY_BUFFER, sizeof(float) 3 * (vertices.size() + normals.size()), NULL, GL_STATIC_DRAW);
+	glBufferData (GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices.size() + normals.size()), NULL, GL_STATIC_DRAW);
 
 	// fill the data
+	
+	// multiple sub buffers
 	glBufferSubData (GL_ARRAY_BUFFER, 0, sizeof (float) * 3 * vertices.size(), &vertices[0]);
 	glBufferSubData (GL_ARRAY_BUFFER, sizeof(float) * 3 * vertices.size(), sizeof (float) * 3 * normals.size(), &normals[0]);
 
 	glBindBuffer (GL_ARRAY_BUFFER, 0);
 
-	return 0;
+	return vbo_id;
 }
 
 void MeshData::addVertice (float x, float y, float z) {

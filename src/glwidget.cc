@@ -1,3 +1,5 @@
+#include "GL/glew.h"
+
 #include <QtGui>
 #include <QtOpenGL>
 #include <QDebug>
@@ -19,6 +21,8 @@
 using namespace std;
 
 static bool update_simulation = false;
+
+MeshData cube_mesh;
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent)
@@ -82,7 +86,14 @@ QSize GLWidget::sizeHint() const
 
 void GLWidget::initializeGL()
 {
-//	qDebug() << "initializeGL() called";
+	GLenum err = glewInit();
+	if (GLEW_OK != err) {
+		cerr << "Error initializing GLEW: " << glewGetErrorString(err) << endl;
+		exit(1);
+	}
+
+	qDebug() << "Using GLEW: " << (const char*) glewGetString (GLEW_VERSION);
+
 	glClearColor (0.3, 0.3, 0.3, 1.);
 	glClearDepth (1.);
 	glEnable (GL_DEPTH_TEST);
@@ -107,11 +118,157 @@ void GLWidget::initializeGL()
 	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd);
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_ks);
 
-	GLfloat light_pos[4] = {20.0f, 20.0f, 20.0f, 1.0f};
+	GLfloat light_pos[4] = {20.0f, 60.0f, 30.0f, 1.0f};
 	glLightfv (GL_LIGHT0, GL_POSITION, light_pos);
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+
+	// create the cube mesh
+	cube_mesh.begin();
+
+		// 1st quad "top +y"
+	float normal[] = { 0.f, 1.f, 0.f };
+
+	// 1st triangle
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, -0.5);
+	
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5f, 0.5f, 0.5f);
+
+	// 2nd triangle
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, -0.5);
+
+	// 2nd quad "right side +x"
+	normal[0] = 1.f;
+	normal[1] = 0.f;
+	normal[2] = 0.f;
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, 0.5);
+
+	// 3rd quad "bottom -y"
+	normal[0] = 0.f;
+	normal[1] = -1.f;
+	normal[2] = 0.f;
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, 0.5);
+
+	// 4th quad "left -x"
+	normal[0] = -1.f;
+	normal[1] = 0.f;
+	normal[2] = 0.f;
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, 0.5);
+
+	// 5th quad "front +z"
+	normal[0] = 0.f;
+	normal[1] = 0.f;
+	normal[2] = 1.f;
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, 0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, 0.5);
+
+	// 6th quad "back -z"
+	normal[0] = 0.f;
+	normal[1] = 0.f;
+	normal[2] = -1.f;
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, 0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, -0.5f, -0.5);
+
+	cube_mesh.addNormalfv (normal);
+	cube_mesh.addVertice (-0.5, 0.5f, -0.5);
+
+	cube_mesh.end();
+
+	cube_mesh.generate_vbo();
+	qDebug() << "cube_mesh vbo_id = " << cube_mesh.vbo_id;
 }
 
 void GLWidget::updateSphericalCoordinates() {
@@ -173,6 +330,7 @@ void GLWidget::drawGrid() {
 		glVertex3f (xmax, 0, i * zstep + zmin);
 	}
 	glEnd ();
+
 }
 
 void GLWidget::paintGL() {
@@ -186,15 +344,32 @@ void GLWidget::paintGL() {
 
 	updateCamera();
 
-	GLfloat light_pos[4] = {20.0f, 20.0f, 20.0f, 1.0f};
+	GLfloat light_pos[4] = {20.0f, 60.0f, 30.0f, 1.0f};
 	glLightfv (GL_LIGHT0, GL_POSITION, light_pos);
 
 	glEnable (GL_COLOR_MATERIAL);
 	glDisable(GL_LIGHTING);
 
 	drawGrid();
-	glDisable (GL_COLOR_MATERIAL);
+
+	glEnable (GL_COLOR_MATERIAL);
 	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+
+	if (cube_mesh.vbo_id != 0) {
+		glColor3f (0.8, 0.2, 0.2);
+		glBindBuffer (GL_ARRAY_BUFFER, cube_mesh.vbo_id);
+
+		glVertexPointer (3, GL_FLOAT, 0, 0);
+		glNormalPointer (GL_FLOAT, 0, (const GLvoid *) (cube_mesh.vertices.size() * sizeof (float) * 3));
+
+		glEnableClientState (GL_VERTEX_ARRAY);
+		glEnableClientState (GL_NORMAL_ARRAY);
+
+		glDrawArrays (GL_TRIANGLES, 0, cube_mesh.vertices.size());
+		glBindBuffer (GL_ARRAY_BUFFER, 0);
+	}
+
 }
 
 void GLWidget::resizeGL(int width, int height)
