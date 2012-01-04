@@ -23,6 +23,7 @@ using namespace std;
 static bool update_simulation = false;
 
 MeshData cube_mesh;
+ModelData model_data;
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent)
@@ -269,6 +270,18 @@ void GLWidget::initializeGL()
 
 	cube_mesh.generate_vbo();
 	qDebug() << "cube_mesh vbo_id = " << cube_mesh.vbo_id;
+
+	Segment segment;
+	unsigned int segment_index;
+	segment_index = model_data.addSegment(
+			0,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			segment);
+	model_data.addSegmentMesh(segment_index,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			cube_mesh);
 }
 
 void GLWidget::updateSphericalCoordinates() {
@@ -356,20 +369,7 @@ void GLWidget::paintGL() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	if (cube_mesh.vbo_id != 0) {
-		glColor3f (0.8, 0.2, 0.2);
-		glBindBuffer (GL_ARRAY_BUFFER, cube_mesh.vbo_id);
-
-		glVertexPointer (3, GL_FLOAT, 0, 0);
-		glNormalPointer (GL_FLOAT, 0, (const GLvoid *) (cube_mesh.vertices.size() * sizeof (float) * 3));
-
-		glEnableClientState (GL_VERTEX_ARRAY);
-		glEnableClientState (GL_NORMAL_ARRAY);
-
-		glDrawArrays (GL_TRIANGLES, 0, cube_mesh.vertices.size());
-		glBindBuffer (GL_ARRAY_BUFFER, 0);
-	}
-
+	model_data.draw();
 }
 
 void GLWidget::resizeGL(int width, int height)
