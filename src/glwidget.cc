@@ -273,14 +273,16 @@ void GLWidget::initializeGL()
 
 	Segment segment;
 	unsigned int segment_index;
-	segment_index = model_data.addSegment(
-			0,
+	model_data.addSegment(
+			"BASE",
+			"CHILD1",
 			Vector3f (0.f, 0.f, 0.f),
 			Vector3f (0.f, 0.f, 0.f),
 			segment);
-	model_data.addSegmentMesh(segment_index,
+	model_data.addSegmentMesh(
+			"CHILD1",
 			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f),
 			cube_mesh);
 }
 
