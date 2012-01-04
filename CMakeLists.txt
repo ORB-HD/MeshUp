@@ -41,7 +41,7 @@ IF ( QT_FOUND )
 		src/glwidget.h
 		)
 
-	ADD_EXECUTABLE ( qtsimplegl
+	ADD_EXECUTABLE ( simpleqtgl
 		${SimpleQtGlApp_SRCS}
 		${SimpleQtGlApp_MOC_SRCS}
 		${MainWindow_UIS_H}
@@ -59,13 +59,13 @@ IF ( QT_FOUND )
 		INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" 
   )
 
-  TARGET_LINK_LIBRARIES ( qtsimplegl
+  TARGET_LINK_LIBRARIES ( simpleqtgl
 		${QT_LIBRARIES}
 		${OPENGL_LIBRARIES}
 			
   )
 
-	INSTALL (TARGETS qtsimplegl
+	INSTALL (TARGETS simpleqtgl
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	)

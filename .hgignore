@@ -1,6 +1,6 @@
 syntax:glob
 
-qtsimplegl
+simpleqtgl
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
