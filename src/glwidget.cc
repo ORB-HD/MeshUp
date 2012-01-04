@@ -14,6 +14,7 @@
 #include <GL/glu.h>
 
 #include "glprimitives.h"
+#include "ModelData.h"
 
 using namespace std;
 

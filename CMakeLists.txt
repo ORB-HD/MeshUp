@@ -34,6 +34,7 @@ IF ( QT_FOUND )
 		src/glwidget.cc
 		src/glprimitives.cc
 		src/SimpleQtGlApp.cc
+		src/ModelData.cc
 		)
 
 	QT4_WRAP_CPP ( SimpleQtGlApp_MOC_SRCS
