@@ -85,6 +85,11 @@ void MeshData::addNormalfv (float normal[3]) {
 }
 
 void MeshData::draw() {
+	glPushMatrix();
+	
+	glTranslatef (parent_translation[0], parent_translation[1], parent_translation[2]);
+	glScalef (parent_scale[0], parent_scale[1], parent_scale[2]);
+
 	glColor3f (0.8, 0.2, 0.2);
 	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
@@ -96,6 +101,8 @@ void MeshData::draw() {
 
 	glDrawArrays (GL_TRIANGLES, 0, vertices.size());
 	glBindBuffer (GL_ARRAY_BUFFER, 0);
+
+	glPopMatrix();
 }
 
 /*********************************

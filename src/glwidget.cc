@@ -282,7 +282,7 @@ void GLWidget::initializeGL()
 	model_data.addSegmentMesh(
 			"CHILD1",
 			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f),
+			Vector3f (1.0f, 1.f, 1.f),
 			cube_mesh);
 }
 
