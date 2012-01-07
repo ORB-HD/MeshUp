@@ -15,10 +15,12 @@ SET (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 SET( QT_USE_QTXML TRUE )
 SET( QT_USE_QTOPENGL TRUE )
 SET( QT_WRAP_CPP TRUE )
-FIND_PACKAGE (Qt4)
+FIND_PACKAGE (Qt4 REQUIRED)
 FIND_PACKAGE (OpenGL)
 
 INCLUDE_DIRECTORIES ( glew/include )
+
+SUBDIRS ( tests/ )
 
 ADD_LIBRARY ( glew
 	glew/src/glew.c
@@ -26,56 +28,63 @@ ADD_LIBRARY ( glew
 	glew/src/visualinfo.c
 	)
 
-IF ( QT_FOUND )
-	ADD_DEFINITIONS (${QT_DEFINITIONS})
-
-	INCLUDE (${QT_USE_FILE})
-
-	SET ( MainWindow_UIS
-		ui/MainWindow.ui
-		)
-	
-	QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
-
-	SET ( SimpleQtGlApp_SRCS
-		src/qtmain.cc
-		src/glwidget.cc
-		src/glprimitives.cc
-		src/SimpleQtGlApp.cc
-		src/ModelData.cc
-		)
-
-	QT4_WRAP_CPP ( SimpleQtGlApp_MOC_SRCS
-		src/SimpleQtGlApp.h
-		src/glwidget.h
-		)
-
-	ADD_EXECUTABLE ( simpleqtgl
-		${SimpleQtGlApp_SRCS}
-		${SimpleQtGlApp_MOC_SRCS}
-		${MainWindow_UIS_H}
+ADD_LIBRARY ( ModelVis
+	src/ModelData.cc
 	)
 
- 	INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR})
- 	INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR}/QtOpenGL)
-	INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
-	INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
-	INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR}/src)
-  INCLUDE_DIRECTORIES ( include )
+ADD_DEFINITIONS (${QT_DEFINITIONS})
 
-  SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
-    LINKER_LANGUAGE CXX
-		INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" 
-  )
+INCLUDE (${QT_USE_FILE})
 
-  TARGET_LINK_LIBRARIES ( simpleqtgl
-		${QT_LIBRARIES}
-		${OPENGL_LIBRARIES}
-		glew	
-  )
-
-	INSTALL (TARGETS simpleqtgl
-	RUNTIME DESTINATION bin
-	LIBRARY DESTINATION lib
+SET ( MainWindow_UIS
+	ui/MainWindow.ui
 	)
-ENDIF ( QT_FOUND )
+
+QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
+
+SET ( SimpleQtGlApp_SRCS
+	src/qtmain.cc
+	src/glwidget.cc
+	src/glprimitives.cc
+	src/SimpleQtGlApp.cc
+	)
+
+QT4_WRAP_CPP ( SimpleQtGlApp_MOC_SRCS
+	src/SimpleQtGlApp.h
+	src/glwidget.h
+	)
+
+ADD_EXECUTABLE ( simpleqtgl
+	${SimpleQtGlApp_SRCS}
+	${SimpleQtGlApp_MOC_SRCS}
+	${MainWindow_UIS_H}
+)
+
+INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR})
+INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR}/QtOpenGL)
+INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
+INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR}/src)
+INCLUDE_DIRECTORIES ( include )
+
+SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
+	LINKER_LANGUAGE CXX
+	INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" 
+)
+
+TARGET_LINK_LIBRARIES ( ModelVis
+	${OPENGL_LIBRARIES}
+	glew
+	)
+
+TARGET_LINK_LIBRARIES ( simpleqtgl
+	${QT_LIBRARIES}
+	${OPENGL_LIBRARIES}
+	glew
+	ModelVis
+)
+
+INSTALL (TARGETS simpleqtgl
+RUNTIME DESTINATION bin
+LIBRARY DESTINATION lib
+)

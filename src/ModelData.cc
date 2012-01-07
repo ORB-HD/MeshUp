@@ -117,6 +117,46 @@ void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
 }
 
 /*********************************
+ * BoneAnimationTrack
+ *********************************/
+BonePose BoneAnimationTrack::interpolatePose (float time) {
+	if (poses.size() == 0) {
+		return BonePose();
+	} else if (poses.size() == 1) {
+		return *poses.begin();
+	}
+
+	// at this point we have at least two poses
+	BonePoseList::iterator pose_iter = poses.begin();
+
+	BonePose start_pose (*pose_iter);
+	pose_iter++;
+	BonePose end_pose = (*pose_iter);
+
+	while (pose_iter != poses.end() && end_pose.timestamp <= time) {
+		start_pose = end_pose;
+		pose_iter++;
+		end_pose = *pose_iter;
+	}
+
+//	cout << "start time = " << start_pose.timestamp << " end time = " << end_pose.timestamp << " query time = " << time << endl;
+
+	// we use end_pose as the result
+	float fraction = (time - start_pose.timestamp) / (end_pose.timestamp - start_pose.timestamp);
+	if (fraction > 1.f)
+		fraction = 1.f;
+	if (fraction < 0.f)
+		fraction = 0.f;
+
+	end_pose.timestamp = start_pose.timestamp + fraction * (end_pose.timestamp - start_pose.timestamp);
+	end_pose.translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
+	end_pose.rotation_ZYXeuler = start_pose.rotation_ZYXeuler + fraction * (end_pose.rotation_ZYXeuler - start_pose.rotation_ZYXeuler);
+	end_pose.scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
+
+	return end_pose;
+}
+
+/*********************************
  * ModelData
  *********************************/
 void ModelData::addBone (const std::string &parent_bone_name,
@@ -174,10 +214,11 @@ void ModelData::draw() {
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
 
-		// scaling + transform
-		Matrix44f transform_matrix = smScale (seg_iter->dimensions[0], seg_iter->dimensions[1], seg_iter->dimensions[2]) * seg_iter->bone->pose_transform;
+		// we also have to apply the scaling after the transform:
+		Matrix44f transform_matrix = 
+			smScale (seg_iter->dimensions[0], seg_iter->dimensions[1], seg_iter->dimensions[2])
+			* seg_iter->bone->pose_transform;
 		glMultMatrixf (transform_matrix.data());
-
 
 		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);

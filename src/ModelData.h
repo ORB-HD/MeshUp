@@ -86,6 +86,27 @@ struct Segment {
 	BonePtr bone;
 };
 
+struct BonePose {
+	BonePose() :
+		timestamp (-1.f),
+		translation (0.f, 0.f, 0.f),
+		rotation_ZYXeuler (0.f, 0.f, 0.f),
+		scaling (1.f, 1.f, 1.f)
+	{}
+
+	float timestamp;
+	Vector3f translation;
+	Vector3f rotation_ZYXeuler;
+	Vector3f scaling;
+};
+
+struct BoneAnimationTrack {
+	typedef std::list<BonePose> BonePoseList;
+	BonePoseList poses;
+
+	BonePose interpolatePose (float time);
+};
+
 struct ModelData {
 	ModelData() {
 		// create the BASE bone
@@ -106,6 +127,8 @@ struct ModelData {
 	BoneVector bones;
 	typedef std::map<std::string, BonePtr> BoneMap;
 	BoneMap bonemap;
+	typedef std::map<BonePtr, BoneAnimationTrack> BoneAnimationTrackMap;
+	BoneAnimationTrackMap bonetracks;
 
 	void addBone (const std::string &parent_bone_name,
 			const Vector3f &parent_translation,
@@ -118,6 +141,13 @@ struct ModelData {
 			const Vector3f &dimensions,
 			const Vector3f &color,
 			const MeshData &mesh);
+
+	void addBonePose (const std::string &bone_name,
+			float time,
+			const Vector3f &bone_translation,
+			const Vector3f &bone_rotation_ZYXeuler,
+			const Vector3f &bone_scaling
+			);
 
 	BonePtr findBone (const char* bone_name) {
 		BoneMap::iterator bone_iter = bonemap.find (bone_name);
