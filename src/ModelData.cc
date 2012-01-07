@@ -2,6 +2,8 @@
 
 #include "ModelData.h"
 
+#include "SimpleMathGL.h"
+
 #include <iostream>
 #include <iomanip>
 
@@ -85,12 +87,6 @@ void MeshData::addNormalfv (float normal[3]) {
 }
 
 void MeshData::draw() {
-	glPushMatrix();
-	
-	glTranslatef (parent_translation[0], parent_translation[1], parent_translation[2]);
-	glScalef (parent_scale[0], parent_scale[1], parent_scale[2]);
-
-	glColor3f (0.8, 0.2, 0.2);
 	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
 	glVertexPointer (3, GL_FLOAT, 0, 0);
@@ -101,14 +97,13 @@ void MeshData::draw() {
 
 	glDrawArrays (GL_TRIANGLES, 0, vertices.size());
 	glBindBuffer (GL_ARRAY_BUFFER, 0);
-
-	glPopMatrix();
 }
 
 /*********************************
  * Segment
  *********************************/
 
+/*
 void Segment::draw() {
 	glPushMatrix();
 	glTranslatef (parent_translation[0], parent_translation[1], parent_translation[2]);
@@ -130,81 +125,87 @@ void Segment::draw() {
 
 	glPopMatrix();
 }
+*/
+
+/*********************************
+ * Bone
+ *********************************/
+void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
+	// first translate, then rotate Z, Y, X
+	pose_transform = 
+		smRotate (parent_rotation_ZYXeuler[0], 1.f, 0.f, 0.f)
+		* smRotate (parent_rotation_ZYXeuler[1], 0.f, 1.f, 0.f)
+		* smRotate (parent_rotation_ZYXeuler[2], 0.f, 0.f, 1.f)
+		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
+			* parent_pose_transform;
+
+	for (unsigned int ci; ci < children.size(); ci++) {
+		children[ci]->updatePoseTransform (pose_transform);
+	}
+}
 
 /*********************************
  * ModelData
  *********************************/
-void ModelData::addSegment (
-			std::string parent_segment_name,
-			std::string segment_name,
-			Vector3f parent_translation,
-			Vector3f parent_rotation,
-			Segment segment) {
-	// find the parent segment
-	SegmentList::iterator parent_segment_iter = findSegment (parent_segment_name.c_str());
+void ModelData::addBone (const std::string &parent_bone_name,
+		const Vector3f &parent_translation,
+		const Vector3f &parent_rotation_ZYXeuler,
+		const char* bone_name) {
 
-	// fill values
-	segment.parent_translation = parent_translation;
-	segment.parent_rotation = parent_rotation;
-	segment.parent_scale.set (1.f, 1.f, 1.f);
-	segment.name = segment_name;
+	// create the bone
+	BonePtr bone (new Bone);
+	bone->name = bone_name;
+	bone->parent_translation = parent_translation;
+	bone->parent_rotation_ZYXeuler = parent_rotation_ZYXeuler;
 
-	// add segment
-	segments.push_back (segment);
-	SegmentList::iterator current_segment_iter = findSegment (segment_name.c_str());
+	// first find the bone
+	BonePtr parent_bone = findBone (parent_bone_name.c_str());
+	if (parent_bone == NULL) {
+		cerr << "Could not find bone '" << parent_bone_name << "'!" << endl;
+		exit (1);
+	}
 
-	// add segment to its parent
-	parent_segment_iter->children.push_back (&(*current_segment_iter));
+	parent_bone->children.push_back (bone);
+	bonemap[bone_name] = bone;
 }
 
-void ModelData::addSegmentMesh (
-		std::string segment_name,
-		Vector3f translation,
-		Vector3f scale,
-		MeshData mesh) {
-	// fill values
-	mesh.parent_translation = translation;
-	mesh.parent_scale = scale;
+void ModelData::addSegment (
+		const std::string &bone_name,
+		const std::string &segment_name,
+		const Vector3f &dimensions,
+		const Vector3f &color,
+		const MeshData &mesh) {
+	Segment segment;
+	segment.name = segment_name;
+	segment.dimensions = dimensions;
+	segment.color = color;
+	segment.mesh = mesh;
+	segment.bone = findBone (bone_name.c_str());
 
-	meshes.push_back (mesh);
+	assert (segment.bone != NULL);
+	segments.push_back (segment);
+}
 
-	SegmentList::iterator segment_iter = findSegment (segment_name.c_str());
+void ModelData::updateBones() {
+	Matrix44f base_transform (Matrix44f::Identity());
 
-	unsigned int mesh_index = meshes.size() - 1;
-	segment_iter->meshes.push_back(&meshes.back());
-
-	/*
-	for (int i = 0; i < segments.size(); i++) {
-		cerr << "segment[" << i << "] " << hex << &segments[i] << " meshcount = " << segments[i].meshes.size() << " childcount = " << segments[i].children.size() << endl;
+	for (unsigned int bi = 0; bi < bones.size(); bi++) {
+		bones[bi]->updatePoseTransform (base_transform);
 	}
-	*/
 }
 
 void ModelData::draw() {
-	unsigned int si;
+	updateBones();
 
-	assert (segments.size() > 0);
-	segments.begin()->draw();
-}
+	SegmentList::iterator seg_iter = segments.begin();
+	
+	while (seg_iter != segments.end()) {
+		glPushMatrix();
+		glMultMatrixf (seg_iter->bone->pose_transform.data());
+		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
+		seg_iter->mesh.draw();
+		glPopMatrix();
 
-ModelData::SegmentList::iterator ModelData::findSegment (const char* segment_name) {
-	SegmentList::iterator segment_iter = segments.begin();
-
-	while (segment_iter != segments.end()){
-		if (segment_iter->name == segment_name)
-			break;
-
-		segment_iter++;
+		seg_iter++;
 	}
-
-	if (segment_iter == segments.end()) {
-		cerr << "Error: could not find segment with name " << segment_name << "." << endl;
-		exit(1);
-	}
-
-	assert (segment_iter->name == segment_name);
-
-	return segment_iter;
 }
-
-

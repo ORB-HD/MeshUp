@@ -3,6 +3,9 @@
 
 #include <vector>
 #include <list>
+#include <iostream>
+#include <map>
+#include <boost/shared_ptr.hpp>
 
 #include "SimpleMath.h"
 
@@ -17,9 +20,7 @@ struct MeshData {
 	MeshData() :
 		parented_segment(""),
 		vbo_id(0),
-		started(false),
-		parent_translation (0., 0., 0.),
-		parent_scale (1., 1., 1.)
+		started(false)
 	{}
 
 	void begin();
@@ -40,9 +41,6 @@ struct MeshData {
 	unsigned int vbo_id;
 	bool started;
 
-	Vector3f parent_translation;
-	Vector3f parent_scale;
-
 	std::vector<Vector3f> vertices;
 	std::vector<Vector3f> normals;
 	/// \note always 3 succeeding calls of addVertice are assumed to be a
@@ -50,57 +48,88 @@ struct MeshData {
 	std::vector<unsigned int> triangle_indices;
 };
 
+struct Bone;
+typedef boost::shared_ptr<Bone> BonePtr;
+
+struct Bone {
+	Bone() :
+		name (""),
+		parent_translation (0.f, 0.f, 0.f),
+		parent_rotation_ZYXeuler (0.f, 0.f, 0.f),
+		pose_transform (Matrix44f::Identity ())
+	{}
+
+	std::string name;
+	Vector3f parent_translation;
+	Vector3f parent_rotation_ZYXeuler;
+
+	/** Transformation from base to pose */
+	Matrix44f pose_transform;
+
+	std::vector<BonePtr> children;
+
+	void updatePoseTransform(const Matrix44f &parent_pose_transform);
+};
+
 struct Segment {
 	Segment () :
 		name ("unnamed"),
-		parent_translation (0.f, 0.f, 0.f),
-		parent_rotation (0.f, 0.f, 0.f),
-		parent_scale (1.f, 1.f, 1.f),
-		bbox_min (0.f, 0.f, 0.f),
-		bbox_max (0.f, 0.f, 0.f)
+		dimensions (1.f, 1.f, 1.f),
+		bone (BonePtr())
 	{}
 
 	std::string name;
 
-	Vector3f parent_translation;
-	Vector3f parent_rotation;
-	Vector3f parent_scale;
-
-	Vector3f bbox_min;
-	Vector3f bbox_max;
-
-	/// \note actual storage of items is in the ModelData structure
-	std::vector<MeshData* > meshes;
-	std::vector<Segment* > children;
-
-	void draw();
+	Vector3f dimensions;
+	Vector3f color;
+	MeshData mesh;
+	BonePtr bone;
 };
 
 struct ModelData {
 	ModelData() {
-		// create the base segment and initialize index pointer
-		Segment base_seg;
-		base_seg.name = "BASE";
-		segments.push_back (base_seg);
+		// create the BASE bone
+		BonePtr base_bone (new (Bone));
+		base_bone->name = "BASE";
+		base_bone->parent_translation.setZero();
+		base_bone->parent_rotation_ZYXeuler.setZero();
+
+		bones.push_back (base_bone);
+		bonemap["BASE"] = base_bone;
 	}
 
 	typedef std::list<Segment> SegmentList;
 	SegmentList segments;
 	typedef std::list<MeshData> MeshDataList;
 	MeshDataList meshes;
+	typedef std::vector<BonePtr> BoneVector;
+	BoneVector bones;
+	typedef std::map<std::string, BonePtr> BoneMap;
+	BoneMap bonemap;
+
+	void addBone (const std::string &parent_bone_name,
+			const Vector3f &parent_translation,
+			const Vector3f &parent_rotation_ZYXeuler,
+			const char* bone_name);
 
 	void addSegment (
-			std::string parent_segment_name,
-			std::string segment_name,
-			Vector3f parent_translation,
-			Vector3f parent_rotation,
-			Segment segment);
-	void addSegmentMesh (
-			std::string segment_name,
-			Vector3f translation,
-			Vector3f scale,
-			MeshData mesh);
-	SegmentList::iterator findSegment (const char* segment_name);
+			const std::string &bone_name,
+			const std::string &segment_name,
+			const Vector3f &dimensions,
+			const Vector3f &color,
+			const MeshData &mesh);
+
+	BonePtr findBone (const char* bone_name) {
+		BoneMap::iterator bone_iter = bonemap.find (bone_name);
+
+		if (bone_iter == bonemap.end()) {
+			std::cerr << "Error: Could not find bone '" << bone_name << "'!" << std::endl;
+			return BonePtr();
+		}
+
+		return bone_iter->second;
+	}
+	void updateBones();
 
 	void draw();
 };

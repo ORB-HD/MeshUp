@@ -271,18 +271,17 @@ void GLWidget::initializeGL()
 	cube_mesh.generate_vbo();
 	qDebug() << "cube_mesh vbo_id = " << cube_mesh.vbo_id;
 
-	Segment segment;
-	unsigned int segment_index;
-	model_data.addSegment(
+	model_data.addBone(
 			"BASE",
-			"CHILD1",
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
-			segment);
-	model_data.addSegmentMesh(
-			"CHILD1",
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (1.0f, 1.f, 1.f),
+			Vector3f (2.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 20.f),
+			"HIP");
+
+	model_data.addSegment (
+			"HIP",
+			"HipMesh1",
+			Vector3f (1.f, 1.f, 1.f),
+			Vector3f (0.8f, 0.2f, 0.2f),
 			cube_mesh);
 }
 

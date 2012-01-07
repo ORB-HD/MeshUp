@@ -288,6 +288,66 @@ class Matrix {
 		}
 
 		Matrix (
+				const val_type &v00, const val_type &v01, const val_type &v02, const val_type &v03,
+				const val_type &v10, const val_type &v11, const val_type &v12, const val_type &v13,
+				const val_type &v20, const val_type &v21, const val_type &v22, const val_type &v23,
+				const val_type &v30, const val_type &v31, const val_type &v32, const val_type &v33
+				) {
+			COMPILE_ASSERT (nrows == 4);
+			COMPILE_ASSERT (ncols == 4);
+
+			mData[0] = v00;
+			mData[1] = v01;
+			mData[2] = v02;
+			mData[3] = v03;
+
+			mData[1 * 4 + 0] = v10;
+			mData[1 * 4 + 1] = v11;
+			mData[1 * 4 + 2] = v12;
+			mData[1 * 4 + 3] = v13;
+			
+			mData[2 * 4 + 0] = v20;
+			mData[2 * 4 + 1] = v21;
+			mData[2 * 4 + 2] = v22;
+			mData[2 * 4 + 3] = v23;
+
+			mData[3 * 4 + 0] = v30;
+			mData[3 * 4 + 1] = v31;
+			mData[3 * 4 + 2] = v32;
+			mData[3 * 4 + 3] = v33;
+		}
+
+		void set(
+				const val_type &v00, const val_type &v01, const val_type &v02, const val_type &v03,
+				const val_type &v10, const val_type &v11, const val_type &v12, const val_type &v13,
+				const val_type &v20, const val_type &v21, const val_type &v22, const val_type &v23,
+				const val_type &v30, const val_type &v31, const val_type &v32, const val_type &v33
+				) {
+			COMPILE_ASSERT (nrows == 4);
+			COMPILE_ASSERT (ncols == 4);
+
+			mData[0] = v00;
+			mData[1] = v01;
+			mData[2] = v02;
+			mData[3] = v03;
+
+			mData[1 * 4 + 0] = v10;
+			mData[1 * 4 + 1] = v11;
+			mData[1 * 4 + 2] = v12;
+			mData[1 * 4 + 3] = v13;
+			
+			mData[2 * 4 + 0] = v20;
+			mData[2 * 4 + 1] = v21;
+			mData[2 * 4 + 2] = v22;
+			mData[2 * 4 + 3] = v23;
+
+			mData[3 * 4 + 0] = v30;
+			mData[3 * 4 + 1] = v31;
+			mData[3 * 4 + 2] = v32;
+			mData[3 * 4 + 3] = v33;
+		}
+
+		Matrix (
 				const val_type &v00, const val_type &v01, const val_type &v02,
 				const val_type &v03, const val_type &v04, const val_type &v05
 				) {
@@ -529,6 +589,12 @@ class Matrix {
 			return result;
 		}
 
+
+		static matrix_type Identity() {
+			matrix_type result;
+			result.identity();
+			return result;
+		}
 
 		static matrix_type Identity(int ignore_me, int ignore_me_too) {
 			matrix_type result;
