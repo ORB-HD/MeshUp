@@ -133,21 +133,34 @@ BonePose BoneAnimationTrack::interpolatePose (float time) {
 	pose_iter++;
 	BonePose end_pose = (*pose_iter);
 
+	// find the two frames that surround the time
 	while (pose_iter != poses.end() && end_pose.timestamp <= time) {
 		start_pose = end_pose;
 		pose_iter++;
 		end_pose = *pose_iter;
 	}
 
+	// if we overshot we have to return the last valid frame (i.e.
+	// start_pose) 
+	if (pose_iter == poses.end())
+		end_pose = start_pose;
+
 //	cout << "start time = " << start_pose.timestamp << " end time = " << end_pose.timestamp << " query time = " << time << endl;
 
 	// we use end_pose as the result
+	float duration = end_pose.timestamp - start_pose.timestamp;
+	if (end_pose.timestamp - start_pose.timestamp == 0.f)
+		return start_pose;
+
 	float fraction = (time - start_pose.timestamp) / (end_pose.timestamp - start_pose.timestamp);
+	
+	// some handling for over- and undershooting
 	if (fraction > 1.f)
 		fraction = 1.f;
 	if (fraction < 0.f)
 		fraction = 0.f;
 
+	// perform the interpolation
 	end_pose.timestamp = start_pose.timestamp + fraction * (end_pose.timestamp - start_pose.timestamp);
 	end_pose.translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
 	end_pose.rotation_ZYXeuler = start_pose.rotation_ZYXeuler + fraction * (end_pose.rotation_ZYXeuler - start_pose.rotation_ZYXeuler);

@@ -56,12 +56,19 @@ struct Bone {
 		name (""),
 		parent_translation (0.f, 0.f, 0.f),
 		parent_rotation_ZYXeuler (0.f, 0.f, 0.f),
+		pose_translation (0.f, 0.f, 0.f),
+		pose_rotation_ZYXeuler (0.f, 0.f, 0.f),
+		pose_scaling (0.f, 0.f, 0.f),
 		pose_transform (Matrix44f::Identity ())
 	{}
 
 	std::string name;
 	Vector3f parent_translation;
 	Vector3f parent_rotation_ZYXeuler;
+
+	Vector3f pose_translation;
+	Vector3f pose_rotation_ZYXeuler;
+	Vector3f pose_scaling;
 
 	/** Transformation from base to pose */
 	Matrix44f pose_transform;
