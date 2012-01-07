@@ -58,7 +58,7 @@ struct Bone {
 		parent_rotation_ZYXeuler (0.f, 0.f, 0.f),
 		pose_translation (0.f, 0.f, 0.f),
 		pose_rotation_ZYXeuler (0.f, 0.f, 0.f),
-		pose_scaling (0.f, 0.f, 0.f),
+		pose_scaling (1.f, 1.f, 1.f),
 		pose_transform (Matrix44f::Identity ())
 	{}
 
@@ -82,6 +82,7 @@ struct Segment {
 	Segment () :
 		name ("unnamed"),
 		dimensions (1.f, 1.f, 1.f),
+		meshcenter (0.f, 0.f, 0.f),
 		bone (BonePtr())
 	{}
 
@@ -90,6 +91,7 @@ struct Segment {
 	Vector3f dimensions;
 	Vector3f color;
 	MeshData mesh;
+	Vector3f meshcenter;
 	BonePtr bone;
 };
 
@@ -98,13 +100,15 @@ struct BonePose {
 		timestamp (-1.f),
 		translation (0.f, 0.f, 0.f),
 		rotation_ZYXeuler (0.f, 0.f, 0.f),
-		scaling (1.f, 1.f, 1.f)
+		scaling (1.f, 1.f, 1.f),
+		endpoint (0.f, 1.f, 0.f)
 	{}
 
 	float timestamp;
 	Vector3f translation;
 	Vector3f rotation_ZYXeuler;
 	Vector3f scaling;
+	Vector3f endpoint;
 };
 
 struct BoneAnimationTrack {
@@ -113,6 +117,22 @@ struct BoneAnimationTrack {
 
 	BonePose interpolatePose (float time);
 };
+
+struct Animation {
+	Animation() :
+		current_time (0.f),
+		duration (0.f),
+		loop (false)
+	{}
+	std::string name;
+	typedef std::map<BonePtr, BoneAnimationTrack> BoneAnimationTrackMap;
+	BoneAnimationTrackMap bonetracks;
+
+	float current_time;
+	float duration;
+	bool loop;
+};
+typedef boost::shared_ptr<Animation> AnimationPtr;
 
 struct ModelData {
 	ModelData() {
@@ -135,21 +155,25 @@ struct ModelData {
 	typedef std::map<std::string, BonePtr> BoneMap;
 	BoneMap bonemap;
 	typedef std::map<BonePtr, BoneAnimationTrack> BoneAnimationTrackMap;
-	BoneAnimationTrackMap bonetracks;
 
-	void addBone (const std::string &parent_bone_name,
+	Animation animation;
+
+	void addBone (
+			const std::string &parent_bone_name,
+			const std::string &bone_name,
 			const Vector3f &parent_translation,
-			const Vector3f &parent_rotation_ZYXeuler,
-			const char* bone_name);
+			const Vector3f &parent_rotation_ZYXeuler);
 
 	void addSegment (
 			const std::string &bone_name,
 			const std::string &segment_name,
 			const Vector3f &dimensions,
 			const Vector3f &color,
-			const MeshData &mesh);
+			const MeshData &mesh,
+			const Vector3f &mesh_center);
 
-	void addBonePose (const std::string &bone_name,
+	void addBonePose (
+			const std::string &bone_name,
 			float time,
 			const Vector3f &bone_translation,
 			const Vector3f &bone_rotation_ZYXeuler,
@@ -166,6 +190,14 @@ struct ModelData {
 
 		return bone_iter->second;
 	}
+
+	void resetAnimation() {
+		animation.current_time = 0.f;
+	}
+	void setAnimationLoop(bool do_loop) {
+		animation.loop = do_loop;
+	}
+	void updatePose(float time_sec);
 	void updateBones();
 
 	void draw();

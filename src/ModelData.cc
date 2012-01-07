@@ -109,9 +109,18 @@ void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
 		* smRotate (parent_rotation_ZYXeuler[1], 0.f, 1.f, 0.f)
 		* smRotate (parent_rotation_ZYXeuler[2], 0.f, 0.f, 1.f)
 		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
-			* parent_pose_transform;
+		* parent_pose_transform;
 
-	for (unsigned int ci; ci < children.size(); ci++) {
+	// apply pose transform
+	pose_transform =
+		smScale (pose_scaling[0], pose_scaling[1], pose_scaling[2])
+		* smRotate (pose_rotation_ZYXeuler[0], 1.f, 0.f, 0.f)
+		* smRotate (pose_rotation_ZYXeuler[1], 0.f, 1.f, 0.f)
+		* smRotate (pose_rotation_ZYXeuler[2], 0.f, 0.f, 1.f)
+		* smTranslate (pose_translation[0], pose_translation[1], pose_translation[2])
+		* pose_transform;
+
+	for (unsigned int ci = 0; ci < children.size(); ci++) {
 		children[ci]->updatePoseTransform (pose_transform);
 	}
 }
@@ -172,10 +181,11 @@ BonePose BoneAnimationTrack::interpolatePose (float time) {
 /*********************************
  * ModelData
  *********************************/
-void ModelData::addBone (const std::string &parent_bone_name,
+void ModelData::addBone (
+		const std::string &parent_bone_name,
+		const std::string &bone_name,
 		const Vector3f &parent_translation,
-		const Vector3f &parent_rotation_ZYXeuler,
-		const char* bone_name) {
+		const Vector3f &parent_rotation_ZYXeuler) {
 
 	// create the bone
 	BonePtr bone (new Bone);
@@ -199,16 +209,64 @@ void ModelData::addSegment (
 		const std::string &segment_name,
 		const Vector3f &dimensions,
 		const Vector3f &color,
-		const MeshData &mesh) {
+		const MeshData &mesh,
+		const Vector3f &mesh_center) {
 	Segment segment;
 	segment.name = segment_name;
 	segment.dimensions = dimensions;
 	segment.color = color;
 	segment.mesh = mesh;
+	segment.meshcenter = mesh_center;
 	segment.bone = findBone (bone_name.c_str());
 
 	assert (segment.bone != NULL);
 	segments.push_back (segment);
+}
+
+void ModelData::addBonePose (
+		const std::string &bone_name,
+		float time,
+		const Vector3f &bone_translation,
+		const Vector3f &bone_rotation_ZYXeuler,
+		const Vector3f &bone_scaling
+		) {
+	BonePtr bone = findBone (bone_name.c_str());
+	BonePose pose;
+	pose.timestamp = time;
+	pose.translation = bone_translation;
+	pose.rotation_ZYXeuler = bone_rotation_ZYXeuler;
+	pose.scaling = bone_scaling;
+
+	animation.bonetracks[bone].poses.push_back(pose);
+
+	// update the duration of the animation
+	if (time > animation.duration)
+		animation.duration = time;
+}
+
+void ModelData::updatePose(float time_sec) {
+	// if there is no animation we can return
+	if (animation.bonetracks.size() != 0) {
+		animation.current_time += time_sec;
+		if (animation.current_time > animation.duration) {
+			if (animation.loop) {
+				while (animation.current_time > animation.duration)
+					animation.current_time -= animation.duration;
+			} else {
+				animation.current_time = animation.duration;
+			}
+		}
+	}
+	BoneAnimationTrackMap::iterator bone_track_iter = animation.bonetracks.begin();
+
+	while (bone_track_iter != animation.bonetracks.end()) {
+		BonePose pose = bone_track_iter->second.interpolatePose (animation.current_time);
+		bone_track_iter->first->pose_translation = pose.translation;
+		bone_track_iter->first->pose_rotation_ZYXeuler = pose.rotation_ZYXeuler;
+		bone_track_iter->first->pose_scaling = pose.scaling;
+
+		bone_track_iter++;
+	}
 }
 
 void ModelData::updateBones() {
@@ -230,6 +288,7 @@ void ModelData::draw() {
 		// we also have to apply the scaling after the transform:
 		Matrix44f transform_matrix = 
 			smScale (seg_iter->dimensions[0], seg_iter->dimensions[1], seg_iter->dimensions[2])
+			* smTranslate (seg_iter->meshcenter[0], seg_iter->meshcenter[1], seg_iter->meshcenter[2])
 			* seg_iter->bone->pose_transform;
 		glMultMatrixf (transform_matrix.data());
 

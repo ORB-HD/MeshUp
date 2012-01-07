@@ -273,29 +273,177 @@ void GLWidget::initializeGL()
 
 	model_data.addBone(
 			"BASE",
+			"HIP",
 			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
-			"HIP");
+			Vector3f (0.f, 0.f, 0.f));
 
 	model_data.addSegment (
 			"HIP",
 			"HipMesh1",
-			Vector3f (1.f, 1.f, 1.f),
-			Vector3f (0.8f, 0.2f, 0.2f),
-			cube_mesh);
+			Vector3f (0.25f, 0.25f, 0.4f),
+			Vector3f (0.8f, 0.8f, 0.2f),
+			cube_mesh,
+			Vector3f (0.f, 0.125f, 0.f));
 
 	model_data.addBone (
 			"HIP",
-			Vector3f (0.f, 0.6f, 0.f),
-			Vector3f (0.f, 20.f, 0.f),
-			"SHOULDER");
+			"UPPERBODY",
+			Vector3f (0.f, 0.25f, 0.f),
+			Vector3f (0.f, 0.f, 0.f));
 
 	model_data.addSegment (
+			"UPPERBODY",
+			"UpperBody",
+			Vector3f (0.3f, 0.7f, 0.6f),
+			Vector3f (0.8f, 0.8f, 0.4f),
+			cube_mesh,
+			Vector3f (0.f, 0.35f, 0.f));
+
+	model_data.addBone(
+			"UPPERBODY",
+			"UPPERARM_L",
+			Vector3f (0.f, 0.65f, -0.4f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment(
+			"UPPERARM_L",
+			"UpperArmL",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.1f, 0.1f, 0.8f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"UPPERARM_L",
+			"LOWERARM_L",
+			Vector3f (0.f, -0.45f, 0.f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment( 
+			"LOWERARM_L",
+			"LowerArmL",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.2f, 0.2f, 0.9f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"UPPERBODY",
+			"UPPERARM_R",
+			Vector3f (0.f, 0.65f, 0.4f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment(
+			"UPPERARM_R",
+			"UpperArmR",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.8f, 0.1f, 0.1f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"UPPERARM_R",
+			"LOWERARM_R",
+			Vector3f (0.f, -0.45f, 0.f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment(
+			"LOWERARM_R",
+			"LowerArmR",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.8f, 0.2f, 0.2f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"UPPERBODY",
+			"HEAD",
+			Vector3f (0.f, 0.7f, 0.0f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment(
+			"HEAD",
+			"Head",
+			Vector3f (0.4, 0.45f, 0.4f),
+			Vector3f (0.1f, 0.7f, 0.1f),
+			cube_mesh,
+			Vector3f (0.f, 0.225f, 0.f));
+
+	model_data.addBone(
+			"HIP",
+			"UPPERLEG_L",
+			Vector3f (0.f, 0.f, -0.15f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment(
+			"UPPERLEG_L",
+			"UpperLeg_L",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.1f, 0.1f, 0.8f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"UPPERLEG_L",
+			"LOWERLEG_L",
+			Vector3f (0.f, -0.45f, 0.f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment( 
+			"LOWERLEG_L",
+			"LowerLeg_L",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.2f, 0.2f, 0.9f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"HIP",
+			"UPPERLEG_R",
+			Vector3f (0.f, 0.f, 0.15f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment(
+			"UPPERLEG_R",
+			"UpperLeg_R",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.8f, 0.1f, 0.1f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	model_data.addBone(
+			"UPPERLEG_R",
+			"LOWERLEG_R",
+			Vector3f (0.f, -0.45f, 0.f),
+			Vector3f (0.f, 0.f, 0.f));
+
+	model_data.addSegment( 
+			"LOWERLEG_R",
+			"LowerLeg_R",
+			Vector3f (0.2, 0.45f, 0.2f),
+			Vector3f (0.9f, 0.2f, 0.2f),
+			cube_mesh,
+			Vector3f (0.f, -0.225f, 0.f));
+
+	/*
+	model_data.addBonePose (
 			"SHOULDER",
-			"ShoulderMesh1",
-			Vector3f (1.f, 0.2f, 1.5f),
-			Vector3f (0.8f, 0.8f, 0.2f),
-			cube_mesh);
+			0.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addBonePose (
+			"SHOULDER",
+			2.,
+			Vector3f (0.f, 1.f, 0.f),
+			Vector3f (0.f, 90.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+	*/
+
+	model_data.setAnimationLoop(true);
 }
 
 void GLWidget::updateSphericalCoordinates() {
@@ -383,6 +531,7 @@ void GLWidget::paintGL() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
+	model_data.updatePose (delta_time_sec);
 	model_data.draw();
 }
 
