@@ -307,7 +307,7 @@ void GLWidget::initializeGL()
 
 	model_data.addSegment(
 			"UPPERARM_L",
-			"UpperArmL",
+			"UpperArm_L",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.1f, 0.1f, 0.8f),
 			cube_mesh,
@@ -321,7 +321,7 @@ void GLWidget::initializeGL()
 
 	model_data.addSegment( 
 			"LOWERARM_L",
-			"LowerArmL",
+			"LowerArm_L",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.2f, 0.2f, 0.9f),
 			cube_mesh,
@@ -335,7 +335,7 @@ void GLWidget::initializeGL()
 
 	model_data.addSegment(
 			"UPPERARM_R",
-			"UpperArmR",
+			"UpperArm_R",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.8f, 0.1f, 0.1f),
 			cube_mesh,
@@ -349,7 +349,7 @@ void GLWidget::initializeGL()
 
 	model_data.addSegment(
 			"LOWERARM_R",
-			"LowerArmR",
+			"LowerArm_R",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.8f, 0.2f, 0.2f),
 			cube_mesh,
@@ -425,9 +425,15 @@ void GLWidget::initializeGL()
 			cube_mesh,
 			Vector3f (0.f, -0.225f, 0.f));
 
-	/*
 	model_data.addBonePose (
-			"SHOULDER",
+			"HIP",
+			0.,
+			Vector3f (0.f, 0.9f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f));
+
+	model_data.addBonePose (
+			"UPPERARM_R",
 			0.,
 			Vector3f (0.f, 0.f, 0.f),
 			Vector3f (0.f, 0.f, 0.f),
@@ -435,13 +441,28 @@ void GLWidget::initializeGL()
 			);
 
 	model_data.addBonePose (
-			"SHOULDER",
+			"UPPERARM_R",
 			2.,
-			Vector3f (0.f, 1.f, 0.f),
-			Vector3f (0.f, 90.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 90.f),
 			Vector3f (1.f, 1.f, 1.f)
 			);
-	*/
+
+	model_data.addBonePose (
+			"LOWERARM_R",
+			0.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addBonePose (
+			"LOWERARM_R",
+			1.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 90.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
 
 	model_data.setAnimationLoop(true);
 }
