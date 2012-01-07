@@ -100,34 +100,6 @@ void MeshData::draw() {
 }
 
 /*********************************
- * Segment
- *********************************/
-
-/*
-void Segment::draw() {
-	glPushMatrix();
-	glTranslatef (parent_translation[0], parent_translation[1], parent_translation[2]);
-	glRotatef (parent_rotation[0], 0., 0., 1.);
-	glRotatef (parent_rotation[1], 0., 1., 0.);
-	glRotatef (parent_rotation[2], 1., 0., 0.);
-	glScalef (parent_scale[0], parent_scale[1], parent_scale[2]);
-
-	//cerr << "segment " << hex << this << " (mesh count = " << meshes.size() << ", child count = " << children.size() << ")" << endl;
-
-	for (unsigned int mi = 0; mi < meshes.size(); mi++) {
-		//cerr << "draw mesh " << mi << endl;
-		meshes[mi]->draw();
-	}
-
-	for (unsigned int si = 0; si < children.size(); si++) {
-		children[si]->draw();
-	}
-
-	glPopMatrix();
-}
-*/
-
-/*********************************
  * Bone
  *********************************/
 void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
@@ -201,7 +173,13 @@ void ModelData::draw() {
 	
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
-		glMultMatrixf (seg_iter->bone->pose_transform.data());
+
+		// scaling + transform
+		Matrix44f transform_matrix = smScale (seg_iter->dimensions[0], seg_iter->dimensions[1], seg_iter->dimensions[2]) * seg_iter->bone->pose_transform;
+		glMultMatrixf (transform_matrix.data());
+
+
+		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
 		seg_iter->mesh.draw();
 		glPopMatrix();

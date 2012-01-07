@@ -273,8 +273,8 @@ void GLWidget::initializeGL()
 
 	model_data.addBone(
 			"BASE",
-			Vector3f (2.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 20.f),
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
 			"HIP");
 
 	model_data.addSegment (
@@ -282,6 +282,19 @@ void GLWidget::initializeGL()
 			"HipMesh1",
 			Vector3f (1.f, 1.f, 1.f),
 			Vector3f (0.8f, 0.2f, 0.2f),
+			cube_mesh);
+
+	model_data.addBone (
+			"HIP",
+			Vector3f (0.f, 0.6f, 0.f),
+			Vector3f (0.f, 20.f, 0.f),
+			"SHOULDER");
+
+	model_data.addSegment (
+			"SHOULDER",
+			"ShoulderMesh1",
+			Vector3f (1.f, 0.2f, 1.5f),
+			Vector3f (0.8f, 0.8f, 0.2f),
 			cube_mesh);
 }
 

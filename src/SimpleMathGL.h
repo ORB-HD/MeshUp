@@ -36,5 +36,15 @@ SimpleMath::Fixed::Matrix<float, 4, 4> smTranslate (float x, float y, float z) {
 			);
 }
 
+SimpleMath::Fixed::Matrix<float, 4, 4> smScale (float x, float y, float z) {
+	return SimpleMath::Fixed::Matrix<float, 4, 4> (
+			  x, 0.f, 0.f, 0.f,
+			0.f,   y, 0.f, 0.f,
+			0.f, 0.f,   z, 0.f,
+			0.f, 0.f, 0.f, 1.f
+			);
+}
+
+
 /* _SIMPLEMATHGL_H_ */
 #endif
