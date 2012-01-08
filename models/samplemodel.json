@@ -1,0 +1,186 @@
+
+{
+	"bones" : 
+	[
+		
+		{
+			"name" : "HIP",
+			"parent" : "BASE",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.0, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERBODY",
+			"parent" : "HIP",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.250, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERARM_L",
+			"parent" : "UPPERBODY",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.64999998, -0.40000001 ]
+		},
+		
+		{
+			"name" : "LOWERARM_L",
+			"parent" : "UPPERARM_L",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.44999999, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERARM_R",
+			"parent" : "UPPERBODY",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.64999998, 0.40000001 ]
+		},
+		
+		{
+			"name" : "LOWERARM_R",
+			"parent" : "UPPERARM_R",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.44999999, 0.0 ]
+		},
+		
+		{
+			"name" : "HEAD",
+			"parent" : "UPPERBODY",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.69999999, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERLEG_L",
+			"parent" : "HIP",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.0, -0.15000001 ]
+		},
+		
+		{
+			"name" : "LOWERLEG_L",
+			"parent" : "UPPERLEG_L",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.44999999, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERLEG_R",
+			"parent" : "HIP",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.0, 0.15000001 ]
+		},
+		
+		{
+			"name" : "LOWERLEG_R",
+			"parent" : "UPPERLEG_R",
+			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.44999999, 0.0 ]
+		}
+	],
+	"segments" : 
+	[
+		
+		{
+			"bone" : "HIP",
+			"color" : [ 0.80000001, 0.80000001, 0.20 ],
+			"dimensions" : [ 0.250, 0.250, 0.40000001 ],
+			"mesh_center" : [ 0.0, 0.1250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "HipMesh1"
+		},
+		
+		{
+			"bone" : "UPPERBODY",
+			"color" : [ 0.80000001, 0.80000001, 0.40000001 ],
+			"dimensions" : [ 0.30000001, 0.69999999, 0.60000002 ],
+			"mesh_center" : [ 0.0, 0.34999999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperBody"
+		},
+		
+		{
+			"bone" : "UPPERARM_L",
+			"color" : [ 0.10, 0.10, 0.80000001 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperArm_L"
+		},
+		
+		{
+			"bone" : "LOWERARM_L",
+			"color" : [ 0.20, 0.20, 0.89999998 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerArm_L"
+		},
+		
+		{
+			"bone" : "UPPERARM_R",
+			"color" : [ 0.80000001, 0.10, 0.10 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperArm_R"
+		},
+		
+		{
+			"bone" : "LOWERARM_R",
+			"color" : [ 0.80000001, 0.20, 0.20 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerArm_R"
+		},
+		
+		{
+			"bone" : "HEAD",
+			"color" : [ 0.10, 0.69999999, 0.10 ],
+			"dimensions" : [ 0.40000001, 0.44999999, 0.40000001 ],
+			"mesh_center" : [ 0.0, 0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/monkeyhead.obj",
+			"name" : "Head"
+		},
+		
+		{
+			"bone" : "UPPERLEG_L",
+			"color" : [ 0.10, 0.10, 0.80000001 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperLeg_L"
+		},
+		
+		{
+			"bone" : "LOWERLEG_L",
+			"color" : [ 0.20, 0.20, 0.89999998 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerLeg_L"
+		},
+		
+		{
+			"bone" : "UPPERLEG_R",
+			"color" : [ 0.80000001, 0.10, 0.10 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperLeg_R"
+		},
+		
+		{
+			"bone" : "LOWERLEG_R",
+			"color" : [ 0.89999998, 0.20, 0.20 ],
+			"dimensions" : [ 0.20, 0.44999999, 0.20 ],
+			"mesh_center" : [ 0.0, -0.22499999, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerLeg_R"
+		}
+	]
+}
+

@@ -257,9 +257,9 @@ void loadOBJ (MeshData *mesh, const char *filename) {
 		}
 	}
 
-	cout << "found " << vertices.size() << " vertices" << endl;
-	cout << "found " << normals.size() << " normals" << endl;
-	cout << "found " << face_infos.size() << " faces" << endl;
+//	cout << "found " << vertices.size() << " vertices" << endl;
+//	cout << "found " << normals.size() << " normals" << endl;
+//	cout << "found " << face_infos.size() << " faces" << endl;
 
 	mesh->begin();
 	// add all vertices to the MeshData
@@ -276,11 +276,9 @@ void loadOBJ (MeshData *mesh, const char *filename) {
 		}
 	}
 
-	cout << "mesh has " << mesh->vertices.size() << " vertices. " << endl;
 	mesh->end();
 
 	mesh->smooth_shading = smooth_shading;
-	cout << "smooth = " << smooth_shading << endl;
 
 	file_stream.close();
 }

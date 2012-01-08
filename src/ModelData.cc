@@ -40,7 +40,7 @@ unsigned int MeshData::generate_vbo() {
 	assert (vertices.size() % 3 == 0);
 	assert (normals.size() == vertices.size());
 
-	cerr << __func__ << ": vert count = " << vertices.size() << endl;
+//	cerr << __func__ << ": vert count = " << vertices.size() << endl;
 
 	// create the buffer
 	glGenBuffers (1, &vbo_id);

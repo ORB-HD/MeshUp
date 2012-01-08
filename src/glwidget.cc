@@ -124,159 +124,10 @@ void GLWidget::initializeGL()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	model_data.addBone(
-			"BASE",
-			"HIP",
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment (
-			"HIP",
-			"HipMesh1",
-			Vector3f (0.25f, 0.25f, 0.4f),
-			Vector3f (0.8f, 0.8f, 0.2f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, 0.125f, 0.f));
-
-	model_data.addBone (
-			"HIP",
-			"UPPERBODY",
-			Vector3f (0.f, 0.25f, 0.f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment (
-			"UPPERBODY",
-			"UpperBody",
-			Vector3f (0.3f, 0.7f, 0.6f),
-			Vector3f (0.8f, 0.8f, 0.4f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, 0.35f, 0.f));
-
-	model_data.addBone(
-			"UPPERBODY",
-			"UPPERARM_L",
-			Vector3f (0.f, 0.65f, -0.4f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment(
-			"UPPERARM_L",
-			"UpperArm_L",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.1f, 0.1f, 0.8f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"UPPERARM_L",
-			"LOWERARM_L",
-			Vector3f (0.f, -0.45f, 0.f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment( 
-			"LOWERARM_L",
-			"LowerArm_L",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.2f, 0.2f, 0.9f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"UPPERBODY",
-			"UPPERARM_R",
-			Vector3f (0.f, 0.65f, 0.4f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment(
-			"UPPERARM_R",
-			"UpperArm_R",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.8f, 0.1f, 0.1f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"UPPERARM_R",
-			"LOWERARM_R",
-			Vector3f (0.f, -0.45f, 0.f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment(
-			"LOWERARM_R",
-			"LowerArm_R",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.8f, 0.2f, 0.2f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"UPPERBODY",
-			"HEAD",
-			Vector3f (0.f, 0.7f, 0.0f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment(
-			"HEAD",
-			"Head",
-			Vector3f (0.4, 0.45f, 0.4f),
-			Vector3f (0.1f, 0.7f, 0.1f),
-			"meshes/monkeyhead.obj",
-			Vector3f (0.f, 0.225f, 0.f));
-
-	model_data.addBone(
-			"HIP",
-			"UPPERLEG_L",
-			Vector3f (0.f, 0.f, -0.15f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment(
-			"UPPERLEG_L",
-			"UpperLeg_L",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.1f, 0.1f, 0.8f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"UPPERLEG_L",
-			"LOWERLEG_L",
-			Vector3f (0.f, -0.45f, 0.f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment( 
-			"LOWERLEG_L",
-			"LowerLeg_L",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.2f, 0.2f, 0.9f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"HIP",
-			"UPPERLEG_R",
-			Vector3f (0.f, 0.f, 0.15f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment(
-			"UPPERLEG_R",
-			"UpperLeg_R",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.8f, 0.1f, 0.1f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
-
-	model_data.addBone(
-			"UPPERLEG_R",
-			"LOWERLEG_R",
-			Vector3f (0.f, -0.45f, 0.f),
-			Vector3f (0.f, 0.f, 0.f));
-
-	model_data.addSegment( 
-			"LOWERLEG_R",
-			"LowerLeg_R",
-			Vector3f (0.2, 0.45f, 0.2f),
-			Vector3f (0.9f, 0.2f, 0.2f),
-			"meshes/unit_cube.obj",
-			Vector3f (0.f, -0.225f, 0.f));
+//	model_data.saveToFile("testmodel.json");
+//	model_data.saveToFile("testmodel_backup.json");
+	model_data.loadFromFile("model/samplemodel.json");
+	model_data.setAnimationLoop(true);
 
 	model_data.addBonePose (
 			"HIP",
@@ -317,10 +168,7 @@ void GLWidget::initializeGL()
 			Vector3f (1.f, 1.f, 1.f)
 			);
 
-	model_data.saveToFile("testmodel.json");
-	model_data.saveToFile("testmodel_backup.json");
-	model_data.loadFromFile("testmodel.json");
-	model_data.setAnimationLoop(true);
+
 }
 
 void GLWidget::updateSphericalCoordinates() {

@@ -14,7 +14,6 @@ tags
 Makefile
 include/config.h
 ./ui_*.h
-model/*
 
 figureview
 qtfigureview
