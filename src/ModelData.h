@@ -49,6 +49,7 @@ struct MeshData {
 	// triangle!
 	std::vector<unsigned int> triangle_indices;
 };
+typedef boost::shared_ptr<MeshData> MeshPtr;
 
 void loadOBJ (MeshData *mesh, const char *filename);
 
@@ -87,16 +88,18 @@ struct Segment {
 		name ("unnamed"),
 		dimensions (1.f, 1.f, 1.f),
 		meshcenter (0.f, 0.f, 0.f),
-		bone (BonePtr())
+		bone (BonePtr()),
+		mesh_filename("")
 	{}
 
 	std::string name;
 
 	Vector3f dimensions;
 	Vector3f color;
-	MeshData mesh;
+	MeshPtr mesh;
 	Vector3f meshcenter;
 	BonePtr bone;
+	std::string mesh_filename;
 };
 
 struct BonePose {
@@ -152,8 +155,8 @@ struct ModelData {
 
 	typedef std::list<Segment> SegmentList;
 	SegmentList segments;
-	typedef std::list<MeshData> MeshDataList;
-	MeshDataList meshes;
+	typedef std::map<std::string, MeshPtr> MeshMap;
+	MeshMap meshmap;
 	typedef std::vector<BonePtr> BoneVector;
 	BoneVector bones;
 	typedef std::map<std::string, BonePtr> BoneMap;
@@ -173,7 +176,7 @@ struct ModelData {
 			const std::string &segment_name,
 			const Vector3f &dimensions,
 			const Vector3f &color,
-			const MeshData &mesh,
+			const std::string &mesh_name,
 			const Vector3f &mesh_center);
 
 	void addBonePose (

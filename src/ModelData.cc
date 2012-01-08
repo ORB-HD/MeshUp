@@ -219,16 +219,32 @@ void ModelData::addSegment (
 		const std::string &segment_name,
 		const Vector3f &dimensions,
 		const Vector3f &color,
-		const MeshData &mesh,
+		const std::string &mesh_name,
 		const Vector3f &mesh_center) {
 	Segment segment;
 	segment.name = segment_name;
 	segment.dimensions = dimensions;
 	segment.color = color;
-	segment.mesh = mesh;
+
+	// check whether we have the mesh, if not try to load it
+	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
+	if (mesh_iter == meshmap.end()) {
+		// load it
+		cout << "Loading mesh " << mesh_name << endl;
+
+		MeshPtr new_mesh (new MeshData);
+		loadOBJ (&(*new_mesh), mesh_name.c_str());
+		new_mesh->generate_vbo();
+
+		meshmap[mesh_name] = new_mesh;
+
+		mesh_iter = meshmap.find (mesh_name);
+	}
+
+	segment.mesh = mesh_iter->second;
 	segment.meshcenter = mesh_center;
 	segment.bone = findBone (bone_name.c_str());
-
+	segment.mesh_filename = mesh_name;
 	assert (segment.bone != NULL);
 	segments.push_back (segment);
 }
@@ -304,17 +320,28 @@ void ModelData::draw() {
 
 		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
-		seg_iter->mesh.draw();
+		seg_iter->mesh->draw();
 		glPopMatrix();
 
 		seg_iter++;
 	}
 }
 
-void serialize_bone (ostream &stream_out, BonePtr bone, const string &tabs) {
-	stream_out << tabs << "\"" << bone->name << "\" {" << endl;
+void serialize_bone (ostream &stream_out, const std::string& parent_name, BonePtr bone, const string &tabs) {
+	stream_out << tabs << "\"" << bone->name << "\" : {" << endl;
+	stream_out << tabs << "  \"parent_bone\": \"" << parent_name << "\"," << endl;
 	stream_out << tabs << "  \"parent_translation\": " << bone->parent_translation.transpose() << "," << endl;
 	stream_out << tabs << "  \"parent_rotation_ZYXeuler\": " << bone->parent_rotation_ZYXeuler.transpose() << "," << endl;
+	stream_out << tabs << "}," << endl;
+}
+
+void serialize_segment (ostream &stream_out, const Segment &segment, const string &tabs) {
+	stream_out << tabs << "\"" << segment.name << "\" : {" << endl;
+	stream_out << tabs << "  \"dimensions\": " << segment.dimensions.transpose() << "," << endl;
+	stream_out << tabs << "  \"color\": " << segment.color.transpose() << "," << endl;
+	stream_out << tabs << "  \"meshcenter\": " << segment.meshcenter.transpose() << "," << endl;
+	stream_out << tabs << "  \"mesh_filename\": \"" << segment.mesh_filename << "\"," << endl;
+	stream_out << tabs << "}," << endl;
 }
 
 void ModelData::saveToFile (const char* filename) {
@@ -322,9 +349,13 @@ void ModelData::saveToFile (const char* filename) {
 
 	string tabs;
 
-	file_out << "\"bones\" {" << endl;
-
+	file_out << "{" << endl;
+	
 	tabs = "  ";
+
+	file_out << tabs << "\"bones\" : {" << endl;
+
+	tabs = tabs + "  ";
 
 	// we have to write out the bones recursively
 	for (int bi = 0; bi < bones.size(); bi++) {
@@ -336,7 +367,8 @@ void ModelData::saveToFile (const char* filename) {
 			child_index_stack.push(0);
 		}
 
-		serialize_bone (file_out, bone_stack.top(), tabs);
+		if (bone_stack.top()->name != "BASE")
+			serialize_bone (file_out, "undefined", bone_stack.top(), tabs);
 
 		while (bone_stack.size() > 0) {
 			BonePtr cur_bone = bone_stack.top();
@@ -345,7 +377,7 @@ void ModelData::saveToFile (const char* filename) {
 			if (child_idx < cur_bone->children.size()) {
 				BonePtr child_bone = cur_bone->children[child_idx];
 
-				serialize_bone (file_out, child_bone, tabs);
+				serialize_bone (file_out, cur_bone->name, child_bone, tabs);
 				
 				child_index_stack.pop();
 				child_index_stack.push (child_idx + 1);
@@ -353,18 +385,8 @@ void ModelData::saveToFile (const char* filename) {
 				if (child_bone->children.size() > 0) {
 					bone_stack.push (child_bone);
 					child_index_stack.push(0);
-
-					file_out << tabs << "  \"children\": {" << endl;
-					tabs = tabs + "  ";
 				}
 			} else {
-				tabs = tabs.substr (0, tabs.size() - 2);
-				file_out << tabs << "}," << endl << endl;
-
-				if (bone_stack.top()->children.size() - 1 == child_index_stack.top()) {
-					file_out << tabs << "}," << endl;
-				}
-
 				bone_stack.pop();
 				child_index_stack.pop();
 			}
@@ -373,6 +395,26 @@ void ModelData::saveToFile (const char* filename) {
 		}
 	}
 
+	tabs = tabs.substr (0, tabs.size() - 2);
+	file_out << tabs << "}," << endl << endl;
+
+	// segments
+	file_out << tabs << "\"segments\" : {" << endl;
+
+	tabs = tabs + "  ";
+	SegmentList::iterator seg_iter = segments.begin();
+	while (seg_iter != segments.end()) {
+		serialize_segment (file_out, *seg_iter, tabs);
+		seg_iter++;
+	}
+
+	tabs = tabs.substr (0, tabs.size() - 2);
+
+	file_out << tabs << "}," << endl;
+
+	tabs = tabs.substr (0, tabs.size() - 2);
+
+	file_out << tabs << "}" << endl << endl;
 
 	file_out.close();
 }

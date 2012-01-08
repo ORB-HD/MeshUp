@@ -287,7 +287,7 @@ void GLWidget::initializeGL()
 			"HipMesh1",
 			Vector3f (0.25f, 0.25f, 0.4f),
 			Vector3f (0.8f, 0.8f, 0.2f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, 0.125f, 0.f));
 
 	model_data.addBone (
@@ -301,7 +301,7 @@ void GLWidget::initializeGL()
 			"UpperBody",
 			Vector3f (0.3f, 0.7f, 0.6f),
 			Vector3f (0.8f, 0.8f, 0.4f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, 0.35f, 0.f));
 
 	model_data.addBone(
@@ -315,7 +315,7 @@ void GLWidget::initializeGL()
 			"UpperArm_L",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.1f, 0.1f, 0.8f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -329,7 +329,7 @@ void GLWidget::initializeGL()
 			"LowerArm_L",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.2f, 0.2f, 0.9f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -343,7 +343,7 @@ void GLWidget::initializeGL()
 			"UpperArm_R",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.8f, 0.1f, 0.1f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -357,7 +357,7 @@ void GLWidget::initializeGL()
 			"LowerArm_R",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.8f, 0.2f, 0.2f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -371,7 +371,7 @@ void GLWidget::initializeGL()
 			"Head",
 			Vector3f (0.4, 0.45f, 0.4f),
 			Vector3f (0.1f, 0.7f, 0.1f),
-			othermesh,
+			"meshes/monkeyhead.obj",
 			Vector3f (0.f, 0.225f, 0.f));
 
 	model_data.addBone(
@@ -385,7 +385,7 @@ void GLWidget::initializeGL()
 			"UpperLeg_L",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.1f, 0.1f, 0.8f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -399,7 +399,7 @@ void GLWidget::initializeGL()
 			"LowerLeg_L",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.2f, 0.2f, 0.9f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -413,7 +413,7 @@ void GLWidget::initializeGL()
 			"UpperLeg_R",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.8f, 0.1f, 0.1f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBone(
@@ -427,7 +427,7 @@ void GLWidget::initializeGL()
 			"LowerLeg_R",
 			Vector3f (0.2, 0.45f, 0.2f),
 			Vector3f (0.9f, 0.2f, 0.2f),
-			cube_mesh,
+			"meshes/unit_cube.obj",
 			Vector3f (0.f, -0.225f, 0.f));
 
 	model_data.addBonePose (
@@ -473,7 +473,7 @@ void GLWidget::initializeGL()
 
 	model_data.saveToFile("testmodel.json");
 
-	exit(1);
+//	exit(1);
 }
 
 void GLWidget::updateSphericalCoordinates() {

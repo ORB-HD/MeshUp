@@ -775,7 +775,7 @@ inline std::ostream& operator<<(std::ostream& output, const Block<val_type, bloc
 	for (i = 0; i < blockrows; i++) {
 		output << "[ ";
 		for (j = 0; j < blockcols; j++) {
-			output << block(i,j) << " ";
+			output << block(i,j) << ", ";
 		}
 		output << "]";
 		
@@ -811,7 +811,7 @@ inline std::ostream& operator<<(std::ostream& output, const Matrix<val_type, nro
 	for (unsigned int i = 0; i < nrows; i++) {
 		output << "[ ";
 		for (unsigned int j = 0; j < ncols; j++) {
-			output << matrix(i,j) << " ";
+			output << matrix(i,j) << ", ";
 		}
 		output << "]";
 
