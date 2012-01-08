@@ -124,7 +124,6 @@ void GLWidget::initializeGL()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	/*
 	model_data.addBone(
 			"BASE",
 			"HIP",
@@ -318,14 +317,10 @@ void GLWidget::initializeGL()
 			Vector3f (1.f, 1.f, 1.f)
 			);
 
-	*/
-
-//	model_data.saveToFile("testmodel.json");
-//	model_data.saveToFile("testmodel_backup.json");
+	model_data.saveToFile("testmodel.json");
+	model_data.saveToFile("testmodel_backup.json");
 	model_data.loadFromFile("testmodel.json");
 	model_data.setAnimationLoop(true);
-
-//	exit(1);
 }
 
 void GLWidget::updateSphericalCoordinates() {

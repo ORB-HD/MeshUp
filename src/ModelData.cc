@@ -329,28 +329,11 @@ void ModelData::draw() {
 	}
 }
 
-void serialize_bone (ostream &stream_out, const std::string& parent_name, BonePtr bone, const string &tabs) {
-	stream_out << tabs << "\"" << bone->name << "\" : {" << endl;
-	stream_out << tabs << "  \"parent_bone\": \"" << parent_name << "\"," << endl;
-	stream_out << tabs << "  \"parent_translation\": " << bone->parent_translation.transpose() << "," << endl;
-	stream_out << tabs << "  \"parent_rotation_ZYXeuler\": " << bone->parent_rotation_ZYXeuler.transpose() << "," << endl;
-	stream_out << tabs << "}," << endl;
-}
-
-void serialize_segment (ostream &stream_out, const Segment &segment, const string &tabs) {
-	stream_out << tabs << "\"" << segment.name << "\" : {" << endl;
-	stream_out << tabs << "  \"dimensions\": " << segment.dimensions.transpose() << "," << endl;
-	stream_out << tabs << "  \"color\": " << segment.color.transpose() << "," << endl;
-	stream_out << tabs << "  \"meshcenter\": " << segment.meshcenter.transpose() << "," << endl;
-	stream_out << tabs << "  \"mesh_filename\": \"" << segment.mesh_filename << "\"," << endl;
-	stream_out << tabs << "}," << endl;
-}
-
 Json::Value vec3_to_json (const Vector3f &vec) {
 	Json::Value result;
-	result[0] = Json::Value(static_cast<double>(vec[0]));
-	result[1] = Json::Value(static_cast<double>(vec[1]));
-	result[2] = Json::Value(static_cast<double>(vec[2]));
+	result[0] = Json::Value(static_cast<float>(vec[0]));
+	result[1] = Json::Value(static_cast<float>(vec[1]));
+	result[2] = Json::Value(static_cast<float>(vec[2]));
 
 	return result;
 }
