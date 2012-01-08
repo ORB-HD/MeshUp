@@ -23,6 +23,7 @@ using namespace std;
 static bool update_simulation = false;
 
 MeshData cube_mesh;
+MeshData othermesh;
 ModelData model_data;
 
 GLWidget::GLWidget(QWidget *parent)
@@ -271,6 +272,10 @@ void GLWidget::initializeGL()
 	cube_mesh.generate_vbo();
 	qDebug() << "cube_mesh vbo_id = " << cube_mesh.vbo_id;
 
+	loadOBJ (&othermesh, "export_test.obj");
+	othermesh.generate_vbo();
+	qDebug() << "othermesh vbo_id = " << othermesh.vbo_id;
+
 	model_data.addBone(
 			"BASE",
 			"HIP",
@@ -366,7 +371,7 @@ void GLWidget::initializeGL()
 			"Head",
 			Vector3f (0.4, 0.45f, 0.4f),
 			Vector3f (0.1f, 0.7f, 0.1f),
-			cube_mesh,
+			othermesh,
 			Vector3f (0.f, 0.225f, 0.f));
 
 	model_data.addBone(

@@ -246,6 +246,29 @@ class Matrix {
 		}
 
 		Matrix (
+				const val_type &v00, const val_type &v01, const val_type &v02, const val_type &v03
+				) {
+			assert (nrows == 4);
+			assert (ncols == 1);
+
+			mData[0] = v00;
+			mData[1] = v01;
+			mData[2] = v02;
+			mData[3] = v03;
+		}
+
+		void set(
+				const val_type &v00, const val_type &v01, const val_type &v02, const val_type &v03
+				) {
+			COMPILE_ASSERT (nrows * ncols == 4);
+
+			mData[0] = v00;
+			mData[1] = v01;
+			mData[2] = v02;
+			mData[3] = v03;
+		}
+
+		Matrix (
 				const val_type &v00, const val_type &v01, const val_type &v02,
 				const val_type &v10, const val_type &v11, const val_type &v12,
 				const val_type &v20, const val_type &v21, const val_type &v22
@@ -748,15 +771,16 @@ class Matrix {
 
 template <typename val_type, unsigned int blockrows, unsigned int blockcols>
 inline std::ostream& operator<<(std::ostream& output, const Block<val_type, blockrows, blockcols> &block) {
-	output << std::endl;
-
 	unsigned int i,j;
 	for (i = 0; i < blockrows; i++) {
 		output << "[ ";
 		for (j = 0; j < blockcols; j++) {
 			output << block(i,j) << " ";
 		}
-		output << "]" << std::endl;
+		output << "]";
+		
+		if (blockrows > 1) 
+			output << std::endl;
 	}
 
 	return output;
@@ -784,13 +808,15 @@ inline Matrix<val_type, nrows, ncols> operator*(const Matrix<val_type, nrows, nc
 
 template <typename val_type, unsigned int nrows, unsigned int ncols>
 inline std::ostream& operator<<(std::ostream& output, const Matrix<val_type, nrows, ncols> &matrix) {
-	output << std::endl;
 	for (unsigned int i = 0; i < nrows; i++) {
 		output << "[ ";
 		for (unsigned int j = 0; j < ncols; j++) {
 			output << matrix(i,j) << " ";
 		}
-		output << "]" << std::endl;
+		output << "]";
+
+		if (nrows > 1) 
+			output << std::endl;
 	}
 	return output;
 }

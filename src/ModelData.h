@@ -20,7 +20,8 @@ struct MeshData {
 	MeshData() :
 		parented_segment(""),
 		vbo_id(0),
-		started(false)
+		started(false),
+		smooth_shading(true)
 	{}
 
 	void begin();
@@ -40,6 +41,7 @@ struct MeshData {
 
 	unsigned int vbo_id;
 	bool started;
+	bool smooth_shading;
 
 	std::vector<Vector3f> vertices;
 	std::vector<Vector3f> normals;
@@ -47,6 +49,8 @@ struct MeshData {
 	// triangle!
 	std::vector<unsigned int> triangle_indices;
 };
+
+void loadOBJ (MeshData *mesh, const char *filename);
 
 struct Bone;
 typedef boost::shared_ptr<Bone> BonePtr;

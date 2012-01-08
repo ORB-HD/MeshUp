@@ -35,6 +35,8 @@ unsigned int MeshData::generate_vbo() {
 	assert (vertices.size() % 3 == 0);
 	assert (normals.size() == vertices.size());
 
+	cerr << __func__ << ": vert count = " << vertices.size() << endl;
+
 	// create the buffer
 	glGenBuffers (1, &vbo_id);
 
@@ -87,6 +89,11 @@ void MeshData::addNormalfv (float normal[3]) {
 }
 
 void MeshData::draw() {
+	if (smooth_shading)
+		glShadeModel(GL_SMOOTH);
+	else
+		glShadeModel(GL_FLAT);
+		
 	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
 	glVertexPointer (3, GL_FLOAT, 0, 0);

@@ -30,6 +30,7 @@ ADD_LIBRARY ( glew
 
 ADD_LIBRARY ( ModelVis
 	src/ModelData.cc
+	src/objloader.cc
 	)
 
 ADD_DEFINITIONS (${QT_DEFINITIONS})
