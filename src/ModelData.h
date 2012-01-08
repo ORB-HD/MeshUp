@@ -198,6 +198,10 @@ struct ModelData {
 		return bone_iter->second;
 	}
 
+	void clear() {
+		*this = ModelData();
+	}
+
 	void resetAnimation() {
 		animation.current_time = 0.f;
 	}
@@ -210,6 +214,7 @@ struct ModelData {
 	void draw();
 
 	void saveToFile (const char* filename);
+	void loadFromFile (const char* filename);
 };
 
 #endif

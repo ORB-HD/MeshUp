@@ -354,6 +354,14 @@ Json::Value vec3_to_json (const Vector3f &vec) {
 	return result;
 }
 
+Vector3f json_to_vec3 (const Json::Value &value) {
+	Vector3f result (
+			value.get(Json::ArrayIndex(0),0.f).asFloat(),
+			value.get(Json::ArrayIndex(1),0.f).asFloat(),
+			value.get(Json::ArrayIndex(2),0.f).asFloat()
+			);
+}
+
 Json::Value bone_to_json_value (const BonePtr &bone) {
 	using namespace Json;
 
@@ -371,9 +379,10 @@ Json::Value segment_to_json_value (const Segment &segment) {
 
 	Value result;
 
+	result["name"] = segment.name;
 	result["dimensions"] = vec3_to_json (segment.dimensions);
 	result["color"] = vec3_to_json (segment.color);
-	result["meshcenter"] = vec3_to_json (segment.meshcenter);
+	result["mesh_center"] = vec3_to_json (segment.meshcenter);
 	result["mesh_filename"] = segment.mesh_filename;
 	result["bone"] = segment.bone->name;
 
@@ -395,11 +404,8 @@ void ModelData::saveToFile (const char* filename) {
 		}
 
 		if (bone_stack.top()->name != "BASE") {
+			root_node["bones"][bone_index] = bone_to_json_value(bone_stack.top());
 			bone_index++;
-			ostringstream name_stream;
-			name_stream << "bone-" << setw(3) << setfill('0') << bone_index;
-
-			root_node["bones"][name_stream.str()] = bone_to_json_value(bone_stack.top());
 		}
 
 		while (bone_stack.size() > 0) {
@@ -409,12 +415,9 @@ void ModelData::saveToFile (const char* filename) {
 			if (child_idx < cur_bone->children.size()) {
 				BonePtr child_bone = cur_bone->children[child_idx];
 
+				root_node["bones"][bone_index] = bone_to_json_value(child_bone);
+				root_node["bones"][bone_index]["parent"] = cur_bone->name;
 				bone_index++;
-				ostringstream name_stream;
-				name_stream << "bone-" << setw(3) << setfill('0') << bone_index;
-
-				root_node["bones"][name_stream.str()] = bone_to_json_value(child_bone);
-				root_node["bones"][name_stream.str()]["parent"] = cur_bone->name;
 				
 				child_index_stack.pop();
 				child_index_stack.push (child_idx + 1);
@@ -433,15 +436,73 @@ void ModelData::saveToFile (const char* filename) {
 	}
 
 	// segments
+	
+	int segment_index = 0;
 	SegmentList::iterator seg_iter = segments.begin();
 	while (seg_iter != segments.end()) {
-		root_node["segments"][seg_iter->name] = segment_to_json_value (*seg_iter);
+		root_node["segments"][segment_index] = segment_to_json_value (*seg_iter);
 
+		segment_index++;
 		seg_iter++;
 	}
 
 	ofstream file_out (filename, ios::trunc);
+	file_out << root_node << endl;
 	file_out.close();
 
 	cout << root_node << endl;
+}
+
+void ModelData::loadFromFile (const char* filename) {
+	using namespace Json;
+	Value root;
+	Reader reader;
+
+	ifstream file_in (filename);
+	stringstream buffer;
+	buffer << file_in.rdbuf();
+
+	bool parsing_result = reader.parse (buffer.str(), root);
+	if (!parsing_result) {
+		cerr << "Error reading model: " << reader.getFormattedErrorMessages();
+
+		exit (1);
+
+		return;
+	}
+
+	// clear the model
+	clear();
+
+	// read the bones:
+	ValueIterator node_iter = root["bones"].begin();
+
+	while (node_iter != root["bones"].end()) {
+		Value bone_node = *node_iter;
+
+		addBone (
+				bone_node["parent"].asString(),
+				bone_node["name"].asString(),
+				json_to_vec3 (bone_node["parent_translation"]),
+				json_to_vec3 (bone_node["parent_translation"])
+				);
+
+		node_iter++;
+	}
+
+	node_iter = root["segments"].begin();
+	while (node_iter != root["segments"].end()) {
+		Value segment_node = *node_iter;
+
+		addSegment (
+				segment_node["bone"].asString(),
+				segment_node["name"].asString(),
+				json_to_vec3 (segment_node["dimensions"]),
+				json_to_vec3 (segment_node["color"]),
+				segment_node["mesh_filename"].asString(),
+				json_to_vec3 (segment_node["mesh_center"])
+				);
+
+		node_iter++;
+	}
 }

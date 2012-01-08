@@ -320,6 +320,7 @@ void GLWidget::initializeGL()
 	model_data.setAnimationLoop(true);
 
 	model_data.saveToFile("testmodel.json");
+	model_data.loadFromFile("testmodel.json");
 
 	exit(1);
 }
