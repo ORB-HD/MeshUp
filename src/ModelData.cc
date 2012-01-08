@@ -348,18 +348,21 @@ void serialize_segment (ostream &stream_out, const Segment &segment, const strin
 
 Json::Value vec3_to_json (const Vector3f &vec) {
 	Json::Value result;
-	result[0] = vec[0];
-	result[1] = vec[1];
-	result[2] = vec[2];
+	result[0] = Json::Value(static_cast<double>(vec[0]));
+	result[1] = Json::Value(static_cast<double>(vec[1]));
+	result[2] = Json::Value(static_cast<double>(vec[2]));
+
 	return result;
 }
 
 Vector3f json_to_vec3 (const Json::Value &value) {
 	Vector3f result (
-			value.get(Json::ArrayIndex(0),0.f).asFloat(),
-			value.get(Json::ArrayIndex(1),0.f).asFloat(),
-			value.get(Json::ArrayIndex(2),0.f).asFloat()
+			value[0].asFloat(),
+			value[1].asFloat(),
+			value[2].asFloat()
 			);
+
+	return result;
 }
 
 Json::Value bone_to_json_value (const BonePtr &bone) {
