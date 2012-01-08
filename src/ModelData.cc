@@ -354,40 +354,36 @@ Json::Value vec3_to_json (const Vector3f &vec) {
 	return result;
 }
 
+Json::Value bone_to_json_value (const BonePtr &bone) {
+	using namespace Json;
+
+	Value result;
+
+	result["name"] = bone->name;
+	result["parent_translation"] = vec3_to_json(bone->parent_translation);
+	result["parent_rotation_ZYXeuler"] = vec3_to_json(bone->parent_rotation_ZYXeuler);
+
+	return result;
+}
+
 Json::Value segment_to_json_value (const Segment &segment) {
 	using namespace Json;
 
 	Value result;
 
-	result[segment.name]["dimensions"] = vec3_to_json (segment.dimensions);
+	result["dimensions"] = vec3_to_json (segment.dimensions);
+	result["color"] = vec3_to_json (segment.color);
+	result["meshcenter"] = vec3_to_json (segment.meshcenter);
+	result["mesh_filename"] = segment.mesh_filename;
+	result["bone"] = segment.bone->name;
 
 	return result;
 }
 
 void ModelData::saveToFile (const char* filename) {
-	Json::StyledWriter writer;
+	Json::Value root_node;
 
-	Json::Value seg_json = segment_to_json_value (segments.front());
-
-//	Json::Path path (".root.blaa.blubb");
-//	seg_json = path.make (seg_json);
-
-	cout << seg_json << endl;
-
-	exit(1);
-
-	ofstream file_out (filename, ios::trunc);
-
-	string tabs;
-
-	file_out << "{" << endl;
-	
-	tabs = "  ";
-
-	file_out << tabs << "\"bones\" : {" << endl;
-
-	tabs = tabs + "  ";
-
+	int bone_index = 0;
 	// we have to write out the bones recursively
 	for (int bi = 0; bi < bones.size(); bi++) {
 		stack<BonePtr> bone_stack;
@@ -398,8 +394,13 @@ void ModelData::saveToFile (const char* filename) {
 			child_index_stack.push(0);
 		}
 
-		if (bone_stack.top()->name != "BASE")
-			serialize_bone (file_out, "undefined", bone_stack.top(), tabs);
+		if (bone_stack.top()->name != "BASE") {
+			bone_index++;
+			ostringstream name_stream;
+			name_stream << "bone-" << setw(3) << setfill('0') << bone_index;
+
+			root_node["bones"][name_stream.str()] = bone_to_json_value(bone_stack.top());
+		}
 
 		while (bone_stack.size() > 0) {
 			BonePtr cur_bone = bone_stack.top();
@@ -408,7 +409,12 @@ void ModelData::saveToFile (const char* filename) {
 			if (child_idx < cur_bone->children.size()) {
 				BonePtr child_bone = cur_bone->children[child_idx];
 
-				serialize_bone (file_out, cur_bone->name, child_bone, tabs);
+				bone_index++;
+				ostringstream name_stream;
+				name_stream << "bone-" << setw(3) << setfill('0') << bone_index;
+
+				root_node["bones"][name_stream.str()] = bone_to_json_value(child_bone);
+				root_node["bones"][name_stream.str()]["parent"] = cur_bone->name;
 				
 				child_index_stack.pop();
 				child_index_stack.push (child_idx + 1);
@@ -426,26 +432,16 @@ void ModelData::saveToFile (const char* filename) {
 		}
 	}
 
-	tabs = tabs.substr (0, tabs.size() - 2);
-	file_out << tabs << "}," << endl << endl;
-
 	// segments
-	file_out << tabs << "\"segments\" : {" << endl;
-
-	tabs = tabs + "  ";
 	SegmentList::iterator seg_iter = segments.begin();
 	while (seg_iter != segments.end()) {
-		serialize_segment (file_out, *seg_iter, tabs);
+		root_node["segments"][seg_iter->name] = segment_to_json_value (*seg_iter);
+
 		seg_iter++;
 	}
 
-	tabs = tabs.substr (0, tabs.size() - 2);
-
-	file_out << tabs << "}," << endl;
-
-	tabs = tabs.substr (0, tabs.size() - 2);
-
-	file_out << tabs << "}" << endl << endl;
-
+	ofstream file_out (filename, ios::trunc);
 	file_out.close();
+
+	cout << root_node << endl;
 }
