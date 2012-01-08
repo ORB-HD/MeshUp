@@ -32,7 +32,8 @@ namespace Json {
       nullValue = 0, ///< 'null' value
       intValue,      ///< signed integer value
       uintValue,     ///< unsigned integer value
-      realValue,     ///< double value
+      realValue,     ///< float value
+			realDoubleValue, ///< double value
       stringValue,   ///< UTF-8 string value
       booleanValue,  ///< bool value
       arrayValue,    ///< array value (ordered list)
@@ -218,6 +219,7 @@ namespace Json {
       Value( Int64 value );
       Value( UInt64 value );
 #endif // if defined(JSON_HAS_INT64)
+      Value( float value );
       Value( double value );
       Value( const char *value );
       Value( const char *beginValue, const char *endValue );
@@ -278,6 +280,7 @@ namespace Json {
       bool isInt() const;
       bool isUInt() const;
       bool isIntegral() const;
+      bool isFloat() const;
       bool isDouble() const;
       bool isNumeric() const;
       bool isString() const;
@@ -479,7 +482,8 @@ namespace Json {
       {
          LargestInt int_;
          LargestUInt uint_;
-         double real_;
+         float real_;
+         double realDouble_;
          bool bool_;
          char *string_;
 # ifdef JSON_VALUE_USE_INTERNAL_MAP

@@ -321,7 +321,7 @@ void GLWidget::initializeGL()
 
 	model_data.saveToFile("testmodel.json");
 
-//	exit(1);
+	exit(1);
 }
 
 void GLWidget::updateSphericalCoordinates() {

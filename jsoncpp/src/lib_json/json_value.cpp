@@ -249,8 +249,11 @@ Value::Value( ValueType type )
    case uintValue:
       value_.int_ = 0;
       break;
-   case realValue:
-      value_.real_ = 0.0;
+	 case realValue:
+			value_.real_ = 0.f;
+			break;
+   case realDoubleValue:
+      value_.realDouble_ = 0.0;
       break;
    case stringValue:
       value_.string_ = 0;
@@ -322,7 +325,7 @@ Value::Value( UInt64 value )
    value_.uint_ = value;
 }
 
-Value::Value( double value )
+Value::Value( float value )
    : type_( realValue )
    , comments_( 0 )
 # ifdef JSON_VALUE_USE_INTERNAL_MAP
@@ -330,6 +333,16 @@ Value::Value( double value )
 #endif
 {
    value_.real_ = value;
+}
+
+Value::Value( double value )
+   : type_( realDoubleValue )
+   , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
+{
+   value_.realDouble_ = value;
 }
 
 Value::Value( const char *value )
@@ -420,6 +433,7 @@ Value::Value( const Value &other )
    case intValue:
    case uintValue:
    case realValue:
+   case realDoubleValue:
    case booleanValue:
       value_ = other.value_;
       break;
@@ -469,6 +483,7 @@ Value::~Value()
    case intValue:
    case uintValue:
    case realValue:
+   case realDoubleValue:
    case booleanValue:
       break;
    case stringValue:
@@ -550,6 +565,8 @@ Value::operator <( const Value &other ) const
       return value_.uint_ < other.value_.uint_;
    case realValue:
       return value_.real_ < other.value_.real_;
+   case realDoubleValue:
+      return value_.realDouble_ < other.value_.realDouble_;
    case booleanValue:
       return value_.bool_ < other.value_.bool_;
    case stringValue:
@@ -616,6 +633,8 @@ Value::operator ==( const Value &other ) const
       return value_.uint_ == other.value_.uint_;
    case realValue:
       return value_.real_ == other.value_.real_;
+   case realDoubleValue:
+      return value_.realDouble_ == other.value_.realDouble_;
    case booleanValue:
       return value_.bool_ == other.value_.bool_;
    case stringValue:
@@ -668,6 +687,7 @@ Value::asString() const
    case intValue:
    case uintValue:
    case realValue:
+   case realDoubleValue:
    case arrayValue:
    case objectValue:
       JSON_FAIL_MESSAGE( "Type is not convertible to string" );
@@ -699,9 +719,12 @@ Value::asInt() const
    case uintValue:
       JSON_ASSERT_MESSAGE( value_.uint_ <= UInt(maxInt), "unsigned integer out of signed int range" );
       return Int(value_.uint_);
-   case realValue:
+	 case realValue:
       JSON_ASSERT_MESSAGE( value_.real_ >= minInt  &&  value_.real_ <= maxInt, "Real out of signed integer range" );
       return Int( value_.real_ );
+	 case realDoubleValue:
+      JSON_ASSERT_MESSAGE( value_.realDouble_ >= minInt  &&  value_.realDouble_ <= maxInt, "Real out of signed integer range" );
+      return Int( value_.realDouble_ );
    case booleanValue:
       return value_.bool_ ? 1 : 0;
    case stringValue:
@@ -732,6 +755,9 @@ Value::asUInt() const
    case realValue:
       JSON_ASSERT_MESSAGE( value_.real_ >= 0  &&  value_.real_ <= maxUInt,  "Real out of unsigned integer range" );
       return UInt( value_.real_ );
+   case realDoubleValue:
+      JSON_ASSERT_MESSAGE( value_.realDouble_ >= 0  &&  value_.realDouble_ <= maxUInt,  "Real out of unsigned integer range" );
+      return UInt( value_.realDouble_ );
    case booleanValue:
       return value_.bool_ ? 1 : 0;
    case stringValue:
@@ -762,6 +788,9 @@ Value::asInt64() const
    case realValue:
       JSON_ASSERT_MESSAGE( value_.real_ >= minInt64  &&  value_.real_ <= maxInt64, "Real out of Int64 range" );
       return Int( value_.real_ );
+   case realDoubleValue:
+      JSON_ASSERT_MESSAGE( value_.realDouble_ >= 0  &&  value_.realDouble_ <= maxUInt,  "Real out of integer range" );
+      return Int( value_.realDouble_ );
    case booleanValue:
       return value_.bool_ ? 1 : 0;
    case stringValue:
@@ -790,6 +819,9 @@ Value::asUInt64() const
    case realValue:
       JSON_ASSERT_MESSAGE( value_.real_ >= 0  &&  value_.real_ <= maxUInt64,  "Real out of UInt64 range" );
       return UInt( value_.real_ );
+   case realDoubleValue:
+      JSON_ASSERT_MESSAGE( value_.realDouble_ >= 0  &&  value_.realDouble_ <= maxUInt,  "Real out of UInt64 range" );
+      return UInt( value_.realDouble_ );
    case booleanValue:
       return value_.bool_ ? 1 : 0;
    case stringValue:
@@ -842,7 +874,9 @@ Value::asDouble() const
       return static_cast<double>( Int(value_.uint_/2) ) * 2 + Int(value_.uint_ & 1);
 #endif // if !defined(JSON_USE_INT64_DOUBLE_CONVERSION)
    case realValue:
-      return value_.real_;
+      return static_cast<double>(value_.real_);
+   case realDoubleValue:
+      return value_.realDouble_;
    case booleanValue:
       return value_.bool_ ? 1.0 : 0.0;
    case stringValue:
@@ -871,8 +905,10 @@ Value::asFloat() const
       return static_cast<float>( Int(value_.uint_/2) ) * 2 + Int(value_.uint_ & 1);
 #endif // if !defined(JSON_USE_INT64_DOUBLE_CONVERSION)
    case realValue:
-      return static_cast<float>( value_.real_ );
-   case booleanValue:
+      return value_.real_;
+   case realDoubleValue:
+      return static_cast<float>( value_.realDouble_ );
+ 	 case booleanValue:
       return value_.bool_ ? 1.0f : 0.0f;
    case stringValue:
    case arrayValue:
@@ -895,7 +931,9 @@ Value::asBool() const
    case uintValue:
       return value_.int_ != 0;
    case realValue:
-      return value_.real_ != 0.0;
+      return value_.real_ != 0.f;
+   case realDoubleValue:
+      return value_.realDouble_ != 0.0;
    case booleanValue:
       return value_.bool_;
    case stringValue:
@@ -922,6 +960,7 @@ Value::isConvertibleTo( ValueType other ) const
              || other == intValue
              || ( other == uintValue  && value_.int_ >= 0 )
              || other == realValue
+             || other == realDoubleValue
              || other == stringValue
              || other == booleanValue;
    case uintValue:
@@ -929,6 +968,7 @@ Value::isConvertibleTo( ValueType other ) const
              || ( other == intValue  && value_.uint_ <= (unsigned)maxInt )
              || other == uintValue
              || other == realValue
+             || other == realDoubleValue
              || other == stringValue
              || other == booleanValue;
    case realValue:
@@ -936,6 +976,15 @@ Value::isConvertibleTo( ValueType other ) const
              || ( other == intValue  &&  value_.real_ >= minInt  &&  value_.real_ <= maxInt )
              || ( other == uintValue  &&  value_.real_ >= 0  &&  value_.real_ <= maxUInt )
              || other == realValue
+             || other == realDoubleValue
+             || other == stringValue
+             || other == booleanValue;
+   case realDoubleValue:
+      return ( other == nullValue  &&  value_.realDouble_ == 0.0 )
+             || ( other == intValue  &&  value_.realDouble_ >= minInt  &&  value_.realDouble_ <= maxInt )
+             || ( other == uintValue  &&  value_.realDouble_ >= 0  &&  value_.realDouble_ <= maxUInt )
+             || other == realValue
+             || other == realDoubleValue
              || other == stringValue
              || other == booleanValue;
    case booleanValue:
@@ -943,6 +992,7 @@ Value::isConvertibleTo( ValueType other ) const
              || other == intValue
              || other == uintValue
              || other == realValue
+             || other == realDoubleValue
              || other == stringValue
              || other == booleanValue;
    case stringValue:
@@ -971,6 +1021,7 @@ Value::size() const
    case intValue:
    case uintValue:
    case realValue:
+   case realDoubleValue:
    case booleanValue:
    case stringValue:
       return 0;
@@ -1400,9 +1451,15 @@ Value::isIntegral() const
 
 
 bool 
-Value::isDouble() const
+Value::isFloat() const
 {
    return type_ == realValue;
+}
+
+bool 
+Value::isDouble() const
+{
+   return type_ == realDoubleValue;
 }
 
 

@@ -4,6 +4,8 @@
 
 #include "SimpleMathGL.h"
 
+#include "json/json.h"
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -344,7 +346,36 @@ void serialize_segment (ostream &stream_out, const Segment &segment, const strin
 	stream_out << tabs << "}," << endl;
 }
 
+Json::Value vec3_to_json (const Vector3f &vec) {
+	Json::Value result;
+	result[0] = vec[0];
+	result[1] = vec[1];
+	result[2] = vec[2];
+	return result;
+}
+
+Json::Value segment_to_json_value (const Segment &segment) {
+	using namespace Json;
+
+	Value result;
+
+	result[segment.name]["dimensions"] = vec3_to_json (segment.dimensions);
+
+	return result;
+}
+
 void ModelData::saveToFile (const char* filename) {
+	Json::StyledWriter writer;
+
+	Json::Value seg_json = segment_to_json_value (segments.front());
+
+//	Json::Path path (".root.blaa.blubb");
+//	seg_json = path.make (seg_json);
+
+	cout << seg_json << endl;
+
+	exit(1);
+
 	ofstream file_out (filename, ios::trunc);
 
 	string tabs;

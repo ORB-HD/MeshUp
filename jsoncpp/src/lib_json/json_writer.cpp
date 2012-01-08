@@ -72,6 +72,45 @@ std::string valueToString( UInt value )
 #endif // # if defined(JSON_HAS_INT64)
 
 
+std::string valueToString( float value )
+{
+   char buffer[32];
+#if defined(_MSC_VER) && defined(__STDC_SECURE_LIB__) // Use secure version with visual studio 2005 to avoid warning. 
+   sprintf_s(buffer, sizeof(buffer), "%#.8g", value); 
+#else	
+   sprintf(buffer, "%#.8g", value); 
+#endif
+   char* ch = buffer + strlen(buffer) - 1;
+   if (*ch != '0') return buffer; // nothing to truncate, so save time
+   while(ch > buffer && *ch == '0'){
+     --ch;
+   }
+   char* last_nonzero = ch;
+   while(ch >= buffer){
+     switch(*ch){
+     case '0':
+     case '1':
+     case '2':
+     case '3':
+     case '4':
+     case '5':
+     case '6':
+     case '7':
+     case '8':
+     case '9':
+       --ch;
+       continue;
+     case '.':
+       // Truncate zeroes to save bytes in output, but keep one.
+       *(last_nonzero+2) = '\0';
+       return buffer;
+     default:
+       return buffer;
+     }
+   }
+   return buffer;
+}
+
 std::string valueToString( double value )
 {
    char buffer[32];
@@ -228,6 +267,9 @@ FastWriter::writeValue( const Value &value )
       document_ += valueToString( value.asLargestUInt() );
       break;
    case realValue:
+      document_ += valueToString( value.asFloat() );
+      break;
+   case realDoubleValue:
       document_ += valueToString( value.asDouble() );
       break;
    case stringValue:
@@ -311,6 +353,9 @@ StyledWriter::writeValue( const Value &value )
       pushValue( valueToString( value.asLargestUInt() ) );
       break;
    case realValue:
+      pushValue( valueToString( value.asFloat() ) );
+      break;
+   case realDoubleValue:
       pushValue( valueToString( value.asDouble() ) );
       break;
    case stringValue:
@@ -587,6 +632,9 @@ StyledStreamWriter::writeValue( const Value &value )
       pushValue( valueToString( value.asLargestUInt() ) );
       break;
    case realValue:
+      pushValue( valueToString( value.asFloat() ) );
+      break;
+   case realDoubleValue:
       pushValue( valueToString( value.asDouble() ) );
       break;
    case stringValue:

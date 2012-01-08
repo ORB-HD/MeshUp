@@ -1,5 +1,9 @@
 syntax:glob
 
+jsoncpp/dist/
+jsoncpp/devtools/*.pyc
+jsoncpp/doc/doxyfile
+
 simpleqtgl
 CMakeCache.txt
 CMakeFiles
