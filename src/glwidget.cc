@@ -470,6 +470,10 @@ void GLWidget::initializeGL()
 			);
 
 	model_data.setAnimationLoop(true);
+
+	model_data.saveToFile("testmodel.json");
+
+	exit(1);
 }
 
 void GLWidget::updateSphericalCoordinates() {

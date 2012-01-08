@@ -6,6 +6,9 @@
 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <ostream>
+#include <stack>
 
 using namespace std;
 
@@ -306,4 +309,70 @@ void ModelData::draw() {
 
 		seg_iter++;
 	}
+}
+
+void serialize_bone (ostream &stream_out, BonePtr bone, const string &tabs) {
+	stream_out << tabs << "\"" << bone->name << "\" {" << endl;
+	stream_out << tabs << "  \"parent_translation\": " << bone->parent_translation.transpose() << "," << endl;
+	stream_out << tabs << "  \"parent_rotation_ZYXeuler\": " << bone->parent_rotation_ZYXeuler.transpose() << "," << endl;
+}
+
+void ModelData::saveToFile (const char* filename) {
+	ofstream file_out (filename, ios::trunc);
+
+	string tabs;
+
+	file_out << "\"bones\" {" << endl;
+
+	tabs = "  ";
+
+	// we have to write out the bones recursively
+	for (int bi = 0; bi < bones.size(); bi++) {
+		stack<BonePtr> bone_stack;
+		bone_stack.push (bones[bi]);
+
+		stack<int> child_index_stack;
+		if (bone_stack.top()->children.size() > 0) {
+			child_index_stack.push(0);
+		}
+
+		serialize_bone (file_out, bone_stack.top(), tabs);
+
+		while (bone_stack.size() > 0) {
+			BonePtr cur_bone = bone_stack.top();
+			int child_idx = child_index_stack.top();
+
+			if (child_idx < cur_bone->children.size()) {
+				BonePtr child_bone = cur_bone->children[child_idx];
+
+				serialize_bone (file_out, child_bone, tabs);
+				
+				child_index_stack.pop();
+				child_index_stack.push (child_idx + 1);
+
+				if (child_bone->children.size() > 0) {
+					bone_stack.push (child_bone);
+					child_index_stack.push(0);
+
+					file_out << tabs << "  \"children\": {" << endl;
+					tabs = tabs + "  ";
+				}
+			} else {
+				tabs = tabs.substr (0, tabs.size() - 2);
+				file_out << tabs << "}," << endl << endl;
+
+				if (bone_stack.top()->children.size() - 1 == child_index_stack.top()) {
+					file_out << tabs << "}," << endl;
+				}
+
+				bone_stack.pop();
+				child_index_stack.pop();
+			}
+
+//			bone_stack.pop();
+		}
+	}
+
+
+	file_out.close();
 }

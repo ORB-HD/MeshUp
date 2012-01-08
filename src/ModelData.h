@@ -205,6 +205,8 @@ struct ModelData {
 	void updateBones();
 
 	void draw();
+
+	void saveToFile (const char* filename);
 };
 
 #endif
