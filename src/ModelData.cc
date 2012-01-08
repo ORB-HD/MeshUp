@@ -435,8 +435,6 @@ void ModelData::saveToFile (const char* filename) {
 	ofstream file_out (filename, ios::trunc);
 	file_out << root_node << endl;
 	file_out.close();
-
-	cout << root_node << endl;
 }
 
 void ModelData::loadFromFile (const char* filename) {
@@ -445,8 +443,15 @@ void ModelData::loadFromFile (const char* filename) {
 	Reader reader;
 
 	ifstream file_in (filename);
+
+	if (!file_in) {
+		cerr << "Error opening file " << filename << "!" << endl;
+		exit(1);
+	}
+
 	stringstream buffer;
 	buffer << file_in.rdbuf();
+	file_in.close();
 
 	bool parsing_result = reader.parse (buffer.str(), root);
 	if (!parsing_result) {
