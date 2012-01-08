@@ -124,9 +124,9 @@ void GLWidget::initializeGL()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-//	model_data.saveToFile("testmodel.json");
 //	model_data.saveToFile("testmodel_backup.json");
 	model_data.loadFromFile("models/samplemodel.json");
+	model_data.saveToFile("testmodel.json");
 	model_data.setAnimationLoop(true);
 
 	model_data.addBonePose (

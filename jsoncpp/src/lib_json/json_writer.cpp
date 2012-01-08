@@ -76,9 +76,9 @@ std::string valueToString( float value )
 {
    char buffer[32];
 #if defined(_MSC_VER) && defined(__STDC_SECURE_LIB__) // Use secure version with visual studio 2005 to avoid warning. 
-   sprintf_s(buffer, sizeof(buffer), "%#.8g", value); 
+   sprintf_s(buffer, sizeof(buffer), "%#.7g", value); 
 #else	
-   sprintf(buffer, "%#.8g", value); 
+   sprintf(buffer, "%#.7g", value); 
 #endif
    char* ch = buffer + strlen(buffer) - 1;
    if (*ch != '0') return buffer; // nothing to truncate, so save time
