@@ -4,7 +4,7 @@ jsoncpp/dist/
 jsoncpp/devtools/*.pyc
 jsoncpp/doc/doxyfile
 
-simpleqtgl
+meshup
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
@@ -15,12 +15,9 @@ Makefile
 include/config.h
 ./ui_*.h
 
-figureview
-qtfigureview
 runtests
 
 moc_*.cxx
-libcal3d/doc/html/*
 
 *.a
 *.o
