@@ -51,34 +51,45 @@ inline Matrix44f smScale (float x, float y, float z) {
  */
 class smQuaternion : public Vector4f {
 	public:
+		smQuaternion () :
+			Vector4f (0.f, 0.f, 0.f, 1.f)
+		{}
+		smQuaternion (const Vector4f vec4) :
+			Vector4f (vec4)
+		{}
 		smQuaternion (float x, float y, float z, float w):
 			Vector4f (x, y, z, w)
 		{}
-		smQuaternion operator* (const smQuaternion &quat) const {
-			// we basically want to do a
-			//   quat * this
-
-			Vector3f v1 (quat[0], quat[1], quat[2]);
-			Vector3f v2 ( (*this)[0], (*this)[1], (*this)[2]);
-			float w1 = quat[3];
-			float w2 = (*this)[3];
-
-			Vector3f v = w1 * v2 + w2 * v1 + v1.cross(v2);
-
+		/** This function is equivalent to multiplicate their corresponding rotation matrices */
+		smQuaternion operator* (const smQuaternion &q) const {
 			return smQuaternion (
-					v[0], v[1], v[2],
-					w1 * w2 - v1.transpose() * v2
+					q[3] * (*this)[0] + q[0] * (*this)[3] + q[1] * (*this)[2] - q[2] * (*this)[1],
+					q[3] * (*this)[1] + q[1] * (*this)[3] + q[2] * (*this)[0] - q[0] * (*this)[2],
+					q[3] * (*this)[2] + q[2] * (*this)[3] + q[0] * (*this)[1] - q[1] * (*this)[0],
+					q[3] * (*this)[3] - q[0] * (*this)[0] - q[1] * (*this)[1] - q[2] * (*this)[2]
 					);
+		}
+		smQuaternion& operator*=(const smQuaternion &q) {
+			set (q[3] * (*this)[0] + q[0] * (*this)[3] + q[1] * (*this)[2] - q[2] * (*this)[1],
+					q[3] * (*this)[1] + q[1] * (*this)[3] + q[2] * (*this)[0] - q[0] * (*this)[2],
+					q[3] * (*this)[2] + q[2] * (*this)[3] + q[0] * (*this)[1] - q[1] * (*this)[0],
+					q[3] * (*this)[3] - q[0] * (*this)[0] - q[1] * (*this)[1] - q[2] * (*this)[2]
+					);
+			return *this;
 		}
 
 		static smQuaternion fromGLRotate (float angle, float x, float y, float z) {
-			float st = sin (angle * M_PI / 360.f);
+			float st = sinf (angle * M_PI / 360.f);
 			return smQuaternion (
 						st * x,
 						st * y,
 						st * z,
-						cos (angle * M_PI / 360.f)
+						cosf (angle * M_PI / 360.f)
 						);
+		}
+
+		smQuaternion normalize() {
+			return Vector4f::normalize();
 		}
 
 		Matrix44f toGLMatrix() const {
@@ -89,7 +100,7 @@ class smQuaternion : public Vector4f {
 			return Matrix44f (
 					1 - 2*y*y - 2*z*z,
 					2*x*y + 2*w*z,
-					2*x*y - 2*w*y,
+					2*x*z - 2*w*y,
 					0.f,
 
 					2*x*y - 2*w*z,

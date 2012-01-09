@@ -576,11 +576,13 @@ class Matrix {
 			return sqrt(this->squaredNorm());
 		}
 
-		void normalize() {
+		matrix_type normalize() {
 			val_type length = this->norm();
 
 			for (unsigned int i = 0; i < ncols * nrows; i++)
 				mData[i] /= length;
+
+			return *this;
 		}
 
 		Matrix<val_type, 3, 1> cross(const Matrix<val_type, 3, 1> &other_vector) {
