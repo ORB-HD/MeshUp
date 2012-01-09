@@ -1,4 +1,4 @@
-PROJECT ( QTSIMPLEGL )
+PROJECT ( MESHUP )
 
 CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
 
@@ -31,7 +31,7 @@ ADD_LIBRARY ( glew
 	glew/src/visualinfo.c
 	)
 
-ADD_LIBRARY ( ModelVis
+ADD_LIBRARY ( MeshUp
 	src/ModelData.cc
 	src/objloader.cc
 	)
@@ -58,7 +58,7 @@ QT4_WRAP_CPP ( SimpleQtGlApp_MOC_SRCS
 	src/glwidget.h
 	)
 
-ADD_EXECUTABLE ( simpleqtgl
+ADD_EXECUTABLE ( meshup
 	${SimpleQtGlApp_SRCS}
 	${SimpleQtGlApp_MOC_SRCS}
 	${MainWindow_UIS_H}
@@ -77,20 +77,20 @@ SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
 	INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" 
 )
 
-TARGET_LINK_LIBRARIES ( ModelVis
+TARGET_LINK_LIBRARIES ( MeshUp
 	${OPENGL_LIBRARIES}
 	glew
 	json
 	)
 
-TARGET_LINK_LIBRARIES ( simpleqtgl
+TARGET_LINK_LIBRARIES ( meshup
 	${QT_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	glew
-	ModelVis
+	MeshUp
 )
 
-INSTALL (TARGETS simpleqtgl
+INSTALL (TARGETS meshup
 RUNTIME DESTINATION bin
 LIBRARY DESTINATION lib
 )

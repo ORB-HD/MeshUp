@@ -31,7 +31,7 @@ IF ( UNITTEST++_FOUND )
 
 	TARGET_LINK_LIBRARIES ( viewertests
 			${UNITTEST++_LIBRARY}
-			ModelVis
+			MeshUp
 		)
 		
 	OPTION (RUN_AUTOMATIC_TESTS "Perform automatic tests after compilation?" OFF)
