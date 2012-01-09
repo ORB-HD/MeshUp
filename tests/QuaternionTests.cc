@@ -49,5 +49,4 @@ TEST ( QuaternionSlerpTest ) {
 
 	Matrix44f rot_matrix = smRotate (35.f, 1.f, 0.f, 0.f);
 	CHECK_ARRAY_CLOSE (rot_matrix.data(), q_slerped.toGLMatrix().data(), 16, 1.0e-6);
-	cout << q_slerped.transpose() << endl;
 }

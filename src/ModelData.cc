@@ -115,20 +115,16 @@ void MeshData::draw() {
  * Bone
  *********************************/
 void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
-	// first translate, then rotate Z, Y, X
+	// first translate, then rotate as specified in the angles
 	pose_transform = 
-		smRotate (parent_rotation_ZYXeuler[0], 1.f, 0.f, 0.f)
-		* smRotate (parent_rotation_ZYXeuler[1], 0.f, 1.f, 0.f)
-		* smRotate (parent_rotation_ZYXeuler[2], 0.f, 0.f, 1.f)
+		rotation_angles_to_matrix (parent_rotation)
 		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
 		* parent_pose_transform;
 
 	// apply pose transform
 	pose_transform =
 		smScale (pose_scaling[0], pose_scaling[1], pose_scaling[2])
-		* smRotate (pose_rotation_ZYXeuler[0], 1.f, 0.f, 0.f)
-		* smRotate (pose_rotation_ZYXeuler[1], 0.f, 1.f, 0.f)
-		* smRotate (pose_rotation_ZYXeuler[2], 0.f, 0.f, 1.f)
+	  * rotation_angles_to_matrix (pose_rotation)
 		* smTranslate (pose_translation[0], pose_translation[1], pose_translation[2])
 		* pose_transform;
 
@@ -184,7 +180,7 @@ BonePose BoneAnimationTrack::interpolatePose (float time) {
 	// perform the interpolation
 	end_pose.timestamp = start_pose.timestamp + fraction * (end_pose.timestamp - start_pose.timestamp);
 	end_pose.translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
-	end_pose.rotation_ZYXeuler = start_pose.rotation_ZYXeuler + fraction * (end_pose.rotation_ZYXeuler - start_pose.rotation_ZYXeuler);
+	end_pose.rotation = start_pose.rotation + fraction * (end_pose.rotation - start_pose.rotation);
 	end_pose.scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
 
 	return end_pose;
@@ -197,13 +193,13 @@ void ModelData::addBone (
 		const std::string &parent_bone_name,
 		const std::string &bone_name,
 		const Vector3f &parent_translation,
-		const Vector3f &parent_rotation_ZYXeuler) {
+		const Vector3f &parent_rotation) {
 
 	// create the bone
 	BonePtr bone (new Bone);
 	bone->name = bone_name;
 	bone->parent_translation = parent_translation;
-	bone->parent_rotation_ZYXeuler = parent_rotation_ZYXeuler;
+	bone->parent_rotation = parent_rotation;
 
 	// first find the bone
 	BonePtr parent_bone = findBone (parent_bone_name.c_str());
@@ -255,14 +251,14 @@ void ModelData::addBonePose (
 		const std::string &bone_name,
 		float time,
 		const Vector3f &bone_translation,
-		const Vector3f &bone_rotation_ZYXeuler,
+		const Vector3f &bone_rotation,
 		const Vector3f &bone_scaling
 		) {
 	BonePtr bone = findBone (bone_name.c_str());
 	BonePose pose;
 	pose.timestamp = time;
 	pose.translation = bone_translation;
-	pose.rotation_ZYXeuler = bone_rotation_ZYXeuler;
+	pose.rotation = bone_rotation;
 	pose.scaling = bone_scaling;
 
 	animation.bonetracks[bone].poses.push_back(pose);
@@ -290,7 +286,7 @@ void ModelData::updatePose(float time_sec) {
 	while (bone_track_iter != animation.bonetracks.end()) {
 		BonePose pose = bone_track_iter->second.interpolatePose (animation.current_time);
 		bone_track_iter->first->pose_translation = pose.translation;
-		bone_track_iter->first->pose_rotation_ZYXeuler = pose.rotation_ZYXeuler;
+		bone_track_iter->first->pose_rotation = pose.rotation;
 		bone_track_iter->first->pose_scaling = pose.scaling;
 
 		bone_track_iter++;
@@ -355,7 +351,7 @@ Json::Value bone_to_json_value (const BonePtr &bone) {
 
 	result["name"] = bone->name;
 	result["parent_translation"] = vec3_to_json(bone->parent_translation);
-	result["parent_rotation_ZYXeuler"] = vec3_to_json(bone->parent_rotation_ZYXeuler);
+	result["parent_rotation"] = vec3_to_json(bone->parent_rotation);
 
 	return result;
 }
@@ -475,7 +471,7 @@ void ModelData::loadFromFile (const char* filename) {
 				bone_node["parent"].asString(),
 				bone_node["name"].asString(),
 				json_to_vec3 (bone_node["parent_translation"]),
-				json_to_vec3 (bone_node["parent_rotation_ZYXeuler"])
+				json_to_vec3 (bone_node["parent_rotation"])
 				);
 
 		node_iter++;

@@ -8,13 +8,13 @@
 #include <boost/shared_ptr.hpp>
 
 #include "SimpleMath.h"
+#include "SimpleMathGL.h"
 
-struct Material {
-	Vector4d ambient;
-	Vector4d diffuse;
-	Vector4d specular;
-	double shininess;
-};
+inline Matrix44f rotation_angles_to_matrix (const Vector3f rotation_angles) {
+	return	smRotate (rotation_angles[0], 1.f, 0.f, 0.f)
+		* smRotate (rotation_angles[1], 0.f, 1.f, 0.f)
+		* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
+}
 
 struct MeshData {
 	MeshData() :
@@ -60,19 +60,19 @@ struct Bone {
 	Bone() :
 		name (""),
 		parent_translation (0.f, 0.f, 0.f),
-		parent_rotation_ZYXeuler (0.f, 0.f, 0.f),
+		parent_rotation (0.f, 0.f, 0.f),
 		pose_translation (0.f, 0.f, 0.f),
-		pose_rotation_ZYXeuler (0.f, 0.f, 0.f),
+		pose_rotation (0.f, 0.f, 0.f),
 		pose_scaling (1.f, 1.f, 1.f),
 		pose_transform (Matrix44f::Identity ())
 	{}
 
 	std::string name;
 	Vector3f parent_translation;
-	Vector3f parent_rotation_ZYXeuler;
+	Vector3f parent_rotation;
 
 	Vector3f pose_translation;
-	Vector3f pose_rotation_ZYXeuler;
+	Vector3f pose_rotation;
 	Vector3f pose_scaling;
 
 	/** Transformation from base to pose */
@@ -106,14 +106,14 @@ struct BonePose {
 	BonePose() :
 		timestamp (-1.f),
 		translation (0.f, 0.f, 0.f),
-		rotation_ZYXeuler (0.f, 0.f, 0.f),
+		rotation (0.f, 0.f, 0.f),
 		scaling (1.f, 1.f, 1.f),
 		endpoint (0.f, 1.f, 0.f)
 	{}
 
 	float timestamp;
 	Vector3f translation;
-	Vector3f rotation_ZYXeuler;
+	Vector3f rotation;
 	Vector3f scaling;
 	Vector3f endpoint;
 };
@@ -147,7 +147,7 @@ struct ModelData {
 		BonePtr base_bone (new (Bone));
 		base_bone->name = "BASE";
 		base_bone->parent_translation.setZero();
-		base_bone->parent_rotation_ZYXeuler.setZero();
+		base_bone->parent_rotation.setZero();
 
 		bones.push_back (base_bone);
 		bonemap["BASE"] = base_bone;
@@ -169,7 +169,7 @@ struct ModelData {
 			const std::string &parent_bone_name,
 			const std::string &bone_name,
 			const Vector3f &parent_translation,
-			const Vector3f &parent_rotation_ZYXeuler);
+			const Vector3f &parent_rotation);
 
 	void addSegment (
 			const std::string &bone_name,
@@ -183,7 +183,7 @@ struct ModelData {
 			const std::string &bone_name,
 			float time,
 			const Vector3f &bone_translation,
-			const Vector3f &bone_rotation_ZYXeuler,
+			const Vector3f &bone_rotation,
 			const Vector3f &bone_scaling
 			);
 

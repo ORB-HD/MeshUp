@@ -6,77 +6,77 @@
 		{
 			"name" : "HIP",
 			"parent" : "BASE",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.0, 0.0 ]
 		},
 		
 		{
 			"name" : "UPPERBODY",
 			"parent" : "HIP",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.250, 0.0 ]
 		},
 		
 		{
 			"name" : "UPPERARM_L",
 			"parent" : "UPPERBODY",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.650, -0.40 ]
 		},
 		
 		{
 			"name" : "LOWERARM_L",
 			"parent" : "UPPERARM_L",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, -0.450, 0.0 ]
 		},
 		
 		{
 			"name" : "UPPERARM_R",
 			"parent" : "UPPERBODY",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.650, 0.40 ]
 		},
 		
 		{
 			"name" : "LOWERARM_R",
 			"parent" : "UPPERARM_R",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, -0.450, 0.0 ]
 		},
 		
 		{
 			"name" : "HEAD",
 			"parent" : "UPPERBODY",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.70, 0.0 ]
 		},
 		
 		{
 			"name" : "UPPERLEG_L",
 			"parent" : "HIP",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.0, -0.150 ]
 		},
 		
 		{
 			"name" : "LOWERLEG_L",
 			"parent" : "UPPERLEG_L",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, -0.450, 0.0 ]
 		},
 		
 		{
 			"name" : "UPPERLEG_R",
 			"parent" : "HIP",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.0, 0.150 ]
 		},
 		
 		{
 			"name" : "LOWERLEG_R",
 			"parent" : "UPPERLEG_R",
-			"parent_rotation_ZYXeuler" : [ 0.0, 0.0, 0.0 ],
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, -0.450, 0.0 ]
 		}
 	],
