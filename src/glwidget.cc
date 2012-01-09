@@ -92,7 +92,9 @@ void GLWidget::initializeGL()
 		exit(1);
 	}
 
-	qDebug() << "Using GLEW: " << (const char*) glewGetString (GLEW_VERSION);
+	qDebug() << "Using GLEW     : " << (const char*) glewGetString (GLEW_VERSION);
+	qDebug() << "OpenGL Version : " << (const char*) glGetString (GL_VERSION);
+	qDebug() << "GLSL Version   : " << (const char*) glGetString (GL_SHADING_LANGUAGE_VERSION);
 
 	glClearColor (0.3, 0.3, 0.3, 1.);
 	glClearDepth (1.);
