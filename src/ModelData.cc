@@ -475,7 +475,7 @@ void ModelData::loadFromFile (const char* filename) {
 				bone_node["parent"].asString(),
 				bone_node["name"].asString(),
 				json_to_vec3 (bone_node["parent_translation"]),
-				json_to_vec3 (bone_node["parent_translation"])
+				json_to_vec3 (bone_node["parent_rotation_ZYXeuler"])
 				);
 
 		node_iter++;
