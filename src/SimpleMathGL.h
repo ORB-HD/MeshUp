@@ -92,6 +92,29 @@ class smQuaternion : public Vector4f {
 			return Vector4f::normalize();
 		}
 
+		smQuaternion slerp (float alpha, const smQuaternion &quat) {
+			// check whether one of the two has 0 length
+			float s = sqrt (squaredNorm() * quat.squaredNorm());
+
+			// division by 0.f is unhealthy!
+			assert (s != 0.f);
+
+			float angle = acos (dot(quat) / s);
+			if (angle == 0.f) {
+				return *this;
+			}
+	
+			float d = 1.f / sinf (angle);
+			float p0 = sinf ((1.f - alpha) * angle);
+			float p1 = sinf (alpha * angle);
+
+			if (dot (quat) < 0.f) {
+				return ( (*this) * p0 - quat * p1) * d;
+			}
+
+			return ( (*this) * p0 + quat * p1) * d;
+		}
+
 		Matrix44f toGLMatrix() const {
 			float x = (*this)[0];
 			float y = (*this)[1];
