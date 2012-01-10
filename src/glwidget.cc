@@ -126,6 +126,21 @@ void GLWidget::initializeGL()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
+	/*
+	// Fog stuff
+	glEnable (GL_FOG);
+
+	glFogi (GL_FOG_MODE, GL_LINEAR);
+	glFogfv (GL_FOG_COLOR, Vector4f (0.3f, 0.3f, 0.3f, 1.f).data());
+	glFogf (GL_FOG_DENSITY, 1.f);
+	glHint (GL_FOG_HINT, GL_DONT_CARE);
+
+	glFogf (GL_FOG_START, 20.0f);
+	glFogf (GL_FOG_END, 25.0f);
+	
+	glFogi (GL_FOG_COORD_SRC, GL_FRAGMENT_DEPTH);
+	*/
+
 //	model_data.saveToFile("testmodel_backup.json");
 	model_data.loadFromFile("models/samplemodel.json");
 //	model_data.saveToFile("testmodel.json");

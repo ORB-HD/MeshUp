@@ -316,7 +316,7 @@ void ModelData::draw() {
 	updateBones();
 
 	SegmentList::iterator seg_iter = segments.begin();
-	
+
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
 
