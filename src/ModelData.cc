@@ -14,6 +14,8 @@
 
 using namespace std;
 
+const bool use_vbo = true;
+
 void MeshData::begin() {
 	started = true;
 
@@ -98,17 +100,26 @@ void MeshData::draw() {
 		glShadeModel(GL_SMOOTH);
 	else
 		glShadeModel(GL_FLAT);
-		
-	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
-	glVertexPointer (3, GL_FLOAT, 0, 0);
-	glNormalPointer (GL_FLOAT, 0, (const GLvoid *) (vertices.size() * sizeof (float) * 3));
+	if (use_vbo) {
+		glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
-	glEnableClientState (GL_VERTEX_ARRAY);
-	glEnableClientState (GL_NORMAL_ARRAY);
+		glVertexPointer (3, GL_FLOAT, 0, 0);
+		glNormalPointer (GL_FLOAT, 0, (const GLvoid *) (vertices.size() * sizeof (float) * 3));
 
-	glDrawArrays (GL_TRIANGLES, 0, vertices.size());
-	glBindBuffer (GL_ARRAY_BUFFER, 0);
+		glEnableClientState (GL_VERTEX_ARRAY);
+		glEnableClientState (GL_NORMAL_ARRAY);
+
+		glDrawArrays (GL_TRIANGLES, 0, vertices.size());
+		glBindBuffer (GL_ARRAY_BUFFER, 0);
+	} else {
+		glBegin (GL_TRIANGLES);
+		for (int vi = 0; vi < vertices.size(); vi++) {
+			glNormal3fv (normals[vi].data());
+			glVertex3fv (vertices[vi].data());
+		}
+		glEnd();
+	}
 }
 
 /*********************************
