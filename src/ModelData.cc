@@ -398,9 +398,9 @@ Json::Value frame_configuration_to_json_value (const FrameConfiguration &config)
 	using namespace Json;
 
 	Value result;
-	result["front_axis"] = vec3_to_json (config.front_axis);
-	result["up_axis"] = vec3_to_json (config.up_axis);
-	result["right_axis"] = vec3_to_json (config.right_axis);
+	result["axis_front"] = vec3_to_json (config.axis_front);
+	result["axis_up"] = vec3_to_json (config.axis_up);
+	result["axis_right"] = vec3_to_json (config.axis_right);
 
 	result["rotation_order"][0] = config.rotation_order[0];
 	result["rotation_order"][1] = config.rotation_order[1];
@@ -529,12 +529,12 @@ void ModelData::loadFromFile (const char* filename) {
 	clear();
 
 	// read the configuration, fill with default values if they do not exist
-	if (root["configuration"]["front_axis"].isNull())
-		root["configuration"]["front_axis"] = vec3_to_json (Vector3f (1.f, 0.f, 0.f));
-	if (root["configuration"]["up_axis"].isNull())
-		root["configuration"]["up_axis"] = vec3_to_json (Vector3f (0.f, 1.f, 0.f));
-	if (root["configuration"]["right_axis"].isNull())
-		root["configuration"]["right_axis"] = vec3_to_json (Vector3f (0.f, 0.f, 1.f));
+	if (root["configuration"]["axis_front"].isNull())
+		root["configuration"]["axis_front"] = vec3_to_json (Vector3f (1.f, 0.f, 0.f));
+	if (root["configuration"]["axis_up"].isNull())
+		root["configuration"]["axis_up"] = vec3_to_json (Vector3f (0.f, 1.f, 0.f));
+	if (root["configuration"]["axis_right"].isNull())
+		root["configuration"]["axis_right"] = vec3_to_json (Vector3f (0.f, 0.f, 1.f));
 	if (root["configuration"]["rotation_order"][0].isNull())
 		root["configuration"]["rotation_order"][0] = 2;
 	if (root["configuration"]["rotation_order"][1].isNull())
@@ -542,24 +542,24 @@ void ModelData::loadFromFile (const char* filename) {
 	if (root["configuration"]["rotation_order"][2].isNull())
 		root["configuration"]["rotation_order"][2] = 0;
 
-	configuration.front_axis = json_to_vec3(root["configuration"]["front_axis"]);
-	configuration.up_axis = json_to_vec3(root["configuration"]["up_axis"]);
-	configuration.right_axis = json_to_vec3(root["configuration"]["right_axis"]);
+	configuration.axis_front = json_to_vec3(root["configuration"]["axis_front"]);
+	configuration.axis_up = json_to_vec3(root["configuration"]["axis_up"]);
+	configuration.axis_right = json_to_vec3(root["configuration"]["axis_right"]);
 	configuration.rotation_order[0] = root["configuration"]["rotation_order"][0].asInt();
 	configuration.rotation_order[1] = root["configuration"]["rotation_order"][1].asInt();
 	configuration.rotation_order[2] = root["configuration"]["rotation_order"][2].asInt();
 
 	configuration.update();
 
-	cout << "front: " << configuration.front_axis.transpose() << endl;
-	cout << "up   : " << configuration.up_axis.transpose() << endl;
-	cout << "right: " << configuration.right_axis.transpose() << endl;
-
-	cout << "rot  : " << configuration.rotation_order[0] 
-		<< ", " << configuration.rotation_order[1] 
-		<< ", " << configuration.rotation_order[2] << endl;
-
-	cout << "axes: " << endl << configuration.axes_rotation << endl;	
+//	cout << "front: " << configuration.axis_front.transpose() << endl;
+//	cout << "up   : " << configuration.axis_up.transpose() << endl;
+//	cout << "right: " << configuration.axis_right.transpose() << endl;
+//
+//	cout << "rot  : " << configuration.rotation_order[0] 
+//		<< ", " << configuration.rotation_order[1] 
+//		<< ", " << configuration.rotation_order[2] << endl;
+//
+//	cout << "axes: " << endl << configuration.axes_rotation << endl;	
 
 	// read the frames:
 	ValueIterator node_iter = root["frames"].begin();

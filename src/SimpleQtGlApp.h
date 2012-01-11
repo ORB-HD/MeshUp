@@ -12,6 +12,8 @@ class SimpleQtGlApp : public QMainWindow, public Ui::MainWindow
 public:
     SimpleQtGlApp(QWidget *parent = 0);
 
+		void parseArguments (int argc, char* argv[]);
+
 protected:
 		QTimer *timer;
 		QTimeLine *timeLine;

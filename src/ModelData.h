@@ -12,34 +12,34 @@
 
 struct FrameConfiguration {
 	FrameConfiguration() :
-		front_axis(1.f, 0.f, 0.f),
-		up_axis(0.f, 1.f, 0.f),
-		right_axis (0.f, 0.f, 1.f),
+		axis_front(1.f, 0.f, 0.f),
+		axis_up(0.f, 1.f, 0.f),
+		axis_right (0.f, 0.f, 1.f),
 		axes_rotation (Matrix33f::Identity())
 	{ 
 		rotation_order[0] = 2;
 		rotation_order[1] = 1;
 		rotation_order[2] = 0;
 	}
-	Vector3f front_axis;
-	Vector3f up_axis;
-	Vector3f right_axis;
+	Vector3f axis_front;
+	Vector3f axis_up;
+	Vector3f axis_right;
 	Matrix33f axes_rotation;
 
 	int rotation_order[3];
 
 	void update() {
-		axes_rotation(0,0) = front_axis[0];
-		axes_rotation(1,0) = front_axis[1];
-		axes_rotation(2,0) = front_axis[2];
+		axes_rotation(0,0) = axis_front[0];
+		axes_rotation(1,0) = axis_front[1];
+		axes_rotation(2,0) = axis_front[2];
 
-		axes_rotation(0,1) = up_axis[0];
-		axes_rotation(1,1) = up_axis[1];
-		axes_rotation(2,1) = up_axis[2];
+		axes_rotation(0,1) = axis_up[0];
+		axes_rotation(1,1) = axis_up[1];
+		axes_rotation(2,1) = axis_up[2];
 
-		axes_rotation(0,2) = right_axis[0];
-		axes_rotation(1,2) = right_axis[1];
-		axes_rotation(2,2) = right_axis[2];
+		axes_rotation(0,2) = axis_right[0];
+		axes_rotation(1,2) = axis_right[1];
+		axes_rotation(2,2) = axis_right[2];
 	}
 };
 
@@ -50,9 +50,9 @@ inline Matrix44f rotation_angles_to_matrix (const Vector3f rotation_angles, cons
 }
 
 inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angles, const FrameConfiguration &config) {
-	int a0 = config.rotation_order[0];
+	int a0 = config.rotation_order[2];
 	int a1 = config.rotation_order[1];
-	int a2 = config.rotation_order[2];
+	int a2 = config.rotation_order[0];
 
 	Vector3f axis_0 (
 			config.axes_rotation(a0, 0),
@@ -87,7 +87,7 @@ inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angle
 
 /*
 			rotation_angles[config.rotation_order[0]],
-			config.right_axis[0], con
+			config.axis_right[0], con
 			1.0, 0.f, 0.f
 			)
 		* smQuaternion::fromGLRotate (rotation_angles[config.rotation_order[1]], 0.f, 1.f, 0.f)

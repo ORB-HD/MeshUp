@@ -17,6 +17,7 @@ class GLWidget : public QGLWidget
 		QSize minimumSizeHint() const;
 		QSize sizeHint() const;
 
+		void loadModel (const char *filename);
 		float getAnimationDuration();
 
 	protected:
@@ -50,6 +51,10 @@ class GLWidget : public QGLWidget
 		unsigned int application_time_msec;
 		unsigned int first_frame_msec;
 		double delta_time_sec;
+
+		std::string model_filename;
+
+		bool opengl_initialized;
 
 	public slots:
 		void toggle_draw_grid(bool status);

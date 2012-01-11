@@ -15,7 +15,6 @@
 #include "glwidget.h"
 #include <GL/glu.h>
 
-#include "glprimitives.h"
 #include "ModelData.h"
 #include "timer.h"
 
@@ -29,7 +28,7 @@ double draw_time = 0.;
 int draw_count = 0;
 
 GLWidget::GLWidget(QWidget *parent)
-    : QGLWidget(parent)
+    : QGLWidget(parent), opengl_initialized (false)
 {
 	poi.setX(0.);
 	poi.setY(1.0);
@@ -51,18 +50,25 @@ GLWidget::GLWidget(QWidget *parent)
 
 	setFocusPolicy(Qt::StrongFocus);
 	setMouseTracking(true);
+
 }
 
 GLWidget::~GLWidget() {
-	qDebug() << "DESTRUCTOR: drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
+	cerr << "DESTRUCTOR: drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw" << endl;
 
 	makeCurrent();
-	glprimitives_destroy();
 }
 
-/****************
- * Slots
- ****************/
+void GLWidget::loadModel(const char* filename) {
+	if (opengl_initialized) {
+		qDebug() << "Loading model " << filename;
+		model_data.loadFromFile (filename);
+	} else {
+		// mark file for later loading
+		model_filename = filename;
+	}
+}
+
 void GLWidget::setAnimationTime (float fraction) {
 	model_data.setAnimationTime(fraction * model_data.getAnimationDuration());
 }
@@ -71,6 +77,9 @@ float GLWidget::getAnimationDuration() {
 	return model_data.getAnimationDuration();
 }
 
+/****************
+ * Slots
+ ****************/
 void GLWidget::toggle_draw_grid (bool status) {
 	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
 }
@@ -137,9 +146,6 @@ void GLWidget::initializeGL()
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
-	// initialize the glprimitives (cubes, etc.)
-	glprimitives_init();
-
 	// initialize lights
 	GLfloat light_ka[] = { 0.2f, 0.2f, 0.2f, 1.0f};
 	GLfloat light_kd[] = { 0.7f, 0.7f, 0.7f, 1.0f};
@@ -154,6 +160,11 @@ void GLWidget::initializeGL()
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+
+	opengl_initialized = true;
+
+	if (model_filename.size() != 0)
+		loadModel (model_filename.c_str());
 
 	/*
 	// Fog stuff
@@ -172,10 +183,11 @@ void GLWidget::initializeGL()
 
 //	model_data.saveToFile("testmodel_backup.json");
 //	model_data.loadFromFile("models/samplemodel.json");
-	model_data.loadFromFile("models/yzxrotation.json");
-	model_data.saveToFile("testmodel.json");
+//	model_data.loadFromFile("models/yzxrotation.json");
+//	model_data.saveToFile("testmodel.json");
 	model_data.setAnimationLoop(true);
 
+	/*
 	model_data.addFramePose (
 			"UPPERBODY",
 			0.,
@@ -223,6 +235,7 @@ void GLWidget::initializeGL()
 			Vector3f (30.f, 30.f, 30.f),
 			Vector3f (1.f, 1.f, 1.f)
 			);
+			*/
 	/*
 	model_data.addFramePose (
 			"HIP",
@@ -286,6 +299,9 @@ void GLWidget::updateCamera() {
 	eye.setZ(r * s_theta * s_phi);
 
 	eye += poi;
+
+	if (eye.y() < 0.)
+		eye.setY(0.f);
 
 	QVector3D right (-s_phi, 0., c_phi);
 

@@ -2,9 +2,9 @@
 {
 	"configuration" : 
 	{
-		"front_axis" : [ 1.0, 0.0, 0.0 ],
-		"right_axis" : [ 0.0, 0.0, 1.0 ],
-		"up_axis" : [ 0.0, 1.0, 0.0 ],
+		"axis_front" : [ 1.0, 0.0, 0.0 ],
+		"axis_right" : [ 0.0, 0.0, 1.0 ],
+		"axis_up" : [ 0.0, 1.0, 0.0 ],
 		"rotation_order" : [ 2, 1, 0 ]
 	},
 	"frames" : 
@@ -14,7 +14,7 @@
 			"name" : "HIP",
 			"parent" : "BASE",
 			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
-			"parent_translation" : [ 0.0, 0.0, 0.0 ]
+			"parent_translation" : [ 0.0, 0.9, 0.0 ]
 		},
 		
 		{
@@ -22,6 +22,69 @@
 			"parent" : "HIP",
 			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
 			"parent_translation" : [ 0.0, 0.250, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERARM_L",
+			"parent" : "UPPERBODY",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.650, -0.40 ]
+		},
+		
+		{
+			"name" : "LOWERARM_L",
+			"parent" : "UPPERARM_L",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.450, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERARM_R",
+			"parent" : "UPPERBODY",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.650, 0.40 ]
+		},
+		
+		{
+			"name" : "LOWERARM_R",
+			"parent" : "UPPERARM_R",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.450, 0.0 ]
+		},
+		
+		{
+			"name" : "HEAD",
+			"parent" : "UPPERBODY",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.70, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERLEG_L",
+			"parent" : "HIP",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.0, -0.150 ]
+		},
+		
+		{
+			"name" : "LOWERLEG_L",
+			"parent" : "UPPERLEG_L",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.450, 0.0 ]
+		},
+		
+		{
+			"name" : "UPPERLEG_R",
+			"parent" : "HIP",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, 0.0, 0.150 ]
+		},
+		
+		{
+			"name" : "LOWERLEG_R",
+			"parent" : "UPPERLEG_R",
+			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
+			"parent_translation" : [ 0.0, -0.450, 0.0 ]
 		}
 	],
 	"segments" : 
@@ -43,6 +106,87 @@
 			"mesh_center" : [ 0.0, 0.350, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperBody"
+		},
+		
+		{
+			"color" : [ 0.10, 0.10, 0.80 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERARM_L",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperArm_L"
+		},
+		
+		{
+			"color" : [ 0.20, 0.20, 0.90 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERARM_L",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerArm_L"
+		},
+		
+		{
+			"color" : [ 0.80, 0.10, 0.10 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERARM_R",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperArm_R"
+		},
+		
+		{
+			"color" : [ 0.80, 0.20, 0.20 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERARM_R",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerArm_R"
+		},
+		
+		{
+			"color" : [ 0.10, 0.70, 0.10 ],
+			"dimensions" : [ 0.40, 0.450, 0.40 ],
+			"frame" : "HEAD",
+			"mesh_center" : [ 0.0, 0.2250, 0.0 ],
+			"mesh_filename" : "meshes/monkeyhead.obj",
+			"name" : "Head"
+		},
+		
+		{
+			"color" : [ 0.10, 0.10, 0.80 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERLEG_L",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperLeg_L"
+		},
+		
+		{
+			"color" : [ 0.20, 0.20, 0.90 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERLEG_L",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerLeg_L"
+		},
+		
+		{
+			"color" : [ 0.80, 0.10, 0.10 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERLEG_R",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "UpperLeg_R"
+		},
+		
+		{
+			"color" : [ 0.90, 0.20, 0.20 ],
+			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERLEG_R",
+			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
+			"mesh_filename" : "meshes/unit_cube.obj",
+			"name" : "LowerLeg_R"
 		}
 	]
 }

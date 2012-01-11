@@ -47,9 +47,8 @@ SET ( MainWindow_UIS
 QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
 
 SET ( SimpleQtGlApp_SRCS
-	src/qtmain.cc
+	src/main.cc
 	src/glwidget.cc
-	src/glprimitives.cc
 	src/SimpleQtGlApp.cc
 	)
 

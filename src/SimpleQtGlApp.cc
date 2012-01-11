@@ -1,4 +1,5 @@
 #include <QtGui> 
+#include <QFile>
 
 #include "glwidget.h" 
 #include "SimpleQtGlApp.h"
@@ -57,6 +58,15 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 
 	// quit when we want to quit
 	connect (actionQuit, SIGNAL( triggered() ), qApp, SLOT( quit() ));
+}
+
+void SimpleQtGlApp::parseArguments (int argc, char* argv[]) {
+	for (int i = 1; i < argc; i++) {
+		qDebug () << "Argument " << i << ": " << argv[i];
+		QFile test_file (argv[i]);
+		if (test_file.exists())
+			glWidget->loadModel(argv[i]);
+	}
 }
 
 void SimpleQtGlApp::toggle_play_animation (bool status) {

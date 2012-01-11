@@ -2,9 +2,9 @@
 {
 	"configuration" : 
 	{
-		"front_axis" : [ 1.0, 0.0, 0.0 ],
-		"right_axis" : [ 0.0, -1.0, 0.0 ],
-		"up_axis" : [ 0.0, 0.0, 1.0 ],
+		"axis_front" : [ 1.0, 0.0, 0.0 ],
+		"axis_right" : [ 0.0, -1.0, 0.0 ],
+		"axis_up" : [ 0.0, 0.0, 1.0 ],
 		"rotation_order" : [ 1, 2, 0 ]
 	},
 	"frames" : 

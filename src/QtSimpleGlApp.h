@@ -10,6 +10,9 @@ class SimpleQtGlApp : public QMainWindow, public Ui::MainWindow
  
 public:
     SimpleQtGlApp(QWidget *parent = 0);
+		virtual ~SimpleQtGlApp() {
+			delete glWidget;
+		}
 
 protected:
 		QTimer *timer;
