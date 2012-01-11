@@ -92,20 +92,28 @@
 		
 		{
 			"color" : [ 0.80, 0.80, 0.20 ],
-			"dimensions" : [ 0.250, 0.250, 0.40 ],
+			"dimensions" : [ 0.30, 0.30, 0.55 ],
 			"frame" : "HIP",
 			"mesh_center" : [ 0.0, 0.1250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowertrunk.obj",
 			"name" : "HipMesh1"
 		},
 		
 		{
 			"color" : [ 0.80, 0.80, 0.40 ],
-			"dimensions" : [ 0.30, 0.70, 0.60 ],
+			"dimensions" : [ 0.30, 0.30, 0.60 ],
 			"frame" : "UPPERBODY",
-			"mesh_center" : [ 0.0, 0.350, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
-			"name" : "UpperBody"
+			"mesh_center" : [ 0.0, 0.150, 0.0 ],
+			"mesh_filename" : "meshes/knubbi_middletrunk.obj",
+			"name" : "MiddleTrunk"
+		},
+			{
+			"color" : [ 0.80, 0.80, 0.40 ],
+			"dimensions" : [ 0.30, 0.30, 0.60 ],
+			"frame" : "UPPERBODY",
+			"mesh_center" : [ 0.0, 0.450, 0.0 ],
+			"mesh_filename" : "meshes/knubbi_uppertrunk.obj",
+			"name" : "UpperTrunk"
 		},
 		
 		{
@@ -113,7 +121,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "UPPERARM_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowerarm.obj",
 			"name" : "UpperArm_L"
 		},
 		
@@ -122,7 +130,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "LOWERARM_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowerarm.obj",
 			"name" : "LowerArm_L"
 		},
 		
@@ -131,7 +139,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "UPPERARM_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowerarm.obj",
 			"name" : "UpperArm_R"
 		},
 		
@@ -140,7 +148,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "LOWERARM_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowerarm.obj",
 			"name" : "LowerArm_R"
 		},
 		
@@ -148,18 +156,18 @@
 			"color" : [ 0.10, 0.70, 0.10 ],
 			"dimensions" : [ 0.40, 0.450, 0.40 ],
 			"frame" : "HEAD",
-			"mesh_center" : [ 0.0, 0.2250, 0.0 ],
-			"mesh_filename" : "meshes/monkeyhead.obj",
-			"name" : "Joint"
+			"mesh_center" : [ 0.0, 0.2750, 0.0 ],
+			"mesh_filename" : "meshes/knubbi_head.obj",
+			"name" : "Head"
 		},
 
 		{
-			"color" : [ 0.10, 0.70, 0.10 ],
-			"dimensions" : [ 0.40, 0.450, 0.40 ],
+			"color" : [ 0.90, 0.10, 0.10 ],
+			"dimensions" : [ 0.1, 0.1, 0.1 ],
 			"frame" : "HEAD",
-			"mesh_center" : [ 0.0, 0.2250, 0.0 ],
-			"mesh_filename" : "meshes/monkeyhead.obj",
-			"name" : "Head"
+			"mesh_center" : [ 0.0, 0.0, 0.0 ],
+			"mesh_filename" : "meshes/unit_sphere_lowres.obj",
+			"name" : "HeadJoint"
 		},
 		
 		{
@@ -167,7 +175,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "UPPERLEG_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_upperleg_L.obj",
 			"name" : "UpperLeg_L"
 		},
 		
@@ -176,7 +184,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "LOWERLEG_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowerarm.obj",
 			"name" : "LowerLeg_L"
 		},
 		
@@ -185,7 +193,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "UPPERLEG_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_upperleg_R.obj",
 			"name" : "UpperLeg_R"
 		},
 		
@@ -194,7 +202,7 @@
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
 			"frame" : "LOWERLEG_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
-			"mesh_filename" : "meshes/unit_cube.obj",
+			"mesh_filename" : "meshes/knubbi_lowerarm.obj",
 			"name" : "LowerLeg_R"
 		}
 	]

@@ -134,7 +134,6 @@ void GLWidget::initializeGL()
 	qDebug() << "OpenGL Version : " << (const char*) glGetString (GL_VERSION);
 	qDebug() << "GLSL Version   : " << (const char*) glGetString (GL_SHADING_LANGUAGE_VERSION);
 
-	glClearColor (0.3, 0.3, 0.3, 1.);
 	glClearDepth (1.);
 	glEnable (GL_DEPTH_TEST);
 	glDepthFunc (GL_LESS);
@@ -332,7 +331,8 @@ void draw_checkers_board_shaded() {
 	float shade_width = length - shade_start;
 	shade_width = 5.f;
 	float m = 1.f / (shade_width);
-	Vector3f bg_color (0.3f, 0.3f, 0.3f);
+	Vector4f clear_color;
+	glGetFloatv (GL_COLOR_CLEAR_VALUE, clear_color.data());
 	glBegin (GL_QUADS);
 
 	for (int i = 0; i < count; i++) {
@@ -355,9 +355,9 @@ void draw_checkers_board_shaded() {
 			assert (alpha >= 0.f &&  alpha <= 1.f);
 
 			// upper left
-			Vector3f color (0.6f, 0.6f, 0.6f);
+			Vector4f color (0.6f, 0.6f, 0.6f, 1.f);
 
-			color = (1.f - alpha) * bg_color + color * alpha;
+			color = (1.f - alpha) * clear_color + color * alpha;
 
 			glColor3fv (color.data());
 			glVertex3fv (v0.data());
@@ -398,7 +398,7 @@ void GLWidget::drawGrid() {
 
 void GLWidget::paintGL() {
 	update_timer();
-	glClearColor (0.3, 0.3, 0.3, 1.);
+	glClearColor (0., 0., 0., 1.);
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
