@@ -128,19 +128,30 @@ void MeshData::draw() {
 void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
 	// first translate, then rotate as specified in the angles
 	pose_transform = 
-		rotation_angles_to_matrix (parent_rotation)
-		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
+		bone_transform
+//		rotation_angles_to_matrix (parent_rotation)
+//		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
 		* parent_pose_transform;
 
 	// apply pose transform
 	pose_transform =
 		smScale (pose_scaling[0], pose_scaling[1], pose_scaling[2])
-	  * rotation_angles_to_matrix (pose_rotation)
+	  * pose_rotation_quaternion.toGLMatrix()
 		* smTranslate (pose_translation[0], pose_translation[1], pose_translation[2])
 		* pose_transform;
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
 		children[ci]->updatePoseTransform (pose_transform);
+	}
+}
+
+void Bone::initBoneTransform(const Matrix44f &parent_bone_transform) {
+	// first translate, then rotate as specified in the angles
+	bone_transform =	rotation_angles_to_matrix (parent_rotation)
+		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
+
+	for (unsigned int ci = 0; ci < children.size(); ci++) {
+		children[ci]->initBoneTransform (bone_transform);
 	}
 }
 
@@ -192,6 +203,7 @@ BonePose BoneAnimationTrack::interpolatePose (float time) {
 	end_pose.timestamp = start_pose.timestamp + fraction * (end_pose.timestamp - start_pose.timestamp);
 	end_pose.translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
 	end_pose.rotation = start_pose.rotation + fraction * (end_pose.rotation - start_pose.rotation);
+	end_pose.rotation_quaternion = start_pose.rotation_quaternion.slerp (fraction, end_pose.rotation_quaternion);
 	end_pose.scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
 
 	return end_pose;
@@ -205,6 +217,8 @@ void ModelData::addBone (
 		const std::string &bone_name,
 		const Vector3f &parent_translation,
 		const Vector3f &parent_rotation) {
+	// mark bone transformations as dirty
+	bones_initialized = false;
 
 	// create the bone
 	BonePtr bone (new Bone);
@@ -270,6 +284,7 @@ void ModelData::addBonePose (
 	pose.timestamp = time;
 	pose.translation = bone_translation;
 	pose.rotation = bone_rotation;
+	pose.rotation_quaternion = rotation_angles_to_quaternion (bone_rotation);
 	pose.scaling = bone_scaling;
 
 	animation.bonetracks[bone].poses.push_back(pose);
@@ -277,6 +292,16 @@ void ModelData::addBonePose (
 	// update the duration of the animation
 	if (time > animation.duration)
 		animation.duration = time;
+}
+
+void ModelData::initBoneTransform() {
+	Matrix44f base_transform (Matrix44f::Identity());
+
+	for (unsigned int bi = 0; bi < bones.size(); bi++) {
+		bones[bi]->initBoneTransform (base_transform);
+	}
+
+	bones_initialized = true;
 }
 
 void ModelData::updatePose(float time_sec) {
@@ -298,6 +323,7 @@ void ModelData::updatePose(float time_sec) {
 		BonePose pose = bone_track_iter->second.interpolatePose (animation.current_time);
 		bone_track_iter->first->pose_translation = pose.translation;
 		bone_track_iter->first->pose_rotation = pose.rotation;
+		bone_track_iter->first->pose_rotation_quaternion = pose.rotation_quaternion;
 		bone_track_iter->first->pose_scaling = pose.scaling;
 
 		bone_track_iter++;
@@ -306,6 +332,10 @@ void ModelData::updatePose(float time_sec) {
 
 void ModelData::updateBones() {
 	Matrix44f base_transform (Matrix44f::Identity());
+
+	// check whether the bone transformations are valid
+	if (bones_initialized == false)
+		initBoneTransform();
 
 	for (unsigned int bi = 0; bi < bones.size(); bi++) {
 		bones[bi]->updatePoseTransform (base_transform);
@@ -503,4 +533,6 @@ void ModelData::loadFromFile (const char* filename) {
 
 		node_iter++;
 	}
+
+	initBoneTransform();
 }

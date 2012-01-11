@@ -17,12 +17,16 @@
 
 #include "glprimitives.h"
 #include "ModelData.h"
+#include "timer.h"
 
 using namespace std;
 
 static bool update_simulation = false;
 
 ModelData model_data;
+TimerInfo timer_info;
+double draw_time = 0.;
+int draw_count = 0;
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent)
@@ -50,6 +54,8 @@ GLWidget::GLWidget(QWidget *parent)
 }
 
 GLWidget::~GLWidget() {
+	qDebug() << "drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
+
 	makeCurrent();
 	glprimitives_destroy();
 }
@@ -273,8 +279,18 @@ void GLWidget::paintGL() {
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
+	timer_start (&timer_info);
+
 	model_data.updatePose (delta_time_sec);
 	model_data.draw();
+
+	draw_time += timer_stop(&timer_info);
+	draw_count++;
+
+	if (draw_count % 100 == 0) {
+		qDebug() << "drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
+}
+
 }
 
 void GLWidget::resizeGL(int width, int height)

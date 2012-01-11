@@ -16,6 +16,12 @@ inline Matrix44f rotation_angles_to_matrix (const Vector3f rotation_angles) {
 		* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
 }
 
+inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angles) {
+	return smQuaternion::fromGLRotate (rotation_angles[0], 1.0, 0.f, 0.f)
+		* smQuaternion::fromGLRotate (rotation_angles[1], 0.f, 1.f, 0.f)
+		* smQuaternion::fromGLRotate (rotation_angles[2], 0.f, 0.f, 1.f);
+}
+
 struct MeshData {
 	MeshData() :
 		parented_segment(""),
@@ -63,7 +69,9 @@ struct Bone {
 		parent_rotation (0.f, 0.f, 0.f),
 		pose_translation (0.f, 0.f, 0.f),
 		pose_rotation (0.f, 0.f, 0.f),
+		pose_rotation_quaternion (0.f, 0.f, 0.f, 1.f),
 		pose_scaling (1.f, 1.f, 1.f),
+		bone_transform (Matrix44f::Identity ()),
 		pose_transform (Matrix44f::Identity ())
 	{}
 
@@ -73,14 +81,17 @@ struct Bone {
 
 	Vector3f pose_translation;
 	Vector3f pose_rotation;
+	smQuaternion pose_rotation_quaternion;
 	Vector3f pose_scaling;
 
 	/** Transformation from base to pose */
+	Matrix44f bone_transform;
 	Matrix44f pose_transform;
 
 	std::vector<BonePtr> children;
 
 	void updatePoseTransform(const Matrix44f &parent_pose_transform);
+	void initBoneTransform(const Matrix44f &parent_pose_transform);
 };
 
 struct Segment {
@@ -107,6 +118,7 @@ struct BonePose {
 		timestamp (-1.f),
 		translation (0.f, 0.f, 0.f),
 		rotation (0.f, 0.f, 0.f),
+		rotation_quaternion (0.f, 0.f, 0.f, 1.f),
 		scaling (1.f, 1.f, 1.f),
 		endpoint (0.f, 1.f, 0.f)
 	{}
@@ -114,6 +126,7 @@ struct BonePose {
 	float timestamp;
 	Vector3f translation;
 	Vector3f rotation;
+	smQuaternion rotation_quaternion;
 	Vector3f scaling;
 	Vector3f endpoint;
 };
@@ -142,7 +155,9 @@ struct Animation {
 typedef boost::shared_ptr<Animation> AnimationPtr;
 
 struct ModelData {
-	ModelData() {
+	ModelData():
+		bones_initialized(false)
+	{
 		// create the BASE bone
 		BonePtr base_bone (new (Bone));
 		base_bone->name = "BASE";
@@ -163,6 +178,8 @@ struct ModelData {
 	BoneMap bonemap;
 	typedef std::map<BonePtr, BoneAnimationTrack> BoneAnimationTrackMap;
 
+	/// Marks whether the bone transformations have to be initialized
+	bool bones_initialized;
 	Animation animation;
 
 	void addBone (
@@ -208,7 +225,13 @@ struct ModelData {
 	void setAnimationLoop(bool do_loop) {
 		animation.loop = do_loop;
 	}
+	/// Initializes the fixed bone transformations and sets bones_initialized to true
+	void initBoneTransform();
+	/// Updates the pose information of the bones by interpolating the
+	// keyframes defined in Animation
 	void updatePose(float time_sec);
+	/// Updates the full pose transformations recursively such that
+	//Bone::pose_transformation contains the full Base->Pose transformation
 	void updateBones();
 
 	void draw();
