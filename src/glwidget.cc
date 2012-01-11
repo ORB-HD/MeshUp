@@ -230,6 +230,61 @@ void GLWidget::updateCamera() {
 			up.x(), up.y(), up.z());
 }
 
+void draw_checkers_board_shaded() {
+	float length = 16.f;
+	int count = 32;
+	float xmin (-length),
+				xmax (length),
+				xstep (fabs (xmin - xmax) / float(count)),
+				zmin (-length),
+				zmax (length),
+				zstep (fabs (xmin -xmax) / float (count));
+
+	float shade_start = 3.;
+	float shade_width = length - shade_start;
+	shade_width = 5.f;
+	float m = 1.f / (shade_width);
+	Vector3f bg_color (0.3f, 0.3f, 0.3f);
+	glBegin (GL_QUADS);
+
+	for (int i = 0; i < count; i++) {
+		float x_shift = (i % 2) * xstep;
+		for (int j = 0; j < count; j = j+2) {
+			Vector3f v0 (j * xstep + xmin + x_shift, 0., i * zstep + zmin);
+			Vector3f v1 (j * xstep + xmin + x_shift, 0., (i + 1) * zstep + zmin);
+			Vector3f v2 ((j + 1) * xstep + xmin + x_shift, 0., (i + 1) * zstep + zmin);
+			Vector3f v3 ((j + 1) * xstep + xmin + x_shift, 0., i * zstep + zmin);
+
+			float distance = v0.norm();
+			float alpha = 1.;
+
+			if (distance > shade_start) {
+				alpha = 1. - m * (distance - shade_start);
+				if (alpha > 1.f)
+					alpha = 1.f;
+				if (alpha < 0.f)
+					alpha = 0.f;
+			}
+
+			assert (alpha >= 0.f &&  alpha <= 1.f);
+
+			// upper left
+			Vector3f color (0.6f, 0.6f, 0.6f);
+
+			color = (1.f - alpha) * bg_color + color * alpha;
+
+			glColor3fv (color.data());
+			glVertex3fv (v0.data());
+			glVertex3fv (v1.data());
+			glVertex3fv (v2.data());
+			glVertex3fv (v3.data());
+		}
+	}
+
+	glEnd();
+	
+}
+
 void GLWidget::drawGrid() {
 	float xmin, xmax, xstep, zmin, zmax, zstep;
 	int i, count;
@@ -244,7 +299,7 @@ void GLWidget::drawGrid() {
 	xstep = fabs (xmin - xmax) / (float)count;
 	zstep = fabs (zmin - zmax) / (float)count;
 
-	glColor3f (0.6, 0.6, 0.6);
+	glColor3f (1.0, 0.6, 0.6);
 	glBegin (GL_LINES);
 	for (i = 0; i <= count; i++) {
 		glVertex3f (i * xstep + xmin, 0., zmin);
@@ -253,7 +308,6 @@ void GLWidget::drawGrid() {
 		glVertex3f (xmax, 0, i * zstep + zmin);
 	}
 	glEnd ();
-
 }
 
 void GLWidget::paintGL() {
@@ -273,7 +327,8 @@ void GLWidget::paintGL() {
 	glEnable (GL_COLOR_MATERIAL);
 	glDisable(GL_LIGHTING);
 
-	drawGrid();
+//	drawGrid();
+	draw_checkers_board_shaded();
 
 	glEnable (GL_COLOR_MATERIAL);
 	glEnable(GL_LIGHTING);
