@@ -17,6 +17,8 @@ class GLWidget : public QGLWidget
 		QSize minimumSizeHint() const;
 		QSize sizeHint() const;
 
+		float getAnimationDuration();
+
 	protected:
 		void update_timer();
 		void drawGrid();
@@ -48,6 +50,13 @@ class GLWidget : public QGLWidget
 		unsigned int application_time_msec;
 		unsigned int first_frame_msec;
 		double delta_time_sec;
+
+	public slots:
+		void toggle_draw_grid(bool status);
+		void toggle_draw_bones(bool status);
+		void toggle_draw_axes(bool status);
+
+		void setAnimationTime (float fraction);
 };
 
 #endif

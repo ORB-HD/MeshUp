@@ -225,11 +225,18 @@ struct ModelData {
 	void setAnimationLoop(bool do_loop) {
 		animation.loop = do_loop;
 	}
+	float getAnimationDuration() {
+		return animation.duration;
+	}
+	void setAnimationTime (float time_sec) {
+		animation.current_time = time_sec;
+	}
+
 	/// Initializes the fixed bone transformations and sets bones_initialized to true
 	void initBoneTransform();
 	/// Updates the pose information of the bones by interpolating the
 	// keyframes defined in Animation
-	void updatePose(float time_sec);
+	void updatePose();
 	/// Updates the full pose transformations recursively such that
 	//Bone::pose_transformation contains the full Base->Pose transformation
 	void updateBones();

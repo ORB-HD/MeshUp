@@ -304,10 +304,9 @@ void ModelData::initBoneTransform() {
 	bones_initialized = true;
 }
 
-void ModelData::updatePose(float time_sec) {
+void ModelData::updatePose() {
 	// if there is no animation we can return
 	if (animation.bonetracks.size() != 0) {
-		animation.current_time += time_sec;
 		if (animation.current_time > animation.duration) {
 			if (animation.loop) {
 				while (animation.current_time > animation.duration)

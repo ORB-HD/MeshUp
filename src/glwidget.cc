@@ -60,6 +60,29 @@ GLWidget::~GLWidget() {
 	glprimitives_destroy();
 }
 
+/****************
+ * Slots
+ ****************/
+void GLWidget::setAnimationTime (float fraction) {
+	model_data.setAnimationTime(fraction * model_data.getAnimationDuration());
+}
+
+float GLWidget::getAnimationDuration() {
+	return model_data.getAnimationDuration();
+}
+
+void GLWidget::toggle_draw_grid (bool status) {
+	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
+}
+
+void GLWidget::toggle_draw_bones (bool status) {
+	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
+}
+
+void GLWidget::toggle_draw_axes (bool status) {
+	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
+}
+
 void GLWidget::update_timer() {
 	struct timeval clock_value;
 	gettimeofday (&clock_value, NULL);
@@ -334,7 +357,7 @@ void GLWidget::paintGL() {
 
 	timer_start (&timer_info);
 
-	model_data.updatePose (delta_time_sec);
+	model_data.updatePose ();
 	model_data.draw();
 
 	draw_time += timer_stop(&timer_info);

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QTimer>
+#include <QTimeLine>
 #include "ui_MainWindow.h"
 
 class SimpleQtGlApp : public QMainWindow, public Ui::MainWindow
@@ -13,6 +14,17 @@ public:
 
 protected:
 		QTimer *timer;
+		QTimeLine *timeLine;
+
+		bool playerPaused;
+
+public slots:
+		void toggle_play_animation (bool status);
+		void toggle_loop_animation (bool status);
+
+		void timeline_frame_changed (int frame_index);
+		void timeline_set_frame (int frame_index);
+		void timeslider_value_changed (int frame_index);
 };
  
 #endif
