@@ -260,8 +260,6 @@ void draw_checkers_board_shaded() {
 
 			if (distance > shade_start) {
 				alpha = 1. - m * (distance - shade_start);
-				if (alpha > 1.f)
-					alpha = 1.f;
 				if (alpha < 0.f)
 					alpha = 0.f;
 			}

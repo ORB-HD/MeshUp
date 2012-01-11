@@ -18,6 +18,8 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 
 	// the timer is used to continously redraw the OpenGL widget
 	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
-	
 	connect (actionQuit, SIGNAL( triggered() ), qApp, SLOT( quit() ));
+
+	dockPlayerControls->setVisible(false);
+	dockViewSettings->setVisible(false);
 }

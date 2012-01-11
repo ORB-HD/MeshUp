@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>587</width>
-    <height>599</height>
+    <height>612</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <string/>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0">
+   <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1">
     <property name="margin">
      <number>0</number>
     </property>
@@ -33,9 +33,6 @@
        </size>
       </property>
      </widget>
-    </item>
-    <item>
-     <layout class="QVBoxLayout" name="verticalLayout"/>
     </item>
    </layout>
   </widget>
@@ -54,65 +51,143 @@
     </property>
     <addaction name="actionQuit"/>
    </widget>
+   <widget class="QMenu" name="menuControl_Panels">
+    <property name="title">
+     <string>Control Panels</string>
+    </property>
+    <addaction name="actionToggleViewSettings"/>
+    <addaction name="actionTogglePlayerControls"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuControl_Panels"/>
+  </widget>
+  <widget class="QDockWidget" name="dockViewSettings">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QCheckBox" name="checkBoxDrawGrid">
+         <property name="text">
+          <string>Draw Grid</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBoxDrawBones">
+         <property name="text">
+          <string>Draw Bones</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="checkBoxDrawAxes">
+         <property name="text">
+          <string>Draw Axes</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dockPlayerControls">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::AllDockWidgetAreas</set>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>8</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_5">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>6</number>
+     </property>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="pushButtonPlay">
+         <property name="text">
+          <string>Play</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="horizontalSliderTime">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
    </property>
   </action>
-  <action name="actionDrawJoints">
+  <action name="actionToggleViewSettings">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>View Settings</string>
+   </property>
+  </action>
+  <action name="actionTogglePlayerControls">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Draw Joints</string>
-   </property>
-   <property name="shortcut">
-    <string>J</string>
+    <string>Player Controls</string>
    </property>
   </action>
-  <action name="actionDrawSkeleton">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Draw Skeleton</string>
-   </property>
-   <property name="shortcut">
-    <string>S</string>
-   </property>
-  </action>
-  <action name="actionDrawMesh">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Draw Mesh</string>
-   </property>
-   <property name="shortcut">
-    <string>M</string>
-   </property>
-  </action>
-  <action name="actionDrawPoints">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Draw Points</string>
-   </property>
-   <property name="shortcut">
-    <string>P</string>
-   </property>
-  </action>
-  <action name="actionRender_Imageseries">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Render Imageseries</string>
-   </property>
-  </action>
+  <zorder>dockPlayerControls</zorder>
+  <zorder>dockViewSettings</zorder>
+  <zorder>dockWidget_2</zorder>
+  <zorder>dockWidget_3</zorder>
+  <zorder>dockWidget_4</zorder>
  </widget>
  <customwidgets>
   <customwidget>
@@ -123,5 +198,70 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionTogglePlayerControls</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockPlayerControls</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>293</x>
+     <y>575</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionToggleViewSettings</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockViewSettings</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>488</x>
+     <y>279</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dockPlayerControls</sender>
+   <signal>visibilityChanged(bool)</signal>
+   <receiver>actionTogglePlayerControls</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>293</x>
+     <y>575</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dockViewSettings</sender>
+   <signal>visibilityChanged(bool)</signal>
+   <receiver>actionToggleViewSettings</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>488</x>
+     <y>279</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
