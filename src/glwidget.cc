@@ -54,7 +54,7 @@ GLWidget::GLWidget(QWidget *parent)
 }
 
 GLWidget::~GLWidget() {
-	qDebug() << "drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
+	qDebug() << "DESTRUCTOR: drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
 
 	makeCurrent();
 	glprimitives_destroy();
@@ -287,9 +287,11 @@ void GLWidget::paintGL() {
 	draw_time += timer_stop(&timer_info);
 	draw_count++;
 
+	/*
 	if (draw_count % 100 == 0) {
 		qDebug() << "drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
-}
+	}
+*/
 
 }
 

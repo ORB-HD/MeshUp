@@ -11,7 +11,6 @@ using namespace std;
 SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 {
 	timer = new QTimer (this);
-
 	setupUi(this); // this sets up GUI
 
 	timer->setSingleShot(false);

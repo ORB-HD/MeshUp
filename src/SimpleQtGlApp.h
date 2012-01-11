@@ -13,7 +13,6 @@ public:
 
 protected:
 		QTimer *timer;
-
 };
  
 #endif

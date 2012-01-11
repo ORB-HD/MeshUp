@@ -4,6 +4,8 @@
 #include <QGLWidget>
 #include <QVector3D>
 
+#include <iostream>
+
 class GLWidget : public QGLWidget
 {
 	Q_OBJECT
