@@ -141,6 +141,39 @@ class smQuaternion : public Vector4f {
 					0.f,
 					1.f);
 		}
+
+		smQuaternion quat_mul (const smQuaternion &q) const {
+			float x = (*this)[0];
+			float y = (*this)[1];
+			float z = (*this)[2];
+			float w = (*this)[3];
+
+			return smQuaternion (
+					w * q[0] + x * q[3] + y * q[2] - z * q[1],
+					w * q[1] + y * q[3] + z * q[0] - x * q[2],
+					w * q[2] + z * q[3] + x * q[1] - y * q[0],
+					w * q[3] - x * q[0] - y * q[1] - z * q[2]);
+		}
+
+		smQuaternion conjugate() const {
+			return smQuaternion (
+					-(*this)[0],
+					-(*this)[1],
+					-(*this)[2],
+					(*this)[3]);
+		}
+
+		Vector3f rotate (const Vector3f &vec) const {
+			Vector3f vn (vec);
+			vn.normalize();
+
+			smQuaternion vec_quat (vn[0], vn[1], vn[2], 0.f), res_quat;
+
+			res_quat = vec_quat * (*this);
+			res_quat = conjugate() * res_quat;
+
+			return Vector3f (res_quat[0], res_quat[1], res_quat[2]);
+		}
 };
 
 /* _SIMPLEMATHGL_H_ */

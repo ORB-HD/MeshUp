@@ -10,16 +10,94 @@
 #include "SimpleMath.h"
 #include "SimpleMathGL.h"
 
-inline Matrix44f rotation_angles_to_matrix (const Vector3f rotation_angles) {
+struct FrameConfiguration {
+	FrameConfiguration() :
+		front_axis(1.f, 0.f, 0.f),
+		up_axis(0.f, 1.f, 0.f),
+		right_axis (0.f, 0.f, 1.f),
+		axes_rotation (Matrix33f::Identity())
+	{ 
+		rotation_order[0] = 2;
+		rotation_order[1] = 1;
+		rotation_order[2] = 0;
+	}
+	Vector3f front_axis;
+	Vector3f up_axis;
+	Vector3f right_axis;
+	Matrix33f axes_rotation;
+
+	int rotation_order[3];
+
+	void update() {
+		axes_rotation(0,0) = front_axis[0];
+		axes_rotation(1,0) = front_axis[1];
+		axes_rotation(2,0) = front_axis[2];
+
+		axes_rotation(0,1) = up_axis[0];
+		axes_rotation(1,1) = up_axis[1];
+		axes_rotation(2,1) = up_axis[2];
+
+		axes_rotation(0,2) = right_axis[0];
+		axes_rotation(1,2) = right_axis[1];
+		axes_rotation(2,2) = right_axis[2];
+	}
+};
+
+inline Matrix44f rotation_angles_to_matrix (const Vector3f rotation_angles, const FrameConfiguration &config) {
 	return	smRotate (rotation_angles[0], 1.f, 0.f, 0.f)
 		* smRotate (rotation_angles[1], 0.f, 1.f, 0.f)
 		* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
 }
 
-inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angles) {
+inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angles, const FrameConfiguration &config) {
+	int a0 = config.rotation_order[0];
+	int a1 = config.rotation_order[1];
+	int a2 = config.rotation_order[2];
+
+	Vector3f axis_0 (
+			config.axes_rotation(a0, 0),
+			config.axes_rotation(a0, 1),
+			config.axes_rotation(a0, 2)
+				);
+
+	Vector3f axis_1 (
+			config.axes_rotation(a1, 0),
+			config.axes_rotation(a1, 1),
+			config.axes_rotation(a1, 2)
+				);
+
+	Vector3f axis_2 (
+			config.axes_rotation(a2, 0),
+			config.axes_rotation(a2, 1),
+			config.axes_rotation(a2, 2)
+				);
+
+	return smQuaternion::fromGLRotate (
+				rotation_angles[a0],
+				axis_0[0], axis_0[1], axis_0[2]
+				)
+			* smQuaternion::fromGLRotate (
+				rotation_angles[a1],
+				axis_1[0], axis_1[1], axis_1[2]
+				)
+			* smQuaternion::fromGLRotate (
+				rotation_angles[a2],
+				axis_2[0], axis_2[1], axis_2[2]
+				);
+
+/*
+			rotation_angles[config.rotation_order[0]],
+			config.right_axis[0], con
+			1.0, 0.f, 0.f
+			)
+		* smQuaternion::fromGLRotate (rotation_angles[config.rotation_order[1]], 0.f, 1.f, 0.f)
+		* smQuaternion::fromGLRotate (rotation_angles[config.rotation_order[2]], 0.f, 0.f, 1.f);
+*/
+/*
 	return smQuaternion::fromGLRotate (rotation_angles[0], 1.0, 0.f, 0.f)
 		* smQuaternion::fromGLRotate (rotation_angles[1], 0.f, 1.f, 0.f)
 		* smQuaternion::fromGLRotate (rotation_angles[2], 0.f, 0.f, 1.f);
+*/
 }
 
 struct MeshData {
@@ -90,8 +168,8 @@ struct Frame {
 
 	std::vector<FramePtr> children;
 
-	void updatePoseTransform(const Matrix44f &parent_pose_transform);
-	void initFrameTransform(const Matrix44f &parent_pose_transform);
+	void updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config);
+	void initFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config);
 };
 
 struct Segment {
@@ -153,23 +231,6 @@ struct Animation {
 	bool loop;
 };
 typedef boost::shared_ptr<Animation> AnimationPtr;
-
-struct FrameConfiguration {
-	FrameConfiguration() :
-		front_axis(1.f, 0.f, 0.f),
-		up_axis(0.f, 1.f, 0.f),
-		right_axis (0.f, 0.f, 1.f)
-	{ 
-		rotation_order[0] = 2;
-		rotation_order[1] = 1;
-		rotation_order[2] = 0;
-	}
-	Vector3f front_axis;
-	Vector3f up_axis;
-	Vector3f right_axis;
-
-	int rotation_order[3];
-};
 
 struct ModelData {
 	ModelData():

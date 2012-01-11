@@ -3,9 +3,9 @@
 	"configuration" : 
 	{
 		"front_axis" : [ 1.0, 0.0, 0.0 ],
-		"right_axis" : [ 0.0, 0.0, 1.0 ],
-		"up_axis" : [ 0.0, 1.0, 0.0 ],
-		"rotation_order" : [ 2, 1, 0 ]
+		"right_axis" : [ 0.0, -1.0, 0.0 ],
+		"up_axis" : [ 0.0, 0.0, 1.0 ],
+		"rotation_order" : [ 1, 2, 0 ]
 	},
 	"frames" : 
 	[
@@ -21,7 +21,7 @@
 			"name" : "UPPERBODY",
 			"parent" : "HIP",
 			"parent_rotation" : [ 0.0, 0.0, 0.0 ],
-			"parent_translation" : [ 0.0, 0.250, 0.0 ]
+			"parent_translation" : [ 0.0, 0.0, 0.250 ]
 		}
 	],
 	"segments" : 
@@ -29,18 +29,18 @@
 		
 		{
 			"color" : [ 0.80, 0.80, 0.20 ],
-			"dimensions" : [ 0.250, 0.250, 0.40 ],
+			"dimensions" : [ 0.250, 0.40, 0.250 ],
 			"frame" : "HIP",
-			"mesh_center" : [ 0.0, 0.1250, 0.0 ],
+			"mesh_center" : [ 0.0, 0.0, 0.1250 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "HipMesh1"
 		},
 		
 		{
 			"color" : [ 0.80, 0.80, 0.40 ],
-			"dimensions" : [ 0.30, 0.70, 0.60 ],
+			"dimensions" : [ 0.30, 0.60, 0.70 ],
 			"frame" : "UPPERBODY",
-			"mesh_center" : [ 0.0, 0.350, 0.0 ],
+			"mesh_center" : [ 0.0, 0.0, 0.350 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperBody"
 		}

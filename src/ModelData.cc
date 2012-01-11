@@ -125,7 +125,7 @@ void MeshData::draw() {
 /*********************************
  * Frame
  *********************************/
-void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform) {
+void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config) {
 	// first translate, then rotate as specified in the angles
 	pose_transform = 
 		frame_transform
@@ -141,17 +141,17 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform) {
 		* pose_transform;
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
-		children[ci]->updatePoseTransform (pose_transform);
+		children[ci]->updatePoseTransform (pose_transform, config);
 	}
 }
 
-void Frame::initFrameTransform(const Matrix44f &parent_frame_transform) {
+void Frame::initFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfiguration &config) {
 	// first translate, then rotate as specified in the angles
-	frame_transform =	rotation_angles_to_matrix (parent_rotation)
+	frame_transform =	rotation_angles_to_matrix (parent_rotation, config)
 		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
-		children[ci]->initFrameTransform (frame_transform);
+		children[ci]->initFrameTransform (frame_transform, config);
 	}
 }
 
@@ -223,7 +223,7 @@ void ModelData::addFrame (
 	// create the frame
 	FramePtr frame (new Frame);
 	frame->name = frame_name;
-	frame->parent_translation = parent_translation;
+	frame->parent_translation = configuration.axes_rotation.transpose() * parent_translation;
 	frame->parent_rotation = parent_rotation;
 
 	// first find the frame
@@ -246,7 +246,14 @@ void ModelData::addSegment (
 		const Vector3f &mesh_center) {
 	Segment segment;
 	segment.name = segment_name;
-	segment.dimensions = dimensions;
+	segment.dimensions = configuration.axes_rotation.transpose() * dimensions;
+
+	// make sure that the dimensions are all positive
+	for (int i = 0; i < 3; i++) {
+	if (segment.dimensions[i] < 0)
+		segment.dimensions[i] = -segment.dimensions[i];
+	}
+
 	segment.color = color;
 
 	// check whether we have the mesh, if not try to load it
@@ -265,7 +272,7 @@ void ModelData::addSegment (
 	}
 
 	segment.mesh = mesh_iter->second;
-	segment.meshcenter = mesh_center;
+	segment.meshcenter = configuration.axes_rotation.transpose() * mesh_center;
 	segment.frame = findFrame (frame_name.c_str());
 	segment.mesh_filename = mesh_name;
 	assert (segment.frame != NULL);
@@ -284,7 +291,7 @@ void ModelData::addFramePose (
 	pose.timestamp = time;
 	pose.translation = frame_translation;
 	pose.rotation = frame_rotation;
-	pose.rotation_quaternion = rotation_angles_to_quaternion (frame_rotation);
+	pose.rotation_quaternion = rotation_angles_to_quaternion (frame_rotation, configuration);
 	pose.scaling = frame_scaling;
 
 	animation.frametracks[frame].poses.push_back(pose);
@@ -298,7 +305,7 @@ void ModelData::initFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
 	for (unsigned int bi = 0; bi < frames.size(); bi++) {
-		frames[bi]->initFrameTransform (base_transform);
+		frames[bi]->initFrameTransform (base_transform, configuration);
 	}
 
 	frames_initialized = true;
@@ -337,7 +344,7 @@ void ModelData::updateFrames() {
 		initFrameTransform();
 
 	for (unsigned int bi = 0; bi < frames.size(); bi++) {
-		frames[bi]->updatePoseTransform (base_transform);
+		frames[bi]->updatePoseTransform (base_transform, configuration);
 	}
 }
 
@@ -542,6 +549,8 @@ void ModelData::loadFromFile (const char* filename) {
 	configuration.rotation_order[1] = root["configuration"]["rotation_order"][1].asInt();
 	configuration.rotation_order[2] = root["configuration"]["rotation_order"][2].asInt();
 
+	configuration.update();
+
 	cout << "front: " << configuration.front_axis.transpose() << endl;
 	cout << "up   : " << configuration.up_axis.transpose() << endl;
 	cout << "right: " << configuration.right_axis.transpose() << endl;
@@ -549,6 +558,8 @@ void ModelData::loadFromFile (const char* filename) {
 	cout << "rot  : " << configuration.rotation_order[0] 
 		<< ", " << configuration.rotation_order[1] 
 		<< ", " << configuration.rotation_order[2] << endl;
+
+	cout << "axes: " << endl << configuration.axes_rotation << endl;	
 
 	// read the frames:
 	ValueIterator node_iter = root["frames"].begin();

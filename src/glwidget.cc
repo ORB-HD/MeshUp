@@ -171,10 +171,59 @@ void GLWidget::initializeGL()
 	*/
 
 //	model_data.saveToFile("testmodel_backup.json");
-	model_data.loadFromFile("models/samplemodel.json");
+//	model_data.loadFromFile("models/samplemodel.json");
+	model_data.loadFromFile("models/yzxrotation.json");
 	model_data.saveToFile("testmodel.json");
 	model_data.setAnimationLoop(true);
 
+	model_data.addFramePose (
+			"UPPERBODY",
+			0.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addFramePose (
+			"UPPERBODY",
+			1.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 30.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addFramePose (
+			"UPPERBODY",
+			1.5,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 30.f, 0.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addFramePose (
+			"UPPERBODY",
+			2.5,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 30.f, 30.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addFramePose (
+			"UPPERBODY",
+			3.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (0.f, 30.f, 30.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+
+	model_data.addFramePose (
+			"UPPERBODY",
+			4.,
+			Vector3f (0.f, 0.f, 0.f),
+			Vector3f (30.f, 30.f, 30.f),
+			Vector3f (1.f, 1.f, 1.f)
+			);
+	/*
 	model_data.addFramePose (
 			"HIP",
 			0.,
@@ -213,7 +262,7 @@ void GLWidget::initializeGL()
 			Vector3f (0.f, 0.f, 90.f),
 			Vector3f (1.f, 1.f, 1.f)
 			);
-
+ */
 
 }
 
