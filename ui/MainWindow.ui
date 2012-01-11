@@ -151,6 +151,9 @@
          <property name="text">
           <string>Play</string>
          </property>
+         <property name="shortcut">
+          <string>Space</string>
+         </property>
          <property name="checkable">
           <bool>true</bool>
          </property>
@@ -196,6 +199,9 @@
    <property name="text">
     <string>View Settings</string>
    </property>
+   <property name="shortcut">
+    <string>V</string>
+   </property>
   </action>
   <action name="actionTogglePlayerControls">
    <property name="checkable">
@@ -203,6 +209,9 @@
    </property>
    <property name="text">
     <string>Player Controls</string>
+   </property>
+   <property name="shortcut">
+    <string>P</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>

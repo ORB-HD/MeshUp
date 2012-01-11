@@ -1,6 +1,13 @@
 
 {
-	"bones" : 
+	"configuration" : 
+	{
+		"front_axis" : [ 1.30, 0.40, 0.50 ],
+		"right_axis" : [ 0.60, 0.70, 1.80 ],
+		"rotation_order" : [ 7, 2, 6 ],
+		"up_axis" : [ 3.0, 2.0, 6.0 ]
+	},
+	"frames" : 
 	[
 		
 		{
@@ -84,99 +91,99 @@
 	[
 		
 		{
-			"bone" : "HIP",
 			"color" : [ 0.80, 0.80, 0.20 ],
 			"dimensions" : [ 0.250, 0.250, 0.40 ],
+			"frame" : "HIP",
 			"mesh_center" : [ 0.0, 0.1250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "HipMesh1"
 		},
 		
 		{
-			"bone" : "UPPERBODY",
 			"color" : [ 0.80, 0.80, 0.40 ],
 			"dimensions" : [ 0.30, 0.70, 0.60 ],
+			"frame" : "UPPERBODY",
 			"mesh_center" : [ 0.0, 0.350, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperBody"
 		},
 		
 		{
-			"bone" : "UPPERARM_L",
 			"color" : [ 0.10, 0.10, 0.80 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERARM_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperArm_L"
 		},
 		
 		{
-			"bone" : "LOWERARM_L",
 			"color" : [ 0.20, 0.20, 0.90 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERARM_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "LowerArm_L"
 		},
 		
 		{
-			"bone" : "UPPERARM_R",
 			"color" : [ 0.80, 0.10, 0.10 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERARM_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperArm_R"
 		},
 		
 		{
-			"bone" : "LOWERARM_R",
 			"color" : [ 0.80, 0.20, 0.20 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERARM_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "LowerArm_R"
 		},
 		
 		{
-			"bone" : "HEAD",
 			"color" : [ 0.10, 0.70, 0.10 ],
 			"dimensions" : [ 0.40, 0.450, 0.40 ],
+			"frame" : "HEAD",
 			"mesh_center" : [ 0.0, 0.2250, 0.0 ],
 			"mesh_filename" : "meshes/monkeyhead.obj",
 			"name" : "Head"
 		},
 		
 		{
-			"bone" : "UPPERLEG_L",
 			"color" : [ 0.10, 0.10, 0.80 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERLEG_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperLeg_L"
 		},
 		
 		{
-			"bone" : "LOWERLEG_L",
 			"color" : [ 0.20, 0.20, 0.90 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERLEG_L",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "LowerLeg_L"
 		},
 		
 		{
-			"bone" : "UPPERLEG_R",
 			"color" : [ 0.80, 0.10, 0.10 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "UPPERLEG_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "UpperLeg_R"
 		},
 		
 		{
-			"bone" : "LOWERLEG_R",
 			"color" : [ 0.90, 0.20, 0.20 ],
 			"dimensions" : [ 0.20, 0.450, 0.20 ],
+			"frame" : "LOWERLEG_R",
 			"mesh_center" : [ 0.0, -0.2250, 0.0 ],
 			"mesh_filename" : "meshes/unit_cube.obj",
 			"name" : "LowerLeg_R"

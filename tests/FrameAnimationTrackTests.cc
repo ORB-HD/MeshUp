@@ -7,10 +7,10 @@
 
 using namespace std;
 
-TEST ( BoneAnimationTrackInterpolationSimple ) {
-	BoneAnimationTrack anim_track;
+TEST ( FrameAnimationTrackInterpolationSimple ) {
+	FrameAnimationTrack anim_track;
 
-	BonePose pose;
+	FramePose pose;
 	pose.timestamp = 0.f;
 
 	anim_track.poses.push_back (pose);
@@ -23,7 +23,7 @@ TEST ( BoneAnimationTrackInterpolationSimple ) {
 	anim_track.poses.push_back (pose);
 
 	// first frame
-	BonePose interpolated = anim_track.interpolatePose(0.f);
+	FramePose interpolated = anim_track.interpolatePose(0.f);
 	CHECK_EQUAL (0.f, interpolated.timestamp);
 	CHECK_EQUAL (Vector3f (0.f, 0.f, 0.f), interpolated.translation);
 	CHECK_EQUAL (Vector3f (0.f, 0.f, 0.f), interpolated.rotation);

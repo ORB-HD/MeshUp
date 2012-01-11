@@ -172,17 +172,17 @@ void GLWidget::initializeGL()
 
 //	model_data.saveToFile("testmodel_backup.json");
 	model_data.loadFromFile("models/samplemodel.json");
-//	model_data.saveToFile("testmodel.json");
+	model_data.saveToFile("testmodel.json");
 	model_data.setAnimationLoop(true);
 
-	model_data.addBonePose (
+	model_data.addFramePose (
 			"HIP",
 			0.,
 			Vector3f (0.f, 0.9f, 0.f),
 			Vector3f (0.f, 0.f, 0.f),
 			Vector3f (1.f, 1.f, 1.f));
 
-	model_data.addBonePose (
+	model_data.addFramePose (
 			"UPPERARM_R",
 			0.,
 			Vector3f (0.f, 0.f, 0.f),
@@ -190,7 +190,7 @@ void GLWidget::initializeGL()
 			Vector3f (1.f, 1.f, 1.f)
 			);
 
-	model_data.addBonePose (
+	model_data.addFramePose (
 			"UPPERARM_R",
 			2.,
 			Vector3f (0.f, 0.f, 0.f),
@@ -198,7 +198,7 @@ void GLWidget::initializeGL()
 			Vector3f (1.f, 1.f, 1.f)
 			);
 
-	model_data.addBonePose (
+	model_data.addFramePose (
 			"LOWERARM_R",
 			0.,
 			Vector3f (0.f, 0.f, 0.f),
@@ -206,7 +206,7 @@ void GLWidget::initializeGL()
 			Vector3f (1.f, 1.f, 1.f)
 			);
 
-	model_data.addBonePose (
+	model_data.addFramePose (
 			"LOWERARM_R",
 			1.,
 			Vector3f (0.f, 0.f, 0.f),

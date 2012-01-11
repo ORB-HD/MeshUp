@@ -59,11 +59,11 @@ typedef boost::shared_ptr<MeshData> MeshPtr;
 
 void loadOBJ (MeshData *mesh, const char *filename);
 
-struct Bone;
-typedef boost::shared_ptr<Bone> BonePtr;
+struct Frame;
+typedef boost::shared_ptr<Frame> FramePtr;
 
-struct Bone {
-	Bone() :
+struct Frame {
+	Frame() :
 		name (""),
 		parent_translation (0.f, 0.f, 0.f),
 		parent_rotation (0.f, 0.f, 0.f),
@@ -71,7 +71,7 @@ struct Bone {
 		pose_rotation (0.f, 0.f, 0.f),
 		pose_rotation_quaternion (0.f, 0.f, 0.f, 1.f),
 		pose_scaling (1.f, 1.f, 1.f),
-		bone_transform (Matrix44f::Identity ()),
+		frame_transform (Matrix44f::Identity ()),
 		pose_transform (Matrix44f::Identity ())
 	{}
 
@@ -85,13 +85,13 @@ struct Bone {
 	Vector3f pose_scaling;
 
 	/** Transformation from base to pose */
-	Matrix44f bone_transform;
+	Matrix44f frame_transform;
 	Matrix44f pose_transform;
 
-	std::vector<BonePtr> children;
+	std::vector<FramePtr> children;
 
 	void updatePoseTransform(const Matrix44f &parent_pose_transform);
-	void initBoneTransform(const Matrix44f &parent_pose_transform);
+	void initFrameTransform(const Matrix44f &parent_pose_transform);
 };
 
 struct Segment {
@@ -99,7 +99,7 @@ struct Segment {
 		name ("unnamed"),
 		dimensions (1.f, 1.f, 1.f),
 		meshcenter (0.f, 0.f, 0.f),
-		bone (BonePtr()),
+		frame (FramePtr()),
 		mesh_filename("")
 	{}
 
@@ -109,12 +109,12 @@ struct Segment {
 	Vector3f color;
 	MeshPtr mesh;
 	Vector3f meshcenter;
-	BonePtr bone;
+	FramePtr frame;
 	std::string mesh_filename;
 };
 
-struct BonePose {
-	BonePose() :
+struct FramePose {
+	FramePose() :
 		timestamp (-1.f),
 		translation (0.f, 0.f, 0.f),
 		rotation (0.f, 0.f, 0.f),
@@ -131,11 +131,11 @@ struct BonePose {
 	Vector3f endpoint;
 };
 
-struct BoneAnimationTrack {
-	typedef std::list<BonePose> BonePoseList;
-	BonePoseList poses;
+struct FrameAnimationTrack {
+	typedef std::list<FramePose> FramePoseList;
+	FramePoseList poses;
 
-	BonePose interpolatePose (float time);
+	FramePose interpolatePose (float time);
 };
 
 struct Animation {
@@ -145,8 +145,8 @@ struct Animation {
 		loop (false)
 	{}
 	std::string name;
-	typedef std::map<BonePtr, BoneAnimationTrack> BoneAnimationTrackMap;
-	BoneAnimationTrackMap bonetracks;
+	typedef std::map<FramePtr, FrameAnimationTrack> FrameAnimationTrackMap;
+	FrameAnimationTrackMap frametracks;
 
 	float current_time;
 	float duration;
@@ -154,65 +154,85 @@ struct Animation {
 };
 typedef boost::shared_ptr<Animation> AnimationPtr;
 
+struct FrameConfiguration {
+	FrameConfiguration() :
+		front_axis(1.f, 0.f, 0.f),
+		up_axis(0.f, 1.f, 0.f),
+		right_axis (0.f, 0.f, 1.f)
+	{ 
+		rotation_order[0] = 2;
+		rotation_order[1] = 1;
+		rotation_order[2] = 0;
+	}
+	Vector3f front_axis;
+	Vector3f up_axis;
+	Vector3f right_axis;
+
+	int rotation_order[3];
+};
+
 struct ModelData {
 	ModelData():
-		bones_initialized(false)
+		frames_initialized(false)
 	{
-		// create the BASE bone
-		BonePtr base_bone (new (Bone));
-		base_bone->name = "BASE";
-		base_bone->parent_translation.setZero();
-		base_bone->parent_rotation.setZero();
+		// create the BASE frame
+		FramePtr base_frame (new (Frame));
+		base_frame->name = "BASE";
+		base_frame->parent_translation.setZero();
+		base_frame->parent_rotation.setZero();
 
-		bones.push_back (base_bone);
-		bonemap["BASE"] = base_bone;
+		frames.push_back (base_frame);
+		framemap["BASE"] = base_frame;
 	}
 
 	typedef std::list<Segment> SegmentList;
 	SegmentList segments;
 	typedef std::map<std::string, MeshPtr> MeshMap;
 	MeshMap meshmap;
-	typedef std::vector<BonePtr> BoneVector;
-	BoneVector bones;
-	typedef std::map<std::string, BonePtr> BoneMap;
-	BoneMap bonemap;
-	typedef std::map<BonePtr, BoneAnimationTrack> BoneAnimationTrackMap;
+	typedef std::vector<FramePtr> FrameVector;
+	FrameVector frames;
+	typedef std::map<std::string, FramePtr> FrameMap;
+	FrameMap framemap;
+	typedef std::map<FramePtr, FrameAnimationTrack> FrameAnimationTrackMap;
 
-	/// Marks whether the bone transformations have to be initialized
-	bool bones_initialized;
+	/// Configuration how transformations are defined
+	FrameConfiguration configuration;
+
+	/// Marks whether the frame transformations have to be initialized
+	bool frames_initialized;
 	Animation animation;
 
-	void addBone (
-			const std::string &parent_bone_name,
-			const std::string &bone_name,
+	void addFrame (
+			const std::string &parent_frame_name,
+			const std::string &frame_name,
 			const Vector3f &parent_translation,
 			const Vector3f &parent_rotation);
 
 	void addSegment (
-			const std::string &bone_name,
+			const std::string &frame_name,
 			const std::string &segment_name,
 			const Vector3f &dimensions,
 			const Vector3f &color,
 			const std::string &mesh_name,
 			const Vector3f &mesh_center);
 
-	void addBonePose (
-			const std::string &bone_name,
+	void addFramePose (
+			const std::string &frame_name,
 			float time,
-			const Vector3f &bone_translation,
-			const Vector3f &bone_rotation,
-			const Vector3f &bone_scaling
+			const Vector3f &frame_translation,
+			const Vector3f &frame_rotation,
+			const Vector3f &frame_scaling
 			);
 
-	BonePtr findBone (const char* bone_name) {
-		BoneMap::iterator bone_iter = bonemap.find (bone_name);
+	FramePtr findFrame (const char* frame_name) {
+		FrameMap::iterator frame_iter = framemap.find (frame_name);
 
-		if (bone_iter == bonemap.end()) {
-			std::cerr << "Error: Could not find bone '" << bone_name << "'!" << std::endl;
-			return BonePtr();
+		if (frame_iter == framemap.end()) {
+			std::cerr << "Error: Could not find frame '" << frame_name << "'!" << std::endl;
+			return FramePtr();
 		}
 
-		return bone_iter->second;
+		return frame_iter->second;
 	}
 
 	void clear() {
@@ -232,14 +252,14 @@ struct ModelData {
 		animation.current_time = time_sec;
 	}
 
-	/// Initializes the fixed bone transformations and sets bones_initialized to true
-	void initBoneTransform();
-	/// Updates the pose information of the bones by interpolating the
+	/// Initializes the fixed frame transformations and sets frames_initialized to true
+	void initFrameTransform();
+	/// Updates the pose information of the frames by interpolating the
 	// keyframes defined in Animation
 	void updatePose();
 	/// Updates the full pose transformations recursively such that
-	//Bone::pose_transformation contains the full Base->Pose transformation
-	void updateBones();
+	//Frame::pose_transformation contains the full Base->Pose transformation
+	void updateFrames();
 
 	void draw();
 

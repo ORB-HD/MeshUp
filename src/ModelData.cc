@@ -123,12 +123,12 @@ void MeshData::draw() {
 }
 
 /*********************************
- * Bone
+ * Frame
  *********************************/
-void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
+void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform) {
 	// first translate, then rotate as specified in the angles
 	pose_transform = 
-		bone_transform
+		frame_transform
 //		rotation_angles_to_matrix (parent_rotation)
 //		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
 		* parent_pose_transform;
@@ -145,32 +145,32 @@ void Bone::updatePoseTransform(const Matrix44f &parent_pose_transform) {
 	}
 }
 
-void Bone::initBoneTransform(const Matrix44f &parent_bone_transform) {
+void Frame::initFrameTransform(const Matrix44f &parent_frame_transform) {
 	// first translate, then rotate as specified in the angles
-	bone_transform =	rotation_angles_to_matrix (parent_rotation)
+	frame_transform =	rotation_angles_to_matrix (parent_rotation)
 		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
-		children[ci]->initBoneTransform (bone_transform);
+		children[ci]->initFrameTransform (frame_transform);
 	}
 }
 
 /*********************************
- * BoneAnimationTrack
+ * FrameAnimationTrack
  *********************************/
-BonePose BoneAnimationTrack::interpolatePose (float time) {
+FramePose FrameAnimationTrack::interpolatePose (float time) {
 	if (poses.size() == 0) {
-		return BonePose();
+		return FramePose();
 	} else if (poses.size() == 1) {
 		return *poses.begin();
 	}
 
 	// at this point we have at least two poses
-	BonePoseList::iterator pose_iter = poses.begin();
+	FramePoseList::iterator pose_iter = poses.begin();
 
-	BonePose start_pose (*pose_iter);
+	FramePose start_pose (*pose_iter);
 	pose_iter++;
-	BonePose end_pose = (*pose_iter);
+	FramePose end_pose = (*pose_iter);
 
 	// find the two frames that surround the time
 	while (pose_iter != poses.end() && end_pose.timestamp <= time) {
@@ -212,33 +212,33 @@ BonePose BoneAnimationTrack::interpolatePose (float time) {
 /*********************************
  * ModelData
  *********************************/
-void ModelData::addBone (
-		const std::string &parent_bone_name,
-		const std::string &bone_name,
+void ModelData::addFrame (
+		const std::string &parent_frame_name,
+		const std::string &frame_name,
 		const Vector3f &parent_translation,
 		const Vector3f &parent_rotation) {
-	// mark bone transformations as dirty
-	bones_initialized = false;
+	// mark frame transformations as dirty
+	frames_initialized = false;
 
-	// create the bone
-	BonePtr bone (new Bone);
-	bone->name = bone_name;
-	bone->parent_translation = parent_translation;
-	bone->parent_rotation = parent_rotation;
+	// create the frame
+	FramePtr frame (new Frame);
+	frame->name = frame_name;
+	frame->parent_translation = parent_translation;
+	frame->parent_rotation = parent_rotation;
 
-	// first find the bone
-	BonePtr parent_bone = findBone (parent_bone_name.c_str());
-	if (parent_bone == NULL) {
-		cerr << "Could not find bone '" << parent_bone_name << "'!" << endl;
+	// first find the frame
+	FramePtr parent_frame = findFrame (parent_frame_name.c_str());
+	if (parent_frame == NULL) {
+		cerr << "Could not find frame '" << parent_frame_name << "'!" << endl;
 		exit (1);
 	}
 
-	parent_bone->children.push_back (bone);
-	bonemap[bone_name] = bone;
+	parent_frame->children.push_back (frame);
+	framemap[frame_name] = frame;
 }
 
 void ModelData::addSegment (
-		const std::string &bone_name,
+		const std::string &frame_name,
 		const std::string &segment_name,
 		const Vector3f &dimensions,
 		const Vector3f &color,
@@ -266,47 +266,47 @@ void ModelData::addSegment (
 
 	segment.mesh = mesh_iter->second;
 	segment.meshcenter = mesh_center;
-	segment.bone = findBone (bone_name.c_str());
+	segment.frame = findFrame (frame_name.c_str());
 	segment.mesh_filename = mesh_name;
-	assert (segment.bone != NULL);
+	assert (segment.frame != NULL);
 	segments.push_back (segment);
 }
 
-void ModelData::addBonePose (
-		const std::string &bone_name,
+void ModelData::addFramePose (
+		const std::string &frame_name,
 		float time,
-		const Vector3f &bone_translation,
-		const Vector3f &bone_rotation,
-		const Vector3f &bone_scaling
+		const Vector3f &frame_translation,
+		const Vector3f &frame_rotation,
+		const Vector3f &frame_scaling
 		) {
-	BonePtr bone = findBone (bone_name.c_str());
-	BonePose pose;
+	FramePtr frame = findFrame (frame_name.c_str());
+	FramePose pose;
 	pose.timestamp = time;
-	pose.translation = bone_translation;
-	pose.rotation = bone_rotation;
-	pose.rotation_quaternion = rotation_angles_to_quaternion (bone_rotation);
-	pose.scaling = bone_scaling;
+	pose.translation = frame_translation;
+	pose.rotation = frame_rotation;
+	pose.rotation_quaternion = rotation_angles_to_quaternion (frame_rotation);
+	pose.scaling = frame_scaling;
 
-	animation.bonetracks[bone].poses.push_back(pose);
+	animation.frametracks[frame].poses.push_back(pose);
 
 	// update the duration of the animation
 	if (time > animation.duration)
 		animation.duration = time;
 }
 
-void ModelData::initBoneTransform() {
+void ModelData::initFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
-	for (unsigned int bi = 0; bi < bones.size(); bi++) {
-		bones[bi]->initBoneTransform (base_transform);
+	for (unsigned int bi = 0; bi < frames.size(); bi++) {
+		frames[bi]->initFrameTransform (base_transform);
 	}
 
-	bones_initialized = true;
+	frames_initialized = true;
 }
 
 void ModelData::updatePose() {
 	// if there is no animation we can return
-	if (animation.bonetracks.size() != 0) {
+	if (animation.frametracks.size() != 0) {
 		if (animation.current_time > animation.duration) {
 			if (animation.loop) {
 				while (animation.current_time > animation.duration)
@@ -316,33 +316,33 @@ void ModelData::updatePose() {
 			}
 		}
 	}
-	BoneAnimationTrackMap::iterator bone_track_iter = animation.bonetracks.begin();
+	FrameAnimationTrackMap::iterator frame_track_iter = animation.frametracks.begin();
 
-	while (bone_track_iter != animation.bonetracks.end()) {
-		BonePose pose = bone_track_iter->second.interpolatePose (animation.current_time);
-		bone_track_iter->first->pose_translation = pose.translation;
-		bone_track_iter->first->pose_rotation = pose.rotation;
-		bone_track_iter->first->pose_rotation_quaternion = pose.rotation_quaternion;
-		bone_track_iter->first->pose_scaling = pose.scaling;
+	while (frame_track_iter != animation.frametracks.end()) {
+		FramePose pose = frame_track_iter->second.interpolatePose (animation.current_time);
+		frame_track_iter->first->pose_translation = pose.translation;
+		frame_track_iter->first->pose_rotation = pose.rotation;
+		frame_track_iter->first->pose_rotation_quaternion = pose.rotation_quaternion;
+		frame_track_iter->first->pose_scaling = pose.scaling;
 
-		bone_track_iter++;
+		frame_track_iter++;
 	}
 }
 
-void ModelData::updateBones() {
+void ModelData::updateFrames() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
-	// check whether the bone transformations are valid
-	if (bones_initialized == false)
-		initBoneTransform();
+	// check whether the frame transformations are valid
+	if (frames_initialized == false)
+		initFrameTransform();
 
-	for (unsigned int bi = 0; bi < bones.size(); bi++) {
-		bones[bi]->updatePoseTransform (base_transform);
+	for (unsigned int bi = 0; bi < frames.size(); bi++) {
+		frames[bi]->updatePoseTransform (base_transform);
 	}
 }
 
 void ModelData::draw() {
-	updateBones();
+	updateFrames();
 
 	SegmentList::iterator seg_iter = segments.begin();
 
@@ -353,7 +353,7 @@ void ModelData::draw() {
 		Matrix44f transform_matrix = 
 			smScale (seg_iter->dimensions[0], seg_iter->dimensions[1], seg_iter->dimensions[2])
 			* smTranslate (seg_iter->meshcenter[0], seg_iter->meshcenter[1], seg_iter->meshcenter[2])
-			* seg_iter->bone->pose_transform;
+			* seg_iter->frame->pose_transform;
 		glMultMatrixf (transform_matrix.data());
 
 		// drawing
@@ -375,6 +375,9 @@ Json::Value vec3_to_json (const Vector3f &vec) {
 }
 
 Vector3f json_to_vec3 (const Json::Value &value) {
+	if (value.isNull())
+		return Vector3f (0.f, 0.f, 0.f);
+
 	Vector3f result (
 			value[0].asFloat(),
 			value[1].asFloat(),
@@ -384,14 +387,29 @@ Vector3f json_to_vec3 (const Json::Value &value) {
 	return result;
 }
 
-Json::Value bone_to_json_value (const BonePtr &bone) {
+Json::Value frame_configuration_to_json_value (const FrameConfiguration &config) {
+	using namespace Json;
+
+	Value result;
+	result["front_axis"] = vec3_to_json (config.front_axis);
+	result["up_axis"] = vec3_to_json (config.up_axis);
+	result["right_axis"] = vec3_to_json (config.right_axis);
+
+	result["rotation_order"][0] = config.rotation_order[0];
+	result["rotation_order"][1] = config.rotation_order[1];
+	result["rotation_order"][2] = config.rotation_order[2];
+
+	return result;
+}
+
+Json::Value frame_to_json_value (const FramePtr &frame) {
 	using namespace Json;
 
 	Value result;
 
-	result["name"] = bone->name;
-	result["parent_translation"] = vec3_to_json(bone->parent_translation);
-	result["parent_rotation"] = vec3_to_json(bone->parent_rotation);
+	result["name"] = frame->name;
+	result["parent_translation"] = vec3_to_json(frame->parent_translation);
+	result["parent_rotation"] = vec3_to_json(frame->parent_rotation);
 
 	return result;
 }
@@ -406,7 +424,7 @@ Json::Value segment_to_json_value (const Segment &segment) {
 	result["color"] = vec3_to_json (segment.color);
 	result["mesh_center"] = vec3_to_json (segment.meshcenter);
 	result["mesh_filename"] = segment.mesh_filename;
-	result["bone"] = segment.bone->name;
+	result["frame"] = segment.frame->name;
 
 	return result;
 }
@@ -414,46 +432,48 @@ Json::Value segment_to_json_value (const Segment &segment) {
 void ModelData::saveToFile (const char* filename) {
 	Json::Value root_node;
 
-	int bone_index = 0;
-	// we have to write out the bones recursively
-	for (int bi = 0; bi < bones.size(); bi++) {
-		stack<BonePtr> bone_stack;
-		bone_stack.push (bones[bi]);
+	root_node["configuration"] = frame_configuration_to_json_value (configuration);
+
+	int frame_index = 0;
+	// we have to write out the frames recursively
+	for (int bi = 0; bi < frames.size(); bi++) {
+		stack<FramePtr> frame_stack;
+		frame_stack.push (frames[bi]);
 
 		stack<int> child_index_stack;
-		if (bone_stack.top()->children.size() > 0) {
+		if (frame_stack.top()->children.size() > 0) {
 			child_index_stack.push(0);
 		}
 
-		if (bone_stack.top()->name != "BASE") {
-			root_node["bones"][bone_index] = bone_to_json_value(bone_stack.top());
-			bone_index++;
+		if (frame_stack.top()->name != "BASE") {
+			root_node["frames"][frame_index] = frame_to_json_value(frame_stack.top());
+			frame_index++;
 		}
 
-		while (bone_stack.size() > 0) {
-			BonePtr cur_bone = bone_stack.top();
+		while (frame_stack.size() > 0) {
+			FramePtr cur_frame = frame_stack.top();
 			int child_idx = child_index_stack.top();
 
-			if (child_idx < cur_bone->children.size()) {
-				BonePtr child_bone = cur_bone->children[child_idx];
+			if (child_idx < cur_frame->children.size()) {
+				FramePtr child_frame = cur_frame->children[child_idx];
 
-				root_node["bones"][bone_index] = bone_to_json_value(child_bone);
-				root_node["bones"][bone_index]["parent"] = cur_bone->name;
-				bone_index++;
+				root_node["frames"][frame_index] = frame_to_json_value(child_frame);
+				root_node["frames"][frame_index]["parent"] = cur_frame->name;
+				frame_index++;
 				
 				child_index_stack.pop();
 				child_index_stack.push (child_idx + 1);
 
-				if (child_bone->children.size() > 0) {
-					bone_stack.push (child_bone);
+				if (child_frame->children.size() > 0) {
+					frame_stack.push (child_frame);
 					child_index_stack.push(0);
 				}
 			} else {
-				bone_stack.pop();
+				frame_stack.pop();
 				child_index_stack.pop();
 			}
 
-//			bone_stack.pop();
+//			frame_stack.pop();
 		}
 	}
 
@@ -501,17 +521,46 @@ void ModelData::loadFromFile (const char* filename) {
 	// clear the model
 	clear();
 
-	// read the bones:
-	ValueIterator node_iter = root["bones"].begin();
+	// read the configuration, fill with default values if they do not exist
+	if (root["configuration"]["front_axis"].isNull())
+		root["configuration"]["front_axis"] = vec3_to_json (Vector3f (1.f, 0.f, 0.f));
+	if (root["configuration"]["up_axis"].isNull())
+		root["configuration"]["up_axis"] = vec3_to_json (Vector3f (0.f, 1.f, 0.f));
+	if (root["configuration"]["right_axis"].isNull())
+		root["configuration"]["right_axis"] = vec3_to_json (Vector3f (0.f, 0.f, 1.f));
+	if (root["configuration"]["rotation_order"][0].isNull())
+		root["configuration"]["rotation_order"][0] = 2;
+	if (root["configuration"]["rotation_order"][1].isNull())
+		root["configuration"]["rotation_order"][1] = 1;
+	if (root["configuration"]["rotation_order"][2].isNull())
+		root["configuration"]["rotation_order"][2] = 0;
 
-	while (node_iter != root["bones"].end()) {
-		Value bone_node = *node_iter;
+	configuration.front_axis = json_to_vec3(root["configuration"]["front_axis"]);
+	configuration.up_axis = json_to_vec3(root["configuration"]["up_axis"]);
+	configuration.right_axis = json_to_vec3(root["configuration"]["right_axis"]);
+	configuration.rotation_order[0] = root["configuration"]["rotation_order"][0].asInt();
+	configuration.rotation_order[1] = root["configuration"]["rotation_order"][1].asInt();
+	configuration.rotation_order[2] = root["configuration"]["rotation_order"][2].asInt();
 
-		addBone (
-				bone_node["parent"].asString(),
-				bone_node["name"].asString(),
-				json_to_vec3 (bone_node["parent_translation"]),
-				json_to_vec3 (bone_node["parent_rotation"])
+	cout << "front: " << configuration.front_axis.transpose() << endl;
+	cout << "up   : " << configuration.up_axis.transpose() << endl;
+	cout << "right: " << configuration.right_axis.transpose() << endl;
+
+	cout << "rot  : " << configuration.rotation_order[0] 
+		<< ", " << configuration.rotation_order[1] 
+		<< ", " << configuration.rotation_order[2] << endl;
+
+	// read the frames:
+	ValueIterator node_iter = root["frames"].begin();
+
+	while (node_iter != root["frames"].end()) {
+		Value frame_node = *node_iter;
+
+		addFrame (
+				frame_node["parent"].asString(),
+				frame_node["name"].asString(),
+				json_to_vec3 (frame_node["parent_translation"]),
+				json_to_vec3 (frame_node["parent_rotation"])
 				);
 
 		node_iter++;
@@ -522,7 +571,7 @@ void ModelData::loadFromFile (const char* filename) {
 		Value segment_node = *node_iter;
 
 		addSegment (
-				segment_node["bone"].asString(),
+				segment_node["frame"].asString(),
 				segment_node["name"].asString(),
 				json_to_vec3 (segment_node["dimensions"]),
 				json_to_vec3 (segment_node["color"]),
@@ -533,5 +582,5 @@ void ModelData::loadFromFile (const char* filename) {
 		node_iter++;
 	}
 
-	initBoneTransform();
+	initFrameTransform();
 }
