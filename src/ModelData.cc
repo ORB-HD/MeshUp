@@ -437,6 +437,9 @@ Json::Value segment_to_json_value (const Segment &segment) {
 }
 
 void ModelData::saveToFile (const char* filename) {
+	// we absoulutely have to set the locale to english for numbers.
+	// Otherwise we might wrongly formatted data. 
+	std::setlocale(LC_NUMERIC, "POSIX");
 	Json::Value root_node;
 
 	root_node["configuration"] = frame_configuration_to_json_value (configuration);
@@ -501,6 +504,10 @@ void ModelData::saveToFile (const char* filename) {
 }
 
 void ModelData::loadFromFile (const char* filename) {
+	// we absoulutely have to set the locale to english for numbers.
+	// Otherwise we might read false values due to the wrong conversion.
+	std::setlocale(LC_NUMERIC, "POSIX");
+
 	using namespace Json;
 	Value root;
 	Reader reader;
