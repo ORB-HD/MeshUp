@@ -61,11 +61,19 @@ GLWidget::~GLWidget() {
 
 void GLWidget::loadModel(const char* filename) {
 	if (opengl_initialized) {
-		qDebug() << "Loading model " << filename;
-		model_data.loadFromFile (filename);
+		model_data.loadModelFromFile (filename);
 	} else {
 		// mark file for later loading
 		model_filename = filename;
+	}
+}
+
+void GLWidget::loadAnimation(const char* filename) {
+	if (opengl_initialized) {
+		model_data.loadAnimationFromFile (filename);
+	} else {
+		// mark file for later loading
+		animation_filename = filename;
 	}
 }
 
@@ -162,9 +170,6 @@ void GLWidget::initializeGL()
 
 	opengl_initialized = true;
 
-	if (model_filename.size() != 0)
-		loadModel (model_filename.c_str());
-
 	/*
 	// Fog stuff
 	glEnable (GL_FOG);
@@ -185,6 +190,10 @@ void GLWidget::initializeGL()
 //	model_data.loadFromFile("models/yzxrotation.json");
 //	model_data.saveToFile("testmodel.json");
 	model_data.setAnimationLoop(true);
+
+//	model_data.loadModelFromFile("models/knubbi.json");
+//	model_data.loadAnimationFromFile ("testanimation.txt");
+//	exit(1);
 
 	/*
 	model_data.addFramePose (
@@ -397,6 +406,24 @@ void GLWidget::drawGrid() {
 }
 
 void GLWidget::paintGL() {
+	// check whether we should reload our model
+	if (model_filename.size() != 0) {
+		loadModel (model_filename.c_str());
+
+		// clear the variable to mark that we do not have to load a model
+		// anymore
+		model_filename = "";
+	}
+
+	// or the animation
+	if (animation_filename.size() != 0) {
+		loadAnimation (animation_filename.c_str());
+
+		// clear the variable to mark that we do not have to load the animation 
+		// anymore.
+		animation_filename = "";
+	}
+
 	update_timer();
 	glClearColor (0., 0., 0., 1.);
 

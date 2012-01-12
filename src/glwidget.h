@@ -18,6 +18,7 @@ class GLWidget : public QGLWidget
 		QSize sizeHint() const;
 
 		void loadModel (const char *filename);
+		void loadAnimation (const char *filename);
 		float getAnimationDuration();
 
 	protected:
@@ -53,6 +54,7 @@ class GLWidget : public QGLWidget
 		double delta_time_sec;
 
 		std::string model_filename;
+		std::string animation_filename;
 
 		bool opengl_initialized;
 

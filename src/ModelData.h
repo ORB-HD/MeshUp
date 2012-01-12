@@ -324,8 +324,9 @@ struct ModelData {
 
 	void draw();
 
-	void saveToFile (const char* filename);
-	void loadFromFile (const char* filename);
+	void saveModelToFile (const char* filename);
+	void loadModelFromFile (const char* filename);
+	void loadAnimationFromFile (const char* filename);
 };
 
 #endif

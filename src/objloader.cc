@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cctype>
 
+#include "string_utils.h"
+
 using namespace std;
 
 enum ReadState {
@@ -35,52 +37,6 @@ struct FaceInfo {
 	int texcoord_index[3];
 	int normal_index[3];
 };
-
-const std::string whitespaces_std (" \t\n\r");
-
-string strip_comments (const std::string &line) {
-	return line.substr (0, line.find ('#'));
-}
-
-string strip_whitespaces (const std::string &line, string whitespaces = whitespaces_std) {
-	string result (line);
-	if (result.find (whitespaces) != string::npos) {
-		result = result.substr (result.find_first_not_of (whitespaces), result.size());
-	}
-
-	while (whitespaces.find (result[result.size() - 1]) != string::npos) {
-		result = result.substr (0, result.size() - 1);
-	}
-	return result;
-}
-
-string tolower (const std::string &line) {
-	string result (line);
-	for (int i = 0; i < line.size(); i++) 
-		result[i] = tolower(result[i]);
-
-	return result;
-}
-
-string trim_line (const std::string &line) {
-	return tolower (strip_whitespaces (strip_comments (line)));
-}
-
-std::vector<string> tokenize (const std::string &line_in, string delimiter=whitespaces_std) {
-	std::vector<string> result;
-	string line = line_in;
-
-	while (line.find_first_of (delimiter) != string::npos) {
-		string token = line.substr (0, line.find_first_of (delimiter));
-		line = line.substr (token.size() + 1, line.size());
-		result.push_back (token);
-	}
-
-	if (line.size() > 0)
-		result.push_back (line);
-
-	return result;
-}
 
 void loadOBJ (MeshData *mesh, const char *filename) {
 	string line;

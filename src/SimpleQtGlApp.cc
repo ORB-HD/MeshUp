@@ -60,12 +60,35 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 	connect (actionQuit, SIGNAL( triggered() ), qApp, SLOT( quit() ));
 }
 
+void print_usage() {
+	cout << "Usage: meshup [model_file] [animation_file] " << endl
+		<< "Visualization tool for multi-body systems based on skeletal animation and magic." << endl
+		<< endl
+		<< "Report bugs to martin.felis@iwr.uni-heidelberg.de" << endl;
+}
+
 void SimpleQtGlApp::parseArguments (int argc, char* argv[]) {
+	bool model_loaded = false;
+	bool animation_loaded = false;
 	for (int i = 1; i < argc; i++) {
-		qDebug () << "Argument " << i << ": " << argv[i];
+		if (string(argv[i]) == "--help"
+				|| string(argv[i]) == "-h") {
+			print_usage();
+			exit(1);
+		}
+
+		// qDebug () << "Argument " << i << ": " << argv[i];
 		QFile test_file (argv[i]);
-		if (test_file.exists())
-			glWidget->loadModel(argv[i]);
+		if (test_file.exists()) {
+			// first file is assumed to be the model file
+			if (!model_loaded) {
+				glWidget->loadModel(argv[i]);
+				model_loaded = true;
+			} else if (!animation_loaded) {
+				glWidget->loadAnimation(argv[i]);
+				animation_loaded = true;
+			}
+		}
 	}
 }
 
@@ -92,7 +115,6 @@ void SimpleQtGlApp::toggle_loop_animation (bool status) {
 		timeLine->setLoopCount(1);
 	}
 }
-
 
 void SimpleQtGlApp::timeline_frame_changed (int frame_index) {
 //	qDebug () << __func__ << " frame_index = " << frame_index;

@@ -1,0 +1,17 @@
+MeshUp! A visualization tool for multi-body systems based on skeletal
+animation and magic.
+
+Author: Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+
+Features:
+  * Simple definition of models (see directory models/ for examples)
+	* Model serialization to and from JSON files
+	* Lading of Wavefront OBJ files that can be attached to the meshes
+	* Customizable frame definitions order of rotation angles
+	* Loading and interpolation of keyframed animation (see sampleanimation.txt)
+
+Usage: meshup [model_file] [animation_file]
+
+See meshup --help for more options.
+
+Report bugs to martin.felis@iwr.uni-heidelberg.de

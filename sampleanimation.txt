@@ -1,0 +1,19 @@
+# Meshup Animation file.
+#
+# Comments are started with the hash '#' character. Empty lines are
+# ignored.
+#
+# Specification of the columns starts with the keyword 'COLUMNS:'. The
+# descriptions can be specified separated by commas or whitespaces such as
+# tabs.
+COLUMNS:
+Time,
+HIP:T:X, HIP:T:Y,		HIP:T:Z,
+UPPERBODY:R:Z,
+UPPERBODY:R:Y,
+UPPERBODY:R:X,
+# The actual data part starts with the keyword 'DATA:'. The values are
+# separated by spaces or tabs.
+DATA:
+0.	0.	0.	0.	0.	0.	0.
+1.	2.	0.5	1.	20.	30.	39.

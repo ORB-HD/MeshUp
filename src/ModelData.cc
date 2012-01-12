@@ -3,6 +3,7 @@
 #include "ModelData.h"
 
 #include "SimpleMathGL.h"
+#include "string_utils.h"
 
 #include "json/json.h"
 
@@ -15,6 +16,7 @@
 using namespace std;
 
 const bool use_vbo = true;
+const string invalid_id_characters = "{}[],;: \r\n\t";
 
 void MeshData::begin() {
 	started = true;
@@ -129,8 +131,6 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const Fr
 	// first translate, then rotate as specified in the angles
 	pose_transform = 
 		frame_transform
-//		rotation_angles_to_matrix (parent_rotation)
-//		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2])
 		* parent_pose_transform;
 
 	// apply pose transform
@@ -219,6 +219,14 @@ void ModelData::addFrame (
 		const Vector3f &parent_rotation) {
 	// mark frame transformations as dirty
 	frames_initialized = false;
+
+	// check for invalid characters
+	if (frame_name.find_first_of (invalid_id_characters) != string::npos) {
+		cerr << "Error: Found invalid character '"
+			<< frame_name[frame_name.find_first_of (invalid_id_characters)]
+			<< "' in frame name '" << frame_name << "'!" << endl;
+		exit (1);
+	}
 
 	// create the frame
 	FramePtr frame (new Frame);
@@ -436,7 +444,7 @@ Json::Value segment_to_json_value (const Segment &segment) {
 	return result;
 }
 
-void ModelData::saveToFile (const char* filename) {
+void ModelData::saveModelToFile (const char* filename) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might wrongly formatted data. 
 	std::setlocale(LC_NUMERIC, "POSIX");
@@ -503,7 +511,7 @@ void ModelData::saveToFile (const char* filename) {
 	file_out.close();
 }
 
-void ModelData::loadFromFile (const char* filename) {
+void ModelData::loadModelFromFile (const char* filename) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might read false values due to the wrong conversion.
 	std::setlocale(LC_NUMERIC, "POSIX");
@@ -518,6 +526,8 @@ void ModelData::loadFromFile (const char* filename) {
 		cerr << "Error opening file " << filename << "!" << endl;
 		exit(1);
 	}
+
+	cout << "Loading model " << filename << endl;
 
 	stringstream buffer;
 	buffer << file_in.rdbuf();
@@ -601,4 +611,273 @@ void ModelData::loadFromFile (const char* filename) {
 	}
 
 	initFrameTransform();
+}
+
+struct ColumnInfo {
+	ColumnInfo() :
+		frame (FramePtr()),
+		type (TypeUnknown),
+		axis (AxisUnknown),
+		is_time_column (false)
+	{}
+	enum TransformType {
+		TypeUnknown = 0,
+		TypeRotation,
+		TypeTranslation,
+		TypeScale,
+	};
+	enum AxisName {
+		AxisUnknown = 0,
+		AxisX,
+		AxisY,
+		AxisZ
+	};
+	FramePtr frame;
+	TransformType type;
+	AxisName axis;
+
+	bool is_time_column;
+};
+
+struct AnimationKeyPoses {
+	float timestamp;
+	std::vector<ColumnInfo> columns;
+	typedef std::map<FramePtr, FramePose> FramePoseMap;
+	FramePoseMap frame_poses;
+	
+	void clearFramePoses() {
+		frame_poses.clear();
+	}
+	void setValue (int column_index, float value) {
+		assert (column_index <= columns.size());
+		ColumnInfo col_info = columns[column_index];
+
+		if (col_info.is_time_column) {
+			timestamp = value;
+			return;
+		}
+
+		FramePtr frame = col_info.frame;
+
+		if (frame_poses.find(frame) == frame_poses.end()) {
+			// create new frame and insert it
+			frame_poses[frame] = FramePose();
+		}
+
+		if (col_info.type == ColumnInfo::TypeRotation) {
+			if (col_info.axis == ColumnInfo::AxisX) {
+				frame_poses[frame].rotation[0] = value;
+			}
+			if (col_info.axis == ColumnInfo::AxisY) {
+				frame_poses[frame].rotation[1] = value;
+			}
+			if (col_info.axis == ColumnInfo::AxisZ) {
+				frame_poses[frame].rotation[2] = value;
+			}
+		} else if (col_info.type == ColumnInfo::TypeTranslation) {
+			if (col_info.axis == ColumnInfo::AxisX) {
+				frame_poses[frame].translation[0] = value;
+			}
+			if (col_info.axis == ColumnInfo::AxisY) {
+				frame_poses[frame].translation[1] = value;
+			}
+			if (col_info.axis == ColumnInfo::AxisZ) {
+				frame_poses[frame].translation[2] = value;
+			}	
+		} else if (col_info.type == ColumnInfo::TypeScale) {
+			if (col_info.axis == ColumnInfo::AxisX) {
+				frame_poses[frame].scaling[0] = value;
+			}
+			if (col_info.axis == ColumnInfo::AxisY) {
+				frame_poses[frame].scaling[1] = value;
+			}
+			if (col_info.axis == ColumnInfo::AxisZ) {
+				frame_poses[frame].scaling[2] = value;
+			}	
+		} else {
+			cerr << "Error: invalid column info type: " << col_info.type << ". Something really weird happened!" << endl;
+			exit (1);
+		}
+	}
+	void updateTimeValues () {
+		for (FramePoseMap::iterator pose_iter = frame_poses.begin(); pose_iter != frame_poses.end(); pose_iter++) {
+			pose_iter->second.timestamp = timestamp;
+		}
+	}
+};
+
+void ModelData::loadAnimationFromFile (const char* filename) {
+	ifstream file_in (filename);
+
+	if (!file_in) {
+		cerr << "Error opening animation file " << filename << "!";
+		exit (1);
+	}
+
+	cout << "Loading animation " << filename << endl;
+
+	string line;
+
+	bool column_section = false;
+	bool data_section = false;
+	int column_index = 0;
+	int line_number = 0;
+	AnimationKeyPoses animation_keyposes;
+
+	while (!file_in.eof()) {
+		getline (file_in, line);
+		line_number++;
+	
+		line = strip_comments (strip_whitespaces( (line)));
+		
+		// skip lines with no information
+		if (line.size() == 0)
+			continue;
+
+		if (line.substr (0, string("COLUMNS:").size()) == "COLUMNS:") {
+			column_section = true;
+
+			// we set it to -1 and can then easily increasing the value
+			column_index = -1;
+			continue;
+		}
+
+		if (line.substr (0, string("DATA:").size()) == "DATA:") {
+			column_section = false;
+			data_section = true;
+			continue;
+		}
+
+		if (column_section) {
+			// do columny stuff
+			// cout << "COLUMN:" << line << endl;
+
+			std::vector<string> elements = tokenize(line, ", \t\n\r");
+			for (int ei = 0; ei < elements.size(); ei++) {
+				// skip elements that had multiple spaces in them
+				if (elements[ei].size() == 0)
+					continue;
+
+				// it's safe to increase the column index here, as we did
+				// initialize it with -1
+				column_index++;
+
+				string column_def = strip_whitespaces(elements[ei]);
+				// cout << "  E: " << column_def << endl;
+
+				if (tolower(column_def) == "time") {
+					ColumnInfo column_info;
+					column_info.is_time_column = true;
+					animation_keyposes.columns.push_back(column_info);
+					// cout << "Setting time column to " << column_index << endl;
+					continue;
+				}
+
+				std::vector<string> spec = tokenize(column_def, ":");
+				if (spec.size() != 3) {
+					cerr << "Error parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
+					exit(1);
+				}
+
+				// find the frame
+				FramePtr frame = findFrame (strip_whitespaces(spec[0]).c_str());
+				if (frame == NULL) {
+					cerr << "Unknown frame '" << spec[0] << "' in " << filename << " line " << line_number << endl;
+					exit (1);
+				}
+
+				// the transform type
+				string type_str = tolower(strip_whitespaces(spec[1]));
+				ColumnInfo::TransformType type = ColumnInfo::TypeUnknown;
+				if (type_str == "rotation"
+						|| type_str == "r")
+					type = ColumnInfo::TypeRotation;
+				else if (type_str == "translation"
+						|| type_str == "t")
+					type = ColumnInfo::TypeTranslation;
+				else if (type_str == "scale"
+						|| type_str == "s")
+					type = ColumnInfo::TypeScale;
+				else {
+					cerr << "Unknown transform type '" << spec[1] << "' in " << filename << " line " << line_number << endl;
+					exit (1);
+				}
+
+				// and the axis
+				string axis_str = tolower(strip_whitespaces(spec[2]));
+				ColumnInfo::AxisName axis_name;
+				if (axis_str == "x")
+					axis_name = ColumnInfo::AxisX;
+				else if (axis_str == "y")
+					axis_name = ColumnInfo::AxisY;
+				else if (axis_str == "z")
+					axis_name = ColumnInfo::AxisZ;
+				else {
+					cerr << "Unknown axis name '" << spec[2] << "' in " << filename << " line " << line_number << endl;
+					exit (1);
+				}
+
+				ColumnInfo col_info;
+				col_info.frame = frame;
+				col_info.type = type;
+				col_info.axis = axis_name;
+
+				// cout << "Adding column " << column_index << " " << frame->name << ", " << type << ", " << axis_name << endl;
+				animation_keyposes.columns.push_back(col_info);
+			}
+
+			continue;
+		}
+
+		if (data_section) {
+			// cout << "DATA  :" << line << endl;
+			// parse the DOF description and set the column info in
+			// animation_keyposes
+
+			// Data part:
+			// columns have been read
+			std::vector<string> columns = tokenize (line);
+			assert (columns.size() >= animation_keyposes.columns.size());
+
+			// we update all the frame_poses. Once we're done, we add all poses
+			// to the given time and clear all frame poses again.
+			animation_keyposes.clearFramePoses();
+
+			for (int ci = 0; ci < animation_keyposes.columns.size(); ci++) {
+				// parse each column value and submit it to animation_keyposes
+				float value;
+				istringstream value_stream (columns[ci]);
+				value_stream >> value;
+				// cout << "  col value " << ci << " = " << value << endl;
+				animation_keyposes.setValue (ci, value);
+			}
+
+			// dispatch the time information to all frame poses
+			animation_keyposes.updateTimeValues();
+
+			AnimationKeyPoses::FramePoseMap::iterator frame_pose_iter = animation_keyposes.frame_poses.begin();
+			while (frame_pose_iter != animation_keyposes.frame_poses.end()) {
+				// call addFramePose()
+				FramePtr frame = frame_pose_iter->first;
+				FramePose pose = frame_pose_iter->second;
+
+				// cout << "addFramePose("
+				// 	<< "  " << frame->name << endl
+				// 	<< "  " << pose.timestamp << endl
+				// 	<< "  " << pose.translation.transpose() << endl
+				// 	<< "  " << pose.rotation.transpose() << endl
+				// 	<< "  " << pose.scaling.transpose() << endl;
+
+				addFramePose (frame->name.c_str(),
+						pose.timestamp,
+						pose.translation,
+						pose.rotation,
+						pose.scaling
+						);
+
+				frame_pose_iter++;
+			}
+			continue;
+		}
+	}
 }
