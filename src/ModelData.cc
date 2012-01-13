@@ -306,7 +306,7 @@ void ModelData::addFramePose (
 	FramePtr frame = findFrame (frame_name.c_str());
 	FramePose pose;
 	pose.timestamp = time;
-	pose.translation = frame_translation;
+	pose.translation = configuration.axes_rotation.transpose() * frame_translation;
 	pose.rotation = frame_rotation;
 	pose.rotation_quaternion = rotation_angles_to_quaternion (frame_rotation, configuration);
 	pose.scaling = frame_scaling;
