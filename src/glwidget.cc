@@ -28,7 +28,13 @@ double draw_time = 0.;
 int draw_count = 0;
 
 GLWidget::GLWidget(QWidget *parent)
-    : QGLWidget(parent), opengl_initialized (false)
+    : QGLWidget(parent),
+		opengl_initialized (false),
+		draw_base_axes (false),
+		draw_frame_axes (false),
+		draw_grid (false),
+		draw_floor (true),
+		draw_meshes (true)
 {
 	poi.setX(0.);
 	poi.setY(1.0);
@@ -89,15 +95,23 @@ float GLWidget::getAnimationDuration() {
  * Slots
  ****************/
 void GLWidget::toggle_draw_grid (bool status) {
-	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
+	draw_grid = status;
 }
 
-void GLWidget::toggle_draw_bones (bool status) {
-	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
+void GLWidget::toggle_draw_base_axes (bool status) {
+	draw_base_axes = status;
 }
 
-void GLWidget::toggle_draw_axes (bool status) {
-	qDebug() << __func__ << " status = " << status << ": not yet implemented!";
+void GLWidget::toggle_draw_frame_axes (bool status) {
+	draw_frame_axes = status;
+}
+
+void GLWidget::toggle_draw_floor (bool status) {
+	draw_floor = status;
+}
+
+void GLWidget::toggle_draw_meshes (bool status) {
+	draw_meshes = status;
 }
 
 void GLWidget::update_timer() {
@@ -170,121 +184,7 @@ void GLWidget::initializeGL()
 
 	opengl_initialized = true;
 
-	/*
-	// Fog stuff
-	glEnable (GL_FOG);
-
-	glFogi (GL_FOG_MODE, GL_LINEAR);
-	glFogfv (GL_FOG_COLOR, Vector4f (0.3f, 0.3f, 0.3f, 1.f).data());
-	glFogf (GL_FOG_DENSITY, 1.f);
-	glHint (GL_FOG_HINT, GL_DONT_CARE);
-
-	glFogf (GL_FOG_START, 20.0f);
-	glFogf (GL_FOG_END, 25.0f);
-	
-	glFogi (GL_FOG_COORD_SRC, GL_FRAGMENT_DEPTH);
-	*/
-
-//	model_data.saveToFile("testmodel_backup.json");
-//	model_data.loadFromFile("models/samplemodel.json");
-//	model_data.loadFromFile("models/yzxrotation.json");
-//	model_data.saveToFile("testmodel.json");
 	model_data.setAnimationLoop(true);
-
-//	model_data.loadModelFromFile("models/knubbi.json");
-//	model_data.loadAnimationFromFile ("testanimation.txt");
-//	exit(1);
-
-	/*
-	model_data.addFramePose (
-			"UPPERBODY",
-			0.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"UPPERBODY",
-			1.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 30.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"UPPERBODY",
-			1.5,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 30.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"UPPERBODY",
-			2.5,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 30.f, 30.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"UPPERBODY",
-			3.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 30.f, 30.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"UPPERBODY",
-			4.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (30.f, 30.f, 30.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-			*/
-	/*
-	model_data.addFramePose (
-			"HIP",
-			0.,
-			Vector3f (0.f, 0.9f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f));
-
-	model_data.addFramePose (
-			"UPPERARM_R",
-			0.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"UPPERARM_R",
-			2.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 90.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"LOWERARM_R",
-			0.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
-
-	model_data.addFramePose (
-			"LOWERARM_R",
-			1.,
-			Vector3f (0.f, 0.f, 0.f),
-			Vector3f (0.f, 0.f, 90.f),
-			Vector3f (1.f, 1.f, 1.f)
-			);
- */
-
 }
 
 void GLWidget::updateSphericalCoordinates() {
@@ -394,7 +294,7 @@ void GLWidget::drawGrid() {
 	xstep = fabs (xmin - xmax) / (float)count;
 	zstep = fabs (zmin - zmax) / (float)count;
 
-	glColor3f (1.0, 0.6, 0.6);
+	glColor3f (1.f, 1.f, 1.f);
 	glBegin (GL_LINES);
 	for (i = 0; i <= count; i++) {
 		glVertex3f (i * xstep + xmin, 0., zmin);
@@ -440,8 +340,11 @@ void GLWidget::paintGL() {
 	glEnable (GL_COLOR_MATERIAL);
 	glDisable(GL_LIGHTING);
 
-//	drawGrid();
-	draw_checkers_board_shaded();
+	if (draw_grid)
+		drawGrid();
+
+	if (draw_floor)
+		draw_checkers_board_shaded();
 
 	glEnable (GL_COLOR_MATERIAL);
 	glEnable(GL_LIGHTING);
@@ -450,10 +353,17 @@ void GLWidget::paintGL() {
 	timer_start (&timer_info);
 
 	model_data.updatePose ();
-	model_data.draw();
+
+	if (draw_meshes)
+		model_data.draw();
 
 	draw_time += timer_stop(&timer_info);
 	draw_count++;
+
+	if (draw_base_axes)
+		model_data.drawBaseFrameAxes();
+	if (draw_frame_axes)
+		model_data.drawFrameAxes();
 
 	/*
 	if (draw_count % 100 == 0) {

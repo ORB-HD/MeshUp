@@ -21,6 +21,12 @@ class GLWidget : public QGLWidget
 		void loadAnimation (const char *filename);
 		float getAnimationDuration();
 
+		bool draw_base_axes;
+		bool draw_frame_axes;
+		bool draw_grid;
+		bool draw_floor;
+		bool draw_meshes;
+
 	protected:
 		void update_timer();
 		void drawGrid();
@@ -60,8 +66,10 @@ class GLWidget : public QGLWidget
 
 	public slots:
 		void toggle_draw_grid(bool status);
-		void toggle_draw_bones(bool status);
-		void toggle_draw_axes(bool status);
+		void toggle_draw_base_axes(bool status);
+		void toggle_draw_frame_axes(bool status);
+		void toggle_draw_floor(bool status);
+		void toggle_draw_meshes(bool status);
 
 		void setAnimationTime (float fraction);
 };

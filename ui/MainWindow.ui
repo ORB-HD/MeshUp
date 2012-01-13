@@ -79,38 +79,61 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-        <widget class="QCheckBox" name="checkBoxDrawGrid">
-         <property name="text">
-          <string>Draw Grid</string>
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Draw Options</string>
          </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawBaseAxes">
+            <property name="text">
+             <string>Base Axes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawFloor">
+            <property name="text">
+             <string>Floor</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawFrameAxes">
+            <property name="text">
+             <string>Frame Axes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawGrid">
+            <property name="text">
+             <string>Grid</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawMeshes">
+            <property name="text">
+             <string>Meshes</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBoxDrawBones">
-         <property name="text">
-          <string>Draw Bones</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBoxDrawAxes">
-         <property name="text">
-          <string>Draw Axes</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </item>
@@ -216,9 +239,6 @@
   </action>
   <zorder>dockPlayerControls</zorder>
   <zorder>dockViewSettings</zorder>
-  <zorder>dockWidget_2</zorder>
-  <zorder>dockWidget_3</zorder>
-  <zorder>dockWidget_4</zorder>
  </widget>
  <customwidgets>
   <customwidget>

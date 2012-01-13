@@ -32,6 +32,12 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 	horizontalSliderTime->setMaximum(1000.);
 	horizontalSliderTime->setSingleStep(1);
 
+	checkBoxDrawBaseAxes->setChecked (glWidget->draw_base_axes);
+	checkBoxDrawFloor->setChecked (glWidget->draw_floor);
+	checkBoxDrawFrameAxes->setChecked (glWidget->draw_frame_axes);
+	checkBoxDrawGrid->setChecked (glWidget->draw_grid);
+	checkBoxDrawMeshes->setChecked (glWidget->draw_meshes);
+
 	// player is paused on startup
 	playerPaused = true;
 
@@ -42,9 +48,11 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
 
 	// view stettings
+	connect (checkBoxDrawBaseAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_base_axes(bool)));
+	connect (checkBoxDrawFloor, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_floor(bool)));
+	connect (checkBoxDrawFrameAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_frame_axes(bool)));
 	connect (checkBoxDrawGrid, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_grid(bool)));
-	connect (checkBoxDrawBones, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_bones(bool)));
-	connect (checkBoxDrawAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_axes(bool)));
+	connect (checkBoxDrawMeshes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_meshes(bool)));
 
 	// timeline & timeSlider
 	connect (timeLine, SIGNAL(frameChanged(int)), this, SLOT(timeline_frame_changed(int)));

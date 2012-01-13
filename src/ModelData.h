@@ -323,6 +323,8 @@ struct ModelData {
 	void updateFrames();
 
 	void draw();
+	void drawFrameAxes();
+	void drawBaseFrameAxes();
 
 	void saveModelToFile (const char* filename);
 	void loadModelFromFile (const char* filename);

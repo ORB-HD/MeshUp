@@ -414,6 +414,97 @@ void ModelData::draw() {
 		glDisable (GL_NORMALIZE);
 }
 
+void ModelData::drawFrameAxes() {
+	// backup the depth test and line width values
+	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
+	if (depth_test_enabled)
+		glDisable (GL_DEPTH_TEST);
+
+	float line_width;
+	glGetFloatv (GL_LINE_WIDTH, &line_width);
+
+	glLineWidth (2.f);
+
+	// for the rotation of the axes
+	Matrix44f axes_rotation_matrix (Matrix44f::Identity());
+	axes_rotation_matrix.block<3,3> (0,0) = configuration.axes_rotation;
+
+	FrameMap::iterator frame_iter = framemap.begin();
+
+	while (frame_iter != framemap.end()) {
+		if (frame_iter->second->name == "BASE") {
+			frame_iter++;
+			continue;
+		}
+		glPushMatrix();
+
+			
+		Matrix44f transform_matrix = axes_rotation_matrix * frame_iter->second->pose_transform;
+		glMultMatrixf (transform_matrix.data());
+
+		glBegin (GL_LINES);
+		glColor3f (1.f, 0.f, 0.f);
+		glVertex3f (0.f, 0.f, 0.f);
+		glVertex3f (1.f, 0.f, 0.f);
+		glColor3f (0.f, 1.f, 0.f);
+		glVertex3f (0.f, 0.f, 0.f);
+		glVertex3f (0.f, 1.f, 0.f);
+		glColor3f (0.f, 0.f, 1.f);
+		glVertex3f (0.f, 0.f, 0.f);
+		glVertex3f (0.f, 0.f, 1.f);
+		glEnd();
+
+		glPopMatrix();
+
+		frame_iter++;
+	}
+
+	if (depth_test_enabled)
+		glEnable (GL_DEPTH_TEST);
+
+	glLineWidth (line_width);
+}
+
+void ModelData::drawBaseFrameAxes() {
+	// backup the depth test and line width values
+	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
+	if (depth_test_enabled)
+		glDisable (GL_DEPTH_TEST);
+
+	float line_width;
+	glGetFloatv (GL_LINE_WIDTH, &line_width);
+
+	glLineWidth (2.f);
+
+	// for the rotation of the axes
+	Matrix44f axes_rotation_matrix (Matrix44f::Identity());
+	axes_rotation_matrix.block<3,3> (0,0) = configuration.axes_rotation;
+
+	glPushMatrix();
+
+	Matrix44f transform_matrix = axes_rotation_matrix * framemap["BASE"]->pose_transform;
+	glMultMatrixf (transform_matrix.data());
+
+	glBegin (GL_LINES);
+	glColor3f (1.f, 0.f, 0.f);
+	glVertex3f (0.f, 0.f, 0.f);
+	glVertex3f (1.f, 0.f, 0.f);
+	glColor3f (0.f, 1.f, 0.f);
+	glVertex3f (0.f, 0.f, 0.f);
+	glVertex3f (0.f, 1.f, 0.f);
+	glColor3f (0.f, 0.f, 1.f);
+	glVertex3f (0.f, 0.f, 0.f);
+	glVertex3f (0.f, 0.f, 1.f);
+	glEnd();
+
+	glPopMatrix();
+
+	if (depth_test_enabled)
+		glEnable (GL_DEPTH_TEST);
+
+	glLineWidth (line_width);
+}
+
 Json::Value vec3_to_json (const Vector3f &vec) {
 	Json::Value result;
 	result[0] = Json::Value(static_cast<float>(vec[0]));
