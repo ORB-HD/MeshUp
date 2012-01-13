@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <boost/shared_ptr.hpp>
+#include <limits>
 
 #include "SimpleMath.h"
 #include "SimpleMathGL.h"
@@ -105,7 +106,13 @@ struct MeshData {
 		parented_segment(""),
 		vbo_id(0),
 		started(false),
-		smooth_shading(true)
+		smooth_shading(true),
+		bbox_min (std::numeric_limits<float>::max(),
+				std::numeric_limits<float>::max(),
+				std::numeric_limits<float>::max()),
+		bbox_max (-std::numeric_limits<float>::max(),
+				-std::numeric_limits<float>::max(),
+				-std::numeric_limits<float>::max())
 	{}
 
 	void begin();
@@ -126,6 +133,9 @@ struct MeshData {
 	unsigned int vbo_id;
 	bool started;
 	bool smooth_shading;
+
+	Vector3f bbox_min;
+	Vector3f bbox_max;
 
 	std::vector<Vector3f> vertices;
 	std::vector<Vector3f> normals;

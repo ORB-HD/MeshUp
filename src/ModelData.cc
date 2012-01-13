@@ -12,6 +12,7 @@
 #include <fstream>
 #include <ostream>
 #include <stack>
+#include <limits>
 
 using namespace std;
 
@@ -77,6 +78,14 @@ void MeshData::addVertice (float x, float y, float z) {
 	vertex[1] = y;
 	vertex[2] = z;
 	vertices.push_back(vertex);
+
+	bbox_max[0] = max (vertex[0], bbox_max[0]);
+	bbox_max[1] = max (vertex[1], bbox_max[1]);
+	bbox_max[2] = max (vertex[2], bbox_max[2]);
+
+	bbox_min[0] = min (vertex[0], bbox_min[0]);
+	bbox_min[1] = min (vertex[1], bbox_min[1]);
+	bbox_min[2] = min (vertex[2], bbox_min[2]);
 
 	triangle_indices.push_back (vertices.size() - 1);
 }
@@ -359,25 +368,50 @@ void ModelData::updateFrames() {
 void ModelData::draw() {
 	updateFrames();
 
+	// save current state of GL_NORMALIZE to properly restore the original
+	// state
+	bool normalize_enabled = glIsEnabled (GL_NORMALIZE);
+	if (!normalize_enabled)
+		glEnable (GL_NORMALIZE);
+
 	SegmentList::iterator seg_iter = segments.begin();
 
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
 
+		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
+
+		Vector3f scale (
+				seg_iter->dimensions[0] / bbox_size[0],
+				seg_iter->dimensions[1] / bbox_size[1],
+				seg_iter->dimensions[2] / bbox_size[2]
+				);
+
+		Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
+
+		center[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
+		center[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
+		center[2] = -center[2] * scale[2] + seg_iter->meshcenter[2];
+
 		// we also have to apply the scaling after the transform:
 		Matrix44f transform_matrix = 
-			smScale (seg_iter->dimensions[0], seg_iter->dimensions[1], seg_iter->dimensions[2])
-			* smTranslate (seg_iter->meshcenter[0], seg_iter->meshcenter[1], seg_iter->meshcenter[2])
+			smScale (scale[0], scale[1], scale[2])
+			* smTranslate (center[0], center[1], center[2])
 			* seg_iter->frame->pose_transform;
 		glMultMatrixf (transform_matrix.data());
 
 		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
 		seg_iter->mesh->draw();
+
 		glPopMatrix();
 
 		seg_iter++;
 	}
+
+	// disable normalize if it was previously not enabled
+	if (!normalize_enabled)
+		glDisable (GL_NORMALIZE);
 }
 
 Json::Value vec3_to_json (const Vector3f &vec) {
