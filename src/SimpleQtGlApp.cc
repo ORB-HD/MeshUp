@@ -37,6 +37,7 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 	checkBoxDrawFrameAxes->setChecked (glWidget->draw_frame_axes);
 	checkBoxDrawGrid->setChecked (glWidget->draw_grid);
 	checkBoxDrawMeshes->setChecked (glWidget->draw_meshes);
+	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
 
 	// player is paused on startup
 	playerPaused = true;
@@ -53,6 +54,7 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 	connect (checkBoxDrawFrameAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_frame_axes(bool)));
 	connect (checkBoxDrawGrid, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_grid(bool)));
 	connect (checkBoxDrawMeshes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_meshes(bool)));
+	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
 
 	// timeline & timeSlider
 	connect (timeLine, SIGNAL(frameChanged(int)), this, SLOT(timeline_frame_changed(int)));

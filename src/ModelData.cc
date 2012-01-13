@@ -420,6 +420,10 @@ void ModelData::drawFrameAxes() {
 	if (depth_test_enabled)
 		glDisable (GL_DEPTH_TEST);
 
+	bool light_enabled = glIsEnabled (GL_LIGHTING);
+	if (light_enabled)
+		glDisable (GL_LIGHTING);
+
 	float line_width;
 	glGetFloatv (GL_LINE_WIDTH, &line_width);
 
@@ -462,6 +466,9 @@ void ModelData::drawFrameAxes() {
 	if (depth_test_enabled)
 		glEnable (GL_DEPTH_TEST);
 
+	if (light_enabled)
+		glEnable (GL_LIGHTING);
+
 	glLineWidth (line_width);
 }
 
@@ -470,6 +477,10 @@ void ModelData::drawBaseFrameAxes() {
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
 	if (depth_test_enabled)
 		glDisable (GL_DEPTH_TEST);
+
+	bool light_enabled = glIsEnabled (GL_LIGHTING);
+	if (light_enabled)
+		glDisable (GL_LIGHTING);
 
 	float line_width;
 	glGetFloatv (GL_LINE_WIDTH, &line_width);
@@ -501,6 +512,9 @@ void ModelData::drawBaseFrameAxes() {
 
 	if (depth_test_enabled)
 		glEnable (GL_DEPTH_TEST);
+
+	if (light_enabled)
+		glEnable (GL_LIGHTING);
 
 	glLineWidth (line_width);
 }

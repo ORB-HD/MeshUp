@@ -27,6 +27,18 @@ TimerInfo timer_info;
 double draw_time = 0.;
 int draw_count = 0;
 
+Matrix44f camera_projection_matrix (Matrix44f::Identity());
+Matrix44f camera_view_matrix (Matrix44f::Identity());
+Matrix44f light_projection_matrix (Matrix44f::Identity());
+Matrix44f light_view_matrix (Matrix44f::Identity());
+const int shadow_map_size = 512;
+GLuint shadow_map_texture_id = 0;
+
+Vector4f light_ka (0.2f, 0.2f, 0.2f, 1.0f);
+Vector4f light_kd (0.7f, 0.7f, 0.7f, 1.0f);
+Vector4f light_ks (1.0f, 1.0f, 1.0f, 1.0f);
+Vector4f light_position (0.f, 0.f, 0.f, 1.f);
+
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent),
 		opengl_initialized (false),
@@ -34,7 +46,8 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_frame_axes (false),
 		draw_grid (false),
 		draw_floor (true),
-		draw_meshes (true)
+		draw_meshes (true),
+		draw_shadows (false)
 {
 	poi.setX(0.);
 	poi.setY(1.0);
@@ -114,6 +127,11 @@ void GLWidget::toggle_draw_meshes (bool status) {
 	draw_meshes = status;
 }
 
+void GLWidget::toggle_draw_shadows (bool status) {
+	draw_shadows = status;
+}
+
+
 void GLWidget::update_timer() {
 	struct timeval clock_value;
 	gettimeofday (&clock_value, NULL);
@@ -156,10 +174,14 @@ void GLWidget::initializeGL()
 	qDebug() << "OpenGL Version : " << (const char*) glGetString (GL_VERSION);
 	qDebug() << "GLSL Version   : " << (const char*) glGetString (GL_SHADING_LANGUAGE_VERSION);
 
-	glClearDepth (1.);
-	glEnable (GL_DEPTH_TEST);
-	glDepthFunc (GL_LESS);
-	glEnable (GL_CULL_FACE);
+	if (!GLEW_ARB_shadow) {
+		qDebug() << "Error: ARB_shadow not supported!";
+		exit (1);
+	}
+  if (!GLEW_ARB_depth_texture) {
+		qDebug() << "Error: ARB_depth_texture not supported!";
+		exit(1);
+	}
 
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
@@ -167,17 +189,41 @@ void GLWidget::initializeGL()
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
+	glShadeModel (GL_SMOOTH);
+	glClearColor (0.f, 0.f, 0.f, 0.f);
+	glColor4f (1.f, 1.f, 1.f, 1.f);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+	glClearDepth(1.0f);
+  glDepthFunc(GL_LEQUAL);
+	glEnable (GL_DEPTH_TEST);
+	glEnable (GL_CULL_FACE);
+
+	glEnable (GL_NORMALIZE);
+
+	// initialize shadow map texture
+	glGenTextures (1, &shadow_map_texture_id);
+	glBindTexture (GL_TEXTURE_2D, shadow_map_texture_id);
+	glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+			shadow_map_size, shadow_map_size, 
+			0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+	glColorMaterial (GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	glEnable (GL_COLOR_MATERIAL);
+  glMaterialfv(GL_FRONT, GL_SPECULAR, Vector4f (1.f, 1.f, 1.f, 1.f).data());
+  glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
+
 	// initialize lights
-	GLfloat light_ka[] = { 0.2f, 0.2f, 0.2f, 1.0f};
-	GLfloat light_kd[] = { 0.7f, 0.7f, 0.7f, 1.0f};
-	GLfloat light_ks[] = { 1.0f, 1.0f, 1.0f, 1.0f};
+	glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ka.data());
+	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd.data());
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_ks.data());
 
-	glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ka);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light_ks);
-
-	GLfloat light_pos[4] = {20.0f, 60.0f, 30.0f, 1.0f};
-	glLightfv (GL_LIGHT0, GL_POSITION, light_pos);
+	light_position.set (3.f, 6.f, 3.f, 1.f);
+	glLightfv (GL_LIGHT0, GL_POSITION, light_position.data());
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
@@ -226,6 +272,33 @@ void GLWidget::updateCamera() {
 			up.x(), up.y(), up.z());
 }
 
+void GLWidget::updateLightingMatrices () {
+	//Calculate & save matrices
+	glPushMatrix();
+
+	glLoadIdentity();
+	gluPerspective(fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, camera_projection_matrix.data());
+
+	glLoadIdentity();
+	gluLookAt(eye.x(), eye.y(), eye.z(),
+			poi.x(), poi.y(), poi.z(),
+			up.x(), up.y(), up.z());
+	glGetFloatv(GL_MODELVIEW_MATRIX, camera_view_matrix.data());
+
+	glLoadIdentity();
+	gluPerspective(fov, 1.0f, 1.0f, 20.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, light_projection_matrix.data());
+
+	glLoadIdentity();
+	gluLookAt( light_position[0], light_position[1], light_position[2],
+			0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f);
+	glGetFloatv(GL_MODELVIEW_MATRIX, light_view_matrix.data());
+
+	glPopMatrix();
+}
+
 void draw_checkers_board_shaded() {
 	float length = 16.f;
 	int count = 32;
@@ -268,6 +341,12 @@ void draw_checkers_board_shaded() {
 
 			color = (1.f - alpha) * clear_color + color * alpha;
 
+			if (color[0] <= 0.f
+					&& color[1] <= 0.f
+					&& color[2] <= 0.f
+				 )
+				continue;
+
 			glColor3fv (color.data());
 			glVertex3fv (v0.data());
 			glVertex3fv (v1.data());
@@ -305,50 +384,23 @@ void GLWidget::drawGrid() {
 	glEnd ();
 }
 
-void GLWidget::paintGL() {
-	// check whether we should reload our model
-	if (model_filename.size() != 0) {
-		loadModel (model_filename.c_str());
-
-		// clear the variable to mark that we do not have to load a model
-		// anymore
-		model_filename = "";
-	}
-
-	// or the animation
-	if (animation_filename.size() != 0) {
-		loadAnimation (animation_filename.c_str());
-
-		// clear the variable to mark that we do not have to load the animation 
-		// anymore.
-		animation_filename = "";
-	}
-
-	update_timer();
-	glClearColor (0., 0., 0., 1.);
-
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glMatrixMode (GL_MODELVIEW);
-	glLoadIdentity();
-
-	updateCamera();
-
-	GLfloat light_pos[4] = {20.0f, 60.0f, 30.0f, 1.0f};
-	glLightfv (GL_LIGHT0, GL_POSITION, light_pos);
-
-	glEnable (GL_COLOR_MATERIAL);
-	glDisable(GL_LIGHTING);
-
+void GLWidget::drawScene() {
 	if (draw_grid)
 		drawGrid();
 
 	if (draw_floor)
 		draw_checkers_board_shaded();
 
-	glEnable (GL_COLOR_MATERIAL);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
+	/*
+	glColor3f (1.f, 1.f, 1.f);
+	glBegin (GL_QUADS);
+	glNormal3f (0.f, 1.f, 0.f);
+	glVertex3f (-20.f, 0.f, -20.f);
+	glVertex3f (-20.f, 0.f, 20.f);
+	glVertex3f (20.f, 0.f, 20.f);
+	glVertex3f (20.f, 0.f, -20.f);
+	glEnd();
+	*/
 
 	timer_start (&timer_info);
 
@@ -369,8 +421,206 @@ void GLWidget::paintGL() {
 	if (draw_count % 100 == 0) {
 		qDebug() << "drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
 	}
-*/
+	*/
+}
 
+void GLWidget::shadowMapSetupPass1 () {
+	updateLightingMatrices();
+
+
+	// 1st pass: from light's pont of view
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf (light_projection_matrix.data());
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(light_view_matrix.data());
+
+	// set viewport to shadow map size
+	glViewport (0, 0, shadow_map_size, shadow_map_size);
+
+	// draw the back faces
+	glCullFace (GL_FRONT);
+
+	// disable color writes and use cheap flat shading
+	glShadeModel (GL_FLAT);
+	glColorMask (0, 0, 0, 0);
+}
+
+void GLWidget::shadowMapSetupPass2 () {
+	// read the depth buffer back into the shadow map
+	glBindTexture (GL_TEXTURE_2D, shadow_map_texture_id);
+	glCopyTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, 0, 0, shadow_map_size, shadow_map_size);
+
+	// restore previous states
+	glCullFace (GL_BACK);
+	glShadeModel (GL_SMOOTH);
+	glColorMask (1, 1, 1, 1);
+
+	// 2nd pass: draw with dim light
+	glClear (GL_DEPTH_BUFFER_BIT);
+	glMatrixMode (GL_PROJECTION);
+	glLoadMatrixf (camera_projection_matrix.data());
+
+	glMatrixMode (GL_MODELVIEW);
+	glLoadMatrixf (camera_view_matrix.data());
+
+	glViewport (0, 0, windowWidth, windowHeight);
+
+	// setup dim light
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
+//	glLightfv(GL_LIGHT0, GL_AMBIENT,  (light_ka * 0.1f).data());
+	glLightfv(GL_LIGHT0, GL_DIFFUSE,  (light_kd * 0.1f).data());
+	glLightfv(GL_LIGHT0, GL_SPECULAR, Vector4f (0.f, 0.f, 0.f, 0.f).data());
+
+	glEnable(GL_LIGHT0);	
+	glEnable(GL_LIGHTING);
+}
+
+void GLWidget::shadowMapSetupPass3 () {
+	// 3rd pass: draw the lighted area
+	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd.data());
+	glLightfv(GL_LIGHT0, GL_SPECULAR, Vector4f (1.f, 1.f, 1.f, 1.f).data());
+
+	Matrix44f bias_matrix (
+			0.5f, 0.0f, 0.0f, 0.0f,
+			0.0f, 0.5f, 0.0f, 0.0f,
+			0.0f, 0.0f, 0.5f, 0.0f,
+			0.5f, 0.5f, 0.5f, 1.0f);
+	Matrix44f texture_matrix = bias_matrix.transpose() * light_projection_matrix.transpose() * light_view_matrix.transpose();
+
+	texture_matrix = texture_matrix;
+
+	// setup texture coordinate generaton
+	Vector4f row;
+	int row_i = 0;
+	row.set (
+			texture_matrix(row_i,0),
+			texture_matrix(row_i,1),
+			texture_matrix(row_i,2),
+			texture_matrix(row_i,3)
+			);
+	glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_S, GL_EYE_PLANE, row.data());
+	glEnable(GL_TEXTURE_GEN_S);
+
+	row_i = 1;
+	row.set (
+			texture_matrix(row_i,0),
+			texture_matrix(row_i,1),
+			texture_matrix(row_i,2),
+			texture_matrix(row_i,3)
+			);
+	glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_T, GL_EYE_PLANE, row.data());
+	glEnable(GL_TEXTURE_GEN_T);
+
+	row_i = 2;
+	row.set (
+			texture_matrix(row_i,0),
+			texture_matrix(row_i,1),
+			texture_matrix(row_i,2),
+			texture_matrix(row_i,3)
+			);
+	glTexGeni(GL_R, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_R, GL_EYE_PLANE, row.data());
+	glEnable(GL_TEXTURE_GEN_R);
+
+	row_i = 3;
+	row.set (
+			texture_matrix(row_i,0),
+			texture_matrix(row_i,1),
+			texture_matrix(row_i,2),
+			texture_matrix(row_i,3)
+			);
+	glTexGeni(GL_Q, GL_TEXTURE_GEN_MODE, GL_EYE_LINEAR);
+	glTexGenfv(GL_Q, GL_EYE_PLANE, row.data());
+	glEnable(GL_TEXTURE_GEN_Q);	
+
+	// bind and enable shadow map texture
+	glBindTexture (GL_TEXTURE_2D, shadow_map_texture_id);
+	glEnable (GL_TEXTURE_2D);
+
+	// enable shadow comparison
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE);
+
+	// shadow map comparison should be true (i.e. not in shadow) 
+	// if r <= texture
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
+
+	// shadow comparison generates an INTENSITY result
+	glTexParameteri (GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY);
+
+	// set alpha test to discalrd false comparisons
+	glAlphaFunc (GL_GEQUAL, 0.99f);
+	glEnable (GL_ALPHA_TEST);
+}
+
+void GLWidget::shadowMapCleanup() {
+	// reset the state
+	glDisable (GL_TEXTURE_2D);
+
+	glDisable (GL_TEXTURE_GEN_S);
+	glDisable (GL_TEXTURE_GEN_T);
+	glDisable (GL_TEXTURE_GEN_R);
+	glDisable (GL_TEXTURE_GEN_Q);
+
+	glDisable (GL_LIGHTING);
+	glDisable (GL_ALPHA_TEST);
+
+}
+
+void GLWidget::paintGL() {
+	// check whether we should reload our model
+	if (model_filename.size() != 0) {
+		loadModel (model_filename.c_str());
+
+		// clear the variable to mark that we do not have to load a model
+		// anymore
+		model_filename = "";
+	}
+
+	// or the animation
+	if (animation_filename.size() != 0) {
+		loadAnimation (animation_filename.c_str());
+
+		// clear the variable to mark that we do not have to load the animation 
+		// anymore.
+		animation_filename = "";
+	}
+
+	update_timer();
+
+	glMatrixMode (GL_MODELVIEW);
+	glLoadIdentity();
+
+	updateCamera();
+
+	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if (draw_shadows) {
+		// start the shadow mapping magic!
+		shadowMapSetupPass1();
+
+		drawScene();
+
+		shadowMapSetupPass2();
+		drawScene();
+
+		shadowMapSetupPass3();
+		drawScene();
+
+		shadowMapCleanup();
+	} else {
+		glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
+		glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd.data());
+		glEnable(GL_LIGHT0);	
+		glEnable(GL_LIGHTING);
+
+		drawScene();
+		glDisable(GL_LIGHTING);
+	}
+
+	assert (glGetError() == GL_NO_ERROR);
 }
 
 void GLWidget::resizeGL(int width, int height)
@@ -388,8 +638,11 @@ void GLWidget::resizeGL(int width, int height)
 	glMatrixMode (GL_PROJECTION);
 	glLoadIdentity ();
 
-	float fov = 45;
+	fov = 45;
 	gluPerspective (fov, (GLfloat) width / (GLfloat) height, 0.005, 200);
+
+	windowWidth = width;
+	windowHeight = height;
 
 	glMatrixMode (GL_MODELVIEW);
 }

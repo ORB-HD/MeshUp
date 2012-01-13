@@ -26,12 +26,14 @@ class GLWidget : public QGLWidget
 		bool draw_grid;
 		bool draw_floor;
 		bool draw_meshes;
+		bool draw_shadows;
 
 	protected:
 		void update_timer();
 		void drawGrid();
 
 		void initializeGL();
+		void drawScene ();
 		void paintGL();
 		void resizeGL(int width, int height);
 
@@ -42,6 +44,12 @@ class GLWidget : public QGLWidget
 	private:
 		void updateSphericalCoordinates();
 		void updateCamera();
+		void updateLightingMatrices();
+
+		void shadowMapSetupPass1();
+		void shadowMapSetupPass2();
+		void shadowMapSetupPass3();
+		void shadowMapCleanup();
 
 		QPoint lastMousePos;
 		// azimuth
@@ -50,6 +58,7 @@ class GLWidget : public QGLWidget
 		float theta;
 		// radius
 		float r;
+		float fov;
 
 		QVector3D poi;
 		QVector3D eye;
@@ -62,6 +71,9 @@ class GLWidget : public QGLWidget
 		std::string model_filename;
 		std::string animation_filename;
 
+		float windowWidth;
+		float windowHeight;
+
 		bool opengl_initialized;
 
 	public slots:
@@ -70,6 +82,7 @@ class GLWidget : public QGLWidget
 		void toggle_draw_frame_axes(bool status);
 		void toggle_draw_floor(bool status);
 		void toggle_draw_meshes(bool status);
+		void toggle_draw_shadows(bool status);
 
 		void setAnimationTime (float fraction);
 };
