@@ -1,17 +1,40 @@
 MeshUp! A visualization tool for multi-body systems based on skeletal
 animation and magic.
 
-Author: Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+AUTHOR: Martin Felis <martin.felis@iwr.uni-heidelberg.de>
 
-Features:
+FEATURES:
   * Simple definition of models (see directory models/ for examples)
 	* Model serialization to and from JSON files
 	* Lading of Wavefront OBJ files that can be attached to the meshes
 	* Customizable frame definitions order of rotation angles
 	* Loading and interpolation of keyframed animation (see sampleanimation.txt)
 
-Usage: meshup [model_file] [animation_file]
+USAGE: meshup [model_file] [animation_file]
 
 See meshup --help for more options.
+
+NOTES:
+
+Wavefront OBJ restrictions:
+  - Faces of the model must be triangles
+	- Textures are not supported
+	- Materials are not supported
+
+Exporting Meshes from Blender:
+
+  When exporting meshes as Wavefront OBJ files from Blender, make sure to
+	apply the following settings:
+	  [X] Selection Only
+		[X] Apply Modifiers
+		[X] Include Edges
+		[X] Include Normals
+		[X] Triangulate Faces
+		[X] Objects as OBJ Objects
+		Forward   : -X Forward
+		Up        :  Y Up
+		Path Mode : Auto
+  You can save these settings as "Operator Presets" to simplify the export
+	in the future.
 
 Report bugs to martin.felis@iwr.uni-heidelberg.de
