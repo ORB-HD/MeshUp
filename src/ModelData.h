@@ -85,20 +85,6 @@ inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angle
 				rotation_angles[a2],
 				axis_2[0], axis_2[1], axis_2[2]
 				);
-
-/*
-			rotation_angles[config.rotation_order[0]],
-			config.axis_right[0], con
-			1.0, 0.f, 0.f
-			)
-		* smQuaternion::fromGLRotate (rotation_angles[config.rotation_order[1]], 0.f, 1.f, 0.f)
-		* smQuaternion::fromGLRotate (rotation_angles[config.rotation_order[2]], 0.f, 0.f, 1.f);
-*/
-/*
-	return smQuaternion::fromGLRotate (rotation_angles[0], 1.0, 0.f, 0.f)
-		* smQuaternion::fromGLRotate (rotation_angles[1], 0.f, 1.f, 0.f)
-		* smQuaternion::fromGLRotate (rotation_angles[2], 0.f, 0.f, 1.f);
-*/
 }
 
 struct MeshData {
@@ -180,6 +166,10 @@ struct Frame {
 
 	void updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config);
 	void initFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config);
+
+	Vector3f getFrameTransformTranslation() {
+		return Vector3f (frame_transform(3,0), frame_transform(3,1), frame_transform (3,2));
+	}
 };
 
 struct Segment {

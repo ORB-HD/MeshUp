@@ -70,7 +70,8 @@ class smQuaternion : public Vector4f {
 					);
 		}
 		smQuaternion& operator*=(const smQuaternion &q) {
-			set (q[3] * (*this)[0] + q[0] * (*this)[3] + q[1] * (*this)[2] - q[2] * (*this)[1],
+			set (
+					q[3] * (*this)[0] + q[0] * (*this)[3] + q[1] * (*this)[2] - q[2] * (*this)[1],
 					q[3] * (*this)[1] + q[1] * (*this)[3] + q[2] * (*this)[0] - q[0] * (*this)[2],
 					q[3] * (*this)[2] + q[2] * (*this)[3] + q[0] * (*this)[1] - q[1] * (*this)[0],
 					q[3] * (*this)[3] - q[0] * (*this)[0] - q[1] * (*this)[1] - q[2] * (*this)[2]
@@ -140,19 +141,6 @@ class smQuaternion : public Vector4f {
 					0.f,
 					0.f,
 					1.f);
-		}
-
-		smQuaternion quat_mul (const smQuaternion &q) const {
-			float x = (*this)[0];
-			float y = (*this)[1];
-			float z = (*this)[2];
-			float w = (*this)[3];
-
-			return smQuaternion (
-					w * q[0] + x * q[3] + y * q[2] - z * q[1],
-					w * q[1] + y * q[3] + z * q[0] - x * q[2],
-					w * q[2] + z * q[3] + x * q[1] - y * q[0],
-					w * q[3] - x * q[0] - y * q[1] - z * q[2]);
 		}
 
 		smQuaternion conjugate() const {
