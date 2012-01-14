@@ -366,8 +366,6 @@ void ModelData::updateFrames() {
 }
 
 void ModelData::draw() {
-	updateFrames();
-
 	// save current state of GL_NORMALIZE to properly restore the original
 	// state
 	bool normalize_enabled = glIsEnabled (GL_NORMALIZE);

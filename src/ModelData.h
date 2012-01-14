@@ -315,11 +315,19 @@ struct ModelData {
 
 	/// Initializes the fixed frame transformations and sets frames_initialized to true
 	void initFrameTransform();
-	/// Updates the pose information of the frames by interpolating the
-	// keyframes defined in Animation
+
+	/** Update the animation state.
+	 *
+	 * Updates the pose information of the frames by interpolating the
+	 * keyframes defined in Animation.
+	 */
 	void updatePose();
-	/// Updates the full pose transformations recursively such that
-	//Frame::pose_transformation contains the full Base->Pose transformation
+	/** Update the Frame transformations.
+	 *
+	 * Updates the full pose transformations recursively such that
+	 * Frame::pose_transformation contains the full Base->Pose
+	 * transformation.
+	 */
 	void updateFrames();
 
 	void draw();

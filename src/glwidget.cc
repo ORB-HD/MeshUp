@@ -404,8 +404,6 @@ void GLWidget::drawScene() {
 
 	timer_start (&timer_info);
 
-	model_data.updatePose ();
-
 	if (draw_meshes)
 		model_data.draw();
 
@@ -597,6 +595,11 @@ void GLWidget::paintGL() {
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// update the animation state
+	model_data.updatePose ();
+	// update the transformations of the frames
+	model_data.updateFrames ();
+
 	if (draw_shadows) {
 		// start the shadow mapping magic!
 		shadowMapSetupPass1();
@@ -639,7 +642,7 @@ void GLWidget::resizeGL(int width, int height)
 	glLoadIdentity ();
 
 	fov = 45;
-	gluPerspective (fov, (GLfloat) width / (GLfloat) height, 0.005, 200);
+	gluPerspective (fov, (GLfloat) width / (GLfloat) height, 0.1, 30);
 
 	windowWidth = width;
 	windowHeight = height;
