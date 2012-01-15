@@ -4,6 +4,7 @@
 #include <QTimer>
 #include <QTimeLine>
 #include "ui_MainWindow.h"
+#include "RenderImageDialog.h"
 
 class SimpleQtGlApp : public QMainWindow, public Ui::MainWindow
 {
@@ -19,6 +20,7 @@ protected:
 		QTimeLine *timeLine;
 
 		bool playerPaused;
+		RenderImageDialog* renderImageDialog;
 
 public slots:
 		void toggle_play_animation (bool status);
@@ -27,6 +29,8 @@ public slots:
 		void timeline_frame_changed (int frame_index);
 		void timeline_set_frame (int frame_index);
 		void timeslider_value_changed (int frame_index);
+
+		void actionRenderAndSaveToFile ();
 };
  
 #endif

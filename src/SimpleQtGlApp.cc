@@ -6,6 +6,8 @@
 
 #include <assert.h>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -13,6 +15,8 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 {
 	timer = new QTimer (this);
 	setupUi(this); // this sets up GUI
+
+	renderImageDialog = new RenderImageDialog(this);
 
 	timer->setSingleShot(false);
 	timer->start(20);
@@ -47,6 +51,9 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 
 	// the timer is used to continously redraw the OpenGL widget
 	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
+
+	// render dialogs
+	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
 
 	// view stettings
 	connect (checkBoxDrawBaseAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_base_axes(bool)));
@@ -152,3 +159,34 @@ void SimpleQtGlApp::timeslider_value_changed (int frame_index) {
 	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
 }
 
+void SimpleQtGlApp::actionRenderAndSaveToFile () {
+	renderImageDialog->WidthSpinBox->setValue(glWidget->width());
+	renderImageDialog->HeightSpinBox->setValue(glWidget->width());
+
+	int result = renderImageDialog->exec();
+
+	if (result == QDialog::Rejected)
+		return;
+
+	string figure_name = string("./image") ;
+
+	stringstream filename_stream;
+	filename_stream << figure_name << "_" << setw(3) << setfill('0') << 0 << ".png";
+
+	if (QFile (filename_stream.str().c_str()).exists()) {
+		int i = 1;
+		while (QFile (filename_stream.str().c_str()).exists()) {
+			filename_stream.str("");
+			filename_stream << figure_name << "_" << setw(3) << setfill('0') << i << ".png";
+			i++;
+		}
+	}
+
+	int w = renderImageDialog->WidthSpinBox->value();
+	int h = renderImageDialog->HeightSpinBox->value();
+
+	cout << "Saving screenshot to: " << filename_stream.str() << " (size: " << w << "x" << h << ")" << endl;
+
+	QImage image = glWidget->renderContentOffscreen (w,h, renderImageDialog->TransparentBackgroundCheckBox->isChecked());
+	image.save (filename_stream.str().c_str(), 0, -1);
+}

@@ -69,7 +69,6 @@ GLWidget::GLWidget(QWidget *parent)
 
 	setFocusPolicy(Qt::StrongFocus);
 	setMouseTracking(true);
-
 }
 
 GLWidget::~GLWidget() {
@@ -100,8 +99,49 @@ void GLWidget::setAnimationTime (float fraction) {
 	model_data.setAnimationTime(fraction * model_data.getAnimationDuration());
 }
 
+void GLWidget::actionRenderImage () {
+}
+
 float GLWidget::getAnimationDuration() {
 	return model_data.getAnimationDuration();
+}
+
+QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool use_alpha) {
+	makeCurrent();
+
+	// set up the actual format (alpha channel, depth buffer)
+	QGLFramebufferObjectFormat buffer_format;
+	if (use_alpha)
+		buffer_format.setInternalTextureFormat(GL_RGBA);
+	else
+		buffer_format.setInternalTextureFormat(GL_RGB);
+	buffer_format.setAttachment (QGLFramebufferObject::Depth );
+
+	// create the buffer object
+	QGLFramebufferObject *fb = new QGLFramebufferObject(image_width, image_height, buffer_format);
+
+	// future drawing shall be performed into this buffer
+	fb->bind();
+
+	// resize to the desired size, draw, release, and resize again to the
+	// previous size
+
+	int old_width = width();
+	int old_height = height(); 
+
+	resizeGL(image_width, image_height);
+	paintGL();
+
+	fb->release();
+
+	resizeGL (old_width, old_height);
+
+	// now grab the buffer
+	QImage result = fb->toImage();
+
+	delete fb;
+
+	return result;
 }
 
 /****************
@@ -642,7 +682,7 @@ void GLWidget::resizeGL(int width, int height)
 	glLoadIdentity ();
 
 	fov = 45;
-	gluPerspective (fov, (GLfloat) width / (GLfloat) height, 0.1, 30);
+	gluPerspective (fov, (GLfloat) width / (GLfloat) height, 0.005, 200);
 
 	windowWidth = width;
 	windowHeight = height;

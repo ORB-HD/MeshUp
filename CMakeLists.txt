@@ -42,6 +42,7 @@ INCLUDE (${QT_USE_FILE})
 
 SET ( MainWindow_UIS
 	ui/MainWindow.ui
+	ui/RenderImageDialog.ui
 	)
 
 QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
@@ -54,6 +55,7 @@ SET ( SimpleQtGlApp_SRCS
 
 QT4_WRAP_CPP ( SimpleQtGlApp_MOC_SRCS
 	src/SimpleQtGlApp.h
+	src/RenderImageDialog.h
 	src/glwidget.h
 	)
 

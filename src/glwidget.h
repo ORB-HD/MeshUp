@@ -3,6 +3,7 @@
 
 #include <QGLWidget>
 #include <QVector3D>
+#include <QImage>
 
 #include <iostream>
 
@@ -20,6 +21,8 @@ class GLWidget : public QGLWidget
 		void loadModel (const char *filename);
 		void loadAnimation (const char *filename);
 		float getAnimationDuration();
+
+		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
 		bool draw_base_axes;
 		bool draw_frame_axes;
@@ -83,6 +86,8 @@ class GLWidget : public QGLWidget
 		void toggle_draw_floor(bool status);
 		void toggle_draw_meshes(bool status);
 		void toggle_draw_shadows(bool status);
+
+		void actionRenderImage();
 
 		void setAnimationTime (float fraction);
 };

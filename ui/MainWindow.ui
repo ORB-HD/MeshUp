@@ -58,8 +58,15 @@
     <addaction name="actionToggleViewSettings"/>
     <addaction name="actionTogglePlayerControls"/>
    </widget>
+   <widget class="QMenu" name="menuRender">
+    <property name="title">
+     <string>Render</string>
+    </property>
+    <addaction name="actionRenderImage"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuControl_Panels"/>
+   <addaction name="menuRender"/>
   </widget>
   <widget class="QDockWidget" name="dockViewSettings">
    <property name="enabled">
@@ -244,6 +251,16 @@
     <string>P</string>
    </property>
   </action>
+  <action name="actionRenderImage">
+   <property name="text">
+    <string>Image</string>
+   </property>
+  </action>
+  <action name="actionImage_Series">
+   <property name="text">
+    <string>Image Series</string>
+   </property>
+  </action>
   <zorder>dockPlayerControls</zorder>
   <zorder>dockViewSettings</zorder>
  </widget>
@@ -255,9 +272,7 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources>
-  <include location="../res/player_pause.png"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>actionTogglePlayerControls</sender>
