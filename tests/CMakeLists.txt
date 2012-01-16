@@ -10,7 +10,7 @@ SET ( TESTS_SRCS
 	FrameAnimationTrackTests.cc
 	FrameTests.cc
 	QuaternionTests.cc
-	StringUtilsTests.cc
+	#	StringUtilsTests.cc
 	)
 
 FIND_PACKAGE (UnitTest++)

@@ -1,5 +1,6 @@
 #include <QtGui> 
 #include <QFile>
+#include <QDir>
 
 #include "glwidget.h" 
 #include "SimpleQtGlApp.h"
@@ -8,8 +9,14 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <cstdlib>
+#include <fstream>
+
+#include "json/json.h"
 
 using namespace std;
+
+Json::Value settings_json;
 
 SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 {
@@ -46,7 +53,7 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 	// player is paused on startup
 	playerPaused = true;
 
-	// dockPlayerControls->setVisible(false);
+	dockPlayerControls->setVisible(false);
 	dockViewSettings->setVisible(false);
 
 	// the timer is used to continously redraw the OpenGL widget
@@ -75,6 +82,9 @@ SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
 
 	// quit when we want to quit
 	connect (actionQuit, SIGNAL( triggered() ), qApp, SLOT( quit() ));
+
+	loadSettings();
+	saveSettings();
 }
 
 void print_usage() {
@@ -107,6 +117,93 @@ void SimpleQtGlApp::parseArguments (int argc, char* argv[]) {
 			}
 		}
 	}
+}
+
+void SimpleQtGlApp::closeEvent (QCloseEvent *event) {
+	saveSettings();
+}
+
+void SimpleQtGlApp::saveSettings () {
+	settings_json["configuration"]["view"]["draw_base_axes"] = checkBoxDrawBaseAxes->isChecked();
+	settings_json["configuration"]["view"]["draw_floor"] = checkBoxDrawFloor->isChecked();
+	settings_json["configuration"]["view"]["draw_frame_axes"] = checkBoxDrawFrameAxes->isChecked();
+	settings_json["configuration"]["view"]["draw_grid"] = checkBoxDrawGrid->isChecked();
+	settings_json["configuration"]["view"]["draw_meshes"] = checkBoxDrawMeshes->isChecked();
+	settings_json["configuration"]["view"]["draw_shadows"] = checkBoxDrawShadows->isChecked();
+
+	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
+	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
+	settings_json["configuration"]["docks"]["player_controls"]["repeat"] = checkBoxLoopAnimation->isChecked();
+
+	settings_json["configuration"]["window"]["width"] = width();
+	settings_json["configuration"]["window"]["height"] = height();
+	settings_json["configuration"]["window"]["xpos"] = x();
+	settings_json["configuration"]["window"]["ypos"] = y();
+
+	string home_dir = getenv("HOME");
+
+	// create the path if it does not yet exist
+	QDir settings_dir ((home_dir + string("/.meshup")).c_str());
+	if (!settings_dir.exists()) {
+		settings_dir.mkdir((home_dir + string ("/.meshup")).c_str());
+	}
+
+	string settings_filename = home_dir + string ("/.meshup/settings.json");
+
+	ofstream config_file (settings_filename.c_str(), ios::trunc);
+
+	if (!config_file) {
+		cerr << "Error: Could not open config file '" << settings_filename << "' for writing!" << endl;
+		exit (1);
+	}
+
+	config_file << settings_json;
+
+	config_file.close();
+}
+
+void SimpleQtGlApp::loadSettings () {
+	string home_dir = getenv("HOME");
+
+	string settings_filename = home_dir + string ("/.meshup/settings.json");
+	ifstream config_file (settings_filename.c_str());
+
+	// only read values if they are existing
+	if (config_file) {
+
+		qDebug() << "Reading settings from file: " << settings_filename.c_str() ;
+		stringstream buffer;
+		buffer << config_file.rdbuf();
+		config_file.close();
+
+		Json::Reader reader;
+		bool parse_result = reader.parse (buffer.str(), settings_json);
+		if (!parse_result) {
+			cerr << "Error: Parsing file '" << settings_filename << "': " << reader.getFormatedErrorMessages();
+
+			exit (1);
+		}
+	}
+
+	checkBoxDrawBaseAxes->setChecked(settings_json["configuration"]["view"].get("draw_base_axes", true).asBool());
+	checkBoxDrawFloor->setChecked(settings_json["configuration"]["view"].get("draw_floor", true).asBool());
+	checkBoxDrawFrameAxes->setChecked(settings_json["configuration"]["view"].get("draw_frame_axes", false).asBool());
+	checkBoxDrawGrid->setChecked(settings_json["configuration"]["view"].get("draw_grid", false).asBool());
+	checkBoxDrawMeshes->setChecked(settings_json["configuration"]["view"].get("draw_meshes", true).asBool());
+	checkBoxDrawShadows->setChecked(settings_json["configuration"]["view"].get("draw_shadows", false).asBool());
+
+	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
+	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
+	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
+
+	int x, y, w, h;
+
+	x = settings_json["configuration"]["window"].get("xpos", 100).asInt();
+	y = settings_json["configuration"]["window"].get("xpos", 50).asInt();
+	w = settings_json["configuration"]["window"].get("width", 650).asInt();
+	h = settings_json["configuration"]["window"].get("height", 650).asInt();
+
+	setGeometry (x, y, w, h);
 }
 
 void SimpleQtGlApp::toggle_play_animation (bool status) {

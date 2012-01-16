@@ -23,6 +23,11 @@ protected:
 		RenderImageDialog* renderImageDialog;
 
 public slots:
+		void closeEvent(QCloseEvent *event);
+
+		void saveSettings ();
+		void loadSettings ();
+
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);
 
