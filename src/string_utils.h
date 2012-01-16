@@ -41,13 +41,34 @@ inline std::vector<std::string> tokenize (const std::string &line_in, std::strin
 	while (line.find_first_of (delimiter) != std::string::npos) {
 		std::string token = line.substr (0, line.find_first_of (delimiter));
 		line = line.substr (token.size() + 1, line.size());
-		result.push_back (token);
+		if (token.size() > 0)
+			result.push_back (token);
 	}
 
 	if (line.size() > 0)
 		result.push_back (line);
 
 	return result;
+}
+
+/** Counts the number of occurrences of a list of characters.
+ *
+ * \param line_in The hay-stack to search for.
+ * \param characters The needles.
+ * \return The sum of occurrences of all needles found in the hay-stack.
+ */
+inline int count_char (const std::string &line_in, const std::string characters) {
+	int count = 0;
+	size_t index = 0;
+	size_t char_pos = line_in.find_first_of (characters, index);
+
+	while (char_pos != std::string::npos) {
+		index = char_pos + 1;
+		count ++;
+		char_pos = line_in.find_first_of (characters, index) ;
+	}
+
+	return count;
 }
 
 #endif

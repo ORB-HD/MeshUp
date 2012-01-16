@@ -176,17 +176,34 @@ void loadOBJ (MeshData *mesh, const char *filename) {
 				}
 
 				else if (vertex_tokens.size() == 2) {
+					// two possible cases:
+					//   v1/t1  or v1//n1
+					
+					// first one is always the vertex index
 					if (vertex_tokens[0].size() > 0) {
 						istringstream values (vertex_tokens[0]);
 						values >> face_info.vertex_index[vi];
 					}
-					if (vertex_tokens[1].size() > 0) {
-						istringstream values (vertex_tokens[1]);
-						values >> face_info.texcoord_index[vi];
+
+					if (count_char (tokens[vi], "/") == 1) {
+						// v1/t1
+						if (vertex_tokens[1].size() > 0) {
+							istringstream values (vertex_tokens[1]);
+							values >> face_info.texcoord_index[vi];
+						}
+					} else {
+						// v1/n1
+						if (vertex_tokens[1].size() > 0) {
+							istringstream values (vertex_tokens[1]);
+							values >> face_info.normal_index[vi];
+						}
 					}
 				}
 
 				else if (vertex_tokens.size() == 3) {
+					// two possible cases:
+					//   v1/t1/n1
+
 //					cout << "t1 = " << vertex_tokens[0] << " t2 = " << vertex_tokens[1] << " t3 = " << vertex_tokens[2];
 					if (vertex_tokens[0].size() > 0) {
 						istringstream values (vertex_tokens[0]);
