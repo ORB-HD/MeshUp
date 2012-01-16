@@ -3,7 +3,7 @@
 #include <QDir>
 
 #include "glwidget.h" 
-#include "SimpleQtGlApp.h"
+#include "MeshupApp.h"
 
 #include <assert.h>
 #include <iostream>
@@ -18,7 +18,7 @@ using namespace std;
 
 Json::Value settings_json;
 
-SimpleQtGlApp::SimpleQtGlApp(QWidget *parent)
+MeshupApp::MeshupApp(QWidget *parent)
 {
 	timer = new QTimer (this);
 	setupUi(this); // this sets up GUI
@@ -94,7 +94,7 @@ void print_usage() {
 		<< "Report bugs to martin.felis@iwr.uni-heidelberg.de" << endl;
 }
 
-void SimpleQtGlApp::parseArguments (int argc, char* argv[]) {
+void MeshupApp::parseArguments (int argc, char* argv[]) {
 	bool model_loaded = false;
 	bool animation_loaded = false;
 	for (int i = 1; i < argc; i++) {
@@ -119,11 +119,11 @@ void SimpleQtGlApp::parseArguments (int argc, char* argv[]) {
 	}
 }
 
-void SimpleQtGlApp::closeEvent (QCloseEvent *event) {
+void MeshupApp::closeEvent (QCloseEvent *event) {
 	saveSettings();
 }
 
-void SimpleQtGlApp::saveSettings () {
+void MeshupApp::saveSettings () {
 	settings_json["configuration"]["view"]["draw_base_axes"] = checkBoxDrawBaseAxes->isChecked();
 	settings_json["configuration"]["view"]["draw_floor"] = checkBoxDrawFloor->isChecked();
 	settings_json["configuration"]["view"]["draw_frame_axes"] = checkBoxDrawFrameAxes->isChecked();
@@ -162,7 +162,7 @@ void SimpleQtGlApp::saveSettings () {
 	config_file.close();
 }
 
-void SimpleQtGlApp::loadSettings () {
+void MeshupApp::loadSettings () {
 	string home_dir = getenv("HOME");
 
 	string settings_filename = home_dir + string ("/.meshup/settings.json");
@@ -206,7 +206,7 @@ void SimpleQtGlApp::loadSettings () {
 	setGeometry (x, y, w, h);
 }
 
-void SimpleQtGlApp::toggle_play_animation (bool status) {
+void MeshupApp::toggle_play_animation (bool status) {
 	playerPaused = status;
 
 	if (status) {
@@ -222,7 +222,7 @@ void SimpleQtGlApp::toggle_play_animation (bool status) {
 	toolButtonPlay->setText("Play");
 }
 
-void SimpleQtGlApp::toggle_loop_animation (bool status) {
+void MeshupApp::toggle_loop_animation (bool status) {
 	if (status) {
 		timeLine->setLoopCount(0);
 	} else {
@@ -230,7 +230,7 @@ void SimpleQtGlApp::toggle_loop_animation (bool status) {
 	}
 }
 
-void SimpleQtGlApp::timeline_frame_changed (int frame_index) {
+void MeshupApp::timeline_frame_changed (int frame_index) {
 //	qDebug () << __func__ << " frame_index = " << frame_index;
 
 	horizontalSliderTime->setValue (frame_index);
@@ -239,7 +239,7 @@ void SimpleQtGlApp::timeline_frame_changed (int frame_index) {
 	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
 }
 
-void SimpleQtGlApp::timeline_set_frame (int frame_index) {
+void MeshupApp::timeline_set_frame (int frame_index) {
 //	qDebug () << __func__ << " frame_index = " << frame_index;
 
 	static bool repeat_gate = false;
@@ -252,11 +252,11 @@ void SimpleQtGlApp::timeline_set_frame (int frame_index) {
 	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
 }
 
-void SimpleQtGlApp::timeslider_value_changed (int frame_index) {
+void MeshupApp::timeslider_value_changed (int frame_index) {
 	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
 }
 
-void SimpleQtGlApp::actionRenderAndSaveToFile () {
+void MeshupApp::actionRenderAndSaveToFile () {
 	renderImageDialog->WidthSpinBox->setValue(glWidget->width());
 	renderImageDialog->HeightSpinBox->setValue(glWidget->width());
 

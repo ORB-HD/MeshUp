@@ -6,12 +6,12 @@
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 
-class SimpleQtGlApp : public QMainWindow, public Ui::MainWindow
+class MeshupApp : public QMainWindow, public Ui::MainWindow
 {
     Q_OBJECT
  
 public:
-    SimpleQtGlApp(QWidget *parent = 0);
+    MeshupApp(QWidget *parent = 0);
 
 		void parseArguments (int argc, char* argv[]);
 

@@ -47,21 +47,21 @@ SET ( MainWindow_UIS
 
 QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
 
-SET ( SimpleQtGlApp_SRCS
+SET ( MeshupApp_SRCS
 	src/main.cc
 	src/glwidget.cc
-	src/SimpleQtGlApp.cc
+	src/MeshupApp.cc
 	)
 
-QT4_WRAP_CPP ( SimpleQtGlApp_MOC_SRCS
-	src/SimpleQtGlApp.h
+QT4_WRAP_CPP ( MeshupApp_MOC_SRCS
+	src/MeshupApp.h
 	src/RenderImageDialog.h
 	src/glwidget.h
 	)
 
 ADD_EXECUTABLE ( meshup
-	${SimpleQtGlApp_SRCS}
-	${SimpleQtGlApp_MOC_SRCS}
+	${MeshupApp_SRCS}
+	${MeshupApp_MOC_SRCS}
 	${MainWindow_UIS_H}
 )
 

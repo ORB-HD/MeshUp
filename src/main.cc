@@ -1,6 +1,6 @@
 #include <QApplication>
 
-#include "SimpleQtGlApp.h"
+#include "MeshupApp.h"
 #include "glwidget.h"
 
 #include <iostream>
@@ -10,7 +10,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
-	SimpleQtGlApp *main_window = new SimpleQtGlApp;
+	MeshupApp *main_window = new MeshupApp;
 
 	main_window->parseArguments (argc, argv);
 
