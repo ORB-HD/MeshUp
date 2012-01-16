@@ -648,7 +648,7 @@ void ModelData::saveModelToFile (const char* filename) {
 	file_out.close();
 }
 
-void ModelData::loadModelFromFile (const char* filename) {
+bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might read false values due to the wrong conversion.
 	std::setlocale(LC_NUMERIC, "POSIX");
@@ -661,7 +661,10 @@ void ModelData::loadModelFromFile (const char* filename) {
 
 	if (!file_in) {
 		cerr << "Error opening file " << filename << "!" << endl;
-		exit(1);
+		
+		if (strict)
+			exit(1);
+		return false;
 	}
 
 	cout << "Loading model " << filename << endl;
@@ -674,9 +677,9 @@ void ModelData::loadModelFromFile (const char* filename) {
 	if (!parsing_result) {
 		cerr << "Error reading model: " << reader.getFormattedErrorMessages();
 
-		exit (1);
-
-		return;
+		if (strict)
+			exit (1);
+		return false;
 	}
 
 	// clear the model
@@ -748,6 +751,8 @@ void ModelData::loadModelFromFile (const char* filename) {
 	}
 
 	initFrameTransform();
+
+	return true;
 }
 
 struct ColumnInfo {
@@ -785,13 +790,13 @@ struct AnimationKeyPoses {
 	void clearFramePoses() {
 		frame_poses.clear();
 	}
-	void setValue (int column_index, float value) {
+	bool setValue (int column_index, float value, bool strict = true) {
 		assert (column_index <= columns.size());
 		ColumnInfo col_info = columns[column_index];
 
 		if (col_info.is_time_column) {
 			timestamp = value;
-			return;
+			return true;
 		}
 
 		FramePtr frame = col_info.frame;
@@ -833,8 +838,14 @@ struct AnimationKeyPoses {
 			}	
 		} else {
 			cerr << "Error: invalid column info type: " << col_info.type << ". Something really weird happened!" << endl;
-			exit (1);
+
+			if (strict)
+				exit (1);
+
+			return false;
 		}
+
+		return true;
 	}
 	void updateTimeValues () {
 		for (FramePoseMap::iterator pose_iter = frame_poses.begin(); pose_iter != frame_poses.end(); pose_iter++) {
@@ -843,12 +854,16 @@ struct AnimationKeyPoses {
 	}
 };
 
-void ModelData::loadAnimationFromFile (const char* filename) {
+bool ModelData::loadAnimationFromFile (const char* filename, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
 		cerr << "Error opening animation file " << filename << "!";
-		exit (1);
+
+		if (strict)
+			exit (1);
+
+		return false;
 	}
 
 	cout << "Loading animation " << filename << endl;
@@ -912,15 +927,23 @@ void ModelData::loadAnimationFromFile (const char* filename) {
 
 				std::vector<string> spec = tokenize(column_def, ":");
 				if (spec.size() != 3) {
-					cerr << "Error parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
-					exit(1);
+					cerr << "Error: parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
+
+					if (strict)
+						exit(1);
+
+					return false;
 				}
 
 				// find the frame
 				FramePtr frame = findFrame (strip_whitespaces(spec[0]).c_str());
 				if (frame == NULL) {
-					cerr << "Unknown frame '" << spec[0] << "' in " << filename << " line " << line_number << endl;
-					exit (1);
+					cerr << "Error: Unknown frame '" << spec[0] << "' in " << filename << " line " << line_number << endl;
+
+					if (strict)
+						exit (1);
+
+					return false;
 				}
 
 				// the transform type
@@ -936,8 +959,12 @@ void ModelData::loadAnimationFromFile (const char* filename) {
 						|| type_str == "s")
 					type = ColumnInfo::TypeScale;
 				else {
-					cerr << "Unknown transform type '" << spec[1] << "' in " << filename << " line " << line_number << endl;
-					exit (1);
+					cerr << "Error: Unknown transform type '" << spec[1] << "' in " << filename << " line " << line_number << endl;
+					
+					if (strict)
+						exit (1);
+
+					return false;
 				}
 
 				// and the axis
@@ -950,8 +977,12 @@ void ModelData::loadAnimationFromFile (const char* filename) {
 				else if (axis_str == "z")
 					axis_name = ColumnInfo::AxisZ;
 				else {
-					cerr << "Unknown axis name '" << spec[2] << "' in " << filename << " line " << line_number << endl;
-					exit (1);
+					cerr << "Error: Unknown axis name '" << spec[2] << "' in " << filename << " line " << line_number << endl;
+
+					if (strict)
+						exit (1);
+
+					return false;
 				}
 
 				ColumnInfo col_info;
@@ -986,7 +1017,8 @@ void ModelData::loadAnimationFromFile (const char* filename) {
 				istringstream value_stream (columns[ci]);
 				value_stream >> value;
 				// cout << "  col value " << ci << " = " << value << endl;
-				animation_keyposes.setValue (ci, value);
+				animation_keyposes.setValue (ci, value, strict);
+
 			}
 
 			// dispatch the time information to all frame poses
@@ -1017,4 +1049,6 @@ void ModelData::loadAnimationFromFile (const char* filename) {
 			continue;
 		}
 	}
+
+	return true;
 }

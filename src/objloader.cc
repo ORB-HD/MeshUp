@@ -38,13 +38,17 @@ struct FaceInfo {
 	int normal_index[3];
 };
 
-void loadOBJ (MeshData *mesh, const char *filename) {
+bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
 	string line;
 	ifstream file_stream (filename);
 
 	if (!file_stream) {
 		cerr << "Error: Could not open OBJ file '" << filename << "'!" << endl;
-		exit (1);
+
+		if (strict)
+			exit (1);
+
+		return false;
 	}
 
 	ReadState read_state = ReadStateUndefined;
@@ -153,6 +157,11 @@ void loadOBJ (MeshData *mesh, const char *filename) {
 			if (tokens.size() != 3) {
 				cerr << "Error: Faces must be triangles! (" << filename << ": " << line_index << ")" << endl;
 				cerr << tokens.size() << endl;
+
+				if (strict)
+					exit (1);
+
+				return false;
 			}
 
 			FaceInfo face_info;
@@ -254,5 +263,7 @@ void loadOBJ (MeshData *mesh, const char *filename) {
 	mesh->smooth_shading = smooth_shading;
 
 	file_stream.close();
+
+	return true;
 }
 

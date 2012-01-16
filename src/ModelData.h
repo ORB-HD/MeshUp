@@ -131,7 +131,7 @@ struct MeshData {
 };
 typedef boost::shared_ptr<MeshData> MeshPtr;
 
-void loadOBJ (MeshData *mesh, const char *filename);
+bool loadOBJ (MeshData *mesh, const char *filename, bool strict = true);
 
 struct Frame;
 typedef boost::shared_ptr<Frame> FramePtr;
@@ -335,8 +335,8 @@ struct ModelData {
 	void drawBaseFrameAxes();
 
 	void saveModelToFile (const char* filename);
-	void loadModelFromFile (const char* filename);
-	void loadAnimationFromFile (const char* filename);
+	bool loadModelFromFile (const char* filename, bool strict = true);
+	bool loadAnimationFromFile (const char* filename, bool strict = true);
 };
 
 #endif
