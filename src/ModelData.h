@@ -8,8 +8,8 @@
 #include <boost/shared_ptr.hpp>
 #include <limits>
 
-#include "SimpleMath.h"
-#include "SimpleMathGL.h"
+#include "SimpleMath/SimpleMath.h"
+#include "SimpleMath/SimpleMathGL.h"
 
 struct FrameConfiguration {
 	FrameConfiguration() :

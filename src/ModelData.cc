@@ -2,7 +2,7 @@
 
 #include "ModelData.h"
 
-#include "SimpleMathGL.h"
+#include "SimpleMath/SimpleMathGL.h"
 #include "string_utils.h"
 
 #include "json/json.h"

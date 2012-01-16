@@ -1,7 +1,7 @@
 #include <UnitTest++.h>
 
 #include "ModelData.h"
-#include "SimpleMathGL.h"
+#include "SimpleMath/SimpleMathGL.h"
 
 #include <iostream>
 
