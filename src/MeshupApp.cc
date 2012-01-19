@@ -83,6 +83,10 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// quit when we want to quit
 	connect (actionQuit, SIGNAL( triggered() ), qApp, SLOT( quit() ));
 
+	// keyboard shortcuts
+	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
+//	connect (actionQuit, SIGNAL ( triggered() ), this, SLOT(action_quit()));
+
 	loadSettings();
 	saveSettings();
 }
@@ -121,6 +125,14 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 
 void MeshupApp::closeEvent (QCloseEvent *event) {
 	saveSettings();
+}
+
+void MeshupApp::focusChanged(QFocusEvent *event) {
+	cerr << "focus changed!" << endl;
+}
+
+void MeshupApp::focusInEvent(QFocusEvent *event) {
+	cerr << "focus in!" << endl;
 }
 
 void MeshupApp::saveSettings () {
@@ -228,6 +240,46 @@ void MeshupApp::toggle_loop_animation (bool status) {
 	} else {
 		timeLine->setLoopCount(1);
 	}
+}
+
+void MeshupApp::action_reload_files() {
+	ModelData test_model;
+
+	string model_filename = glWidget->model_data.model_filename;
+	string animation_filename = glWidget->model_data.animation_filename;
+
+	// no model to reload
+	if (model_filename.size() == 0) 
+		return;
+
+	bool status;
+	status = test_model.loadModelFromFile(model_filename.c_str(), false);
+
+	if (!status) {
+		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
+		return;
+	}
+
+	glWidget->model_data.loadModelFromFile( model_filename.c_str());
+
+	// no animation to reload
+	if (animation_filename.size() == 0)
+		return;
+
+	status = test_model.loadAnimationFromFile(animation_filename.c_str(), false);
+	if (!status) {
+		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
+		return;
+	}
+
+	// everything worked fine -> replace the current model
+	glWidget->model_data.loadAnimationFromFile ( animation_filename.c_str());	
+
+	return;
+}
+
+void MeshupApp::action_quit () {
+	qDebug () << "quit" << endl;
 }
 
 void MeshupApp::timeline_frame_changed (int frame_index) {

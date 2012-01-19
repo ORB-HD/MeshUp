@@ -752,6 +752,8 @@ bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 
 	initFrameTransform();
 
+	model_filename = filename;
+
 	return true;
 }
 
@@ -1049,6 +1051,8 @@ bool ModelData::loadAnimationFromFile (const char* filename, bool strict) {
 			continue;
 		}
 	}
+
+	animation_filename = filename;
 
 	return true;
 }

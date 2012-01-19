@@ -23,13 +23,18 @@ protected:
 		RenderImageDialog* renderImageDialog;
 
 public slots:
-		void closeEvent(QCloseEvent *event);
+		virtual void closeEvent(QCloseEvent *event);
+		virtual void focusChanged (QFocusEvent *event);
+		virtual void focusInEvent (QFocusEvent *event);
 
 		void saveSettings ();
 		void loadSettings ();
 
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);
+
+		void action_reload_files ();
+		void action_quit();
 
 		void timeline_frame_changed (int frame_index);
 		void timeline_set_frame (int frame_index);

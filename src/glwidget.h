@@ -7,6 +7,8 @@
 
 #include <iostream>
 
+#include "ModelData.h"
+
 class GLWidget : public QGLWidget
 {
 	Q_OBJECT
@@ -23,6 +25,8 @@ class GLWidget : public QGLWidget
 		float getAnimationDuration();
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
+
+		ModelData model_data;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;

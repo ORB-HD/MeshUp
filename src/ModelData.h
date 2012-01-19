@@ -234,6 +234,8 @@ typedef boost::shared_ptr<Animation> AnimationPtr;
 
 struct ModelData {
 	ModelData():
+		model_filename (""),
+		animation_filename (""),
 		frames_initialized(false)
 	{
 		// create the BASE frame
@@ -245,6 +247,28 @@ struct ModelData {
 		frames.push_back (base_frame);
 		framemap["BASE"] = base_frame;
 	}
+
+	ModelData& operator= (const ModelData& other) {
+		if (&other != this) {
+			model_filename = other.model_filename;
+			animation_filename = other.animation_filename;
+
+			segments = other.segments;
+			meshmap = other.meshmap;
+
+			frames = other.frames;
+			framemap = other.framemap;
+
+			configuration = other.configuration;
+			frames_initialized = other.frames_initialized;
+			animation = other.animation;
+
+		}
+		return *this;
+	}
+
+	std::string model_filename;
+	std::string animation_filename;
 
 	typedef std::list<Segment> SegmentList;
 	SegmentList segments;
@@ -297,6 +321,11 @@ struct ModelData {
 	}
 
 	void clear() {
+		segments.clear();
+		frames.clear();
+		framemap.clear();
+		animation.frametracks.clear();
+
 		*this = ModelData();
 	}
 

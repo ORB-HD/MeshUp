@@ -15,14 +15,12 @@
 #include "glwidget.h"
 #include <GL/glu.h>
 
-#include "ModelData.h"
 #include "timer.h"
 
 using namespace std;
 
 static bool update_simulation = false;
 
-ModelData model_data;
 TimerInfo timer_info;
 double draw_time = 0.;
 int draw_count = 0;
