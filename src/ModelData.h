@@ -175,8 +175,10 @@ struct Frame {
 struct Segment {
 	Segment () :
 		name ("unnamed"),
-		dimensions (1.f, 1.f, 1.f),
-		meshcenter (0.f, 0.f, 0.f),
+		dimensions (-1.f, -1.f, -1.f),
+		scale (-1.f, -1.f, -1.f),
+		meshcenter (123.456f, 0.f, 0.f),
+		translate (0.f, 0.f, 0.f),
 		frame (FramePtr()),
 		mesh_filename("")
 	{}
@@ -184,9 +186,11 @@ struct Segment {
 	std::string name;
 
 	Vector3f dimensions;
+	Vector3f scale;
 	Vector3f color;
 	MeshPtr mesh;
 	Vector3f meshcenter;
+	Vector3f translate;
 	FramePtr frame;
 	std::string mesh_filename;
 };
@@ -297,8 +301,10 @@ struct ModelData {
 			const std::string &frame_name,
 			const std::string &segment_name,
 			const Vector3f &dimensions,
+			const Vector3f &scale,
 			const Vector3f &color,
 			const std::string &mesh_name,
+			const Vector3f &translate,
 			const Vector3f &mesh_center);
 
 	void addFramePose (

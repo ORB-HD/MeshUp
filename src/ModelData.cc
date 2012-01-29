@@ -258,20 +258,24 @@ void ModelData::addSegment (
 		const std::string &frame_name,
 		const std::string &segment_name,
 		const Vector3f &dimensions,
+		const Vector3f &scale,
 		const Vector3f &color,
 		const std::string &mesh_name,
+		const Vector3f &translate,
 		const Vector3f &mesh_center) {
 	Segment segment;
 	segment.name = segment_name;
 	segment.dimensions = configuration.axes_rotation.transpose() * dimensions;
 
-	// make sure that the dimensions are all positive
-	for (int i = 0; i < 3; i++) {
-	if (segment.dimensions[i] < 0)
-		segment.dimensions[i] = -segment.dimensions[i];
-	}
+	//~ // make sure that the dimensions are all positive
+	//~ for (int i = 0; i < 3; i++) {
+	//~ if (segment.dimensions[i] < 0)
+		//~ segment.dimensions[i] = -segment.dimensions[i];
+	//~ }
 
 	segment.color = color;
+	segment.scale = scale;
+	segment.translate = translate;
 
 	// check whether we have the mesh, if not try to load it
 	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
@@ -376,25 +380,39 @@ void ModelData::draw() {
 
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
-
+		
+		//BENJAMIN
+		//~ cout << "dim: " << seg_iter->dimensions << endl;
+		//~ cout << "scale: " << seg_iter->scale << endl;
+		
 		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
 
-		Vector3f scale (
-				seg_iter->dimensions[0] / bbox_size[0],
-				seg_iter->dimensions[1] / bbox_size[1],
-				seg_iter->dimensions[2] / bbox_size[2]
-				);
-
-		Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
-
-		center[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
-		center[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
-		center[2] = -center[2] * scale[2] + seg_iter->meshcenter[2];
-
+		Vector3f scale(1.0f,1.0f,1.0f) ;
+		//only scale, if the dimensions are valid, i.e. are set in json-File
+		if (seg_iter->dimensions[0] > 0.f) {
+			scale = Vector3f(
+					seg_iter->dimensions[0] / bbox_size[0],
+					seg_iter->dimensions[1] / bbox_size[1],
+					seg_iter->dimensions[2] / bbox_size[2]
+					);
+		} else if (seg_iter->scale[0] > 0.f) {
+			scale=seg_iter->scale;
+		}
+		
+		Vector3f translate(0.0f,0.0f,0.0f);
+		//only translate with meshcenter if it is defined in json file
+		if (seg_iter->meshcenter[0]!=123.456f) {
+				Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
+				translate[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
+				translate[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
+				translate[2] = -center[2] * scale[2] + seg_iter->meshcenter[2];
+		}
+		translate+=seg_iter->translate;
+		
 		// we also have to apply the scaling after the transform:
 		Matrix44f transform_matrix = 
 			smScale (scale[0], scale[1], scale[2])
-			* smTranslate (center[0], center[1], center[2])
+			* smTranslate (translate[0], translate[1], translate[2])
 			* seg_iter->frame->pose_transform;
 		glMultMatrixf (transform_matrix.data());
 
@@ -742,8 +760,10 @@ bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 				segment_node["frame"].asString(),
 				segment_node["name"].asString(),
 				json_to_vec3 (segment_node["dimensions"]),
+				json_to_vec3 (segment_node["scale"]),
 				json_to_vec3 (segment_node["color"]),
 				segment_node["mesh_filename"].asString(),
+				json_to_vec3 (segment_node["translate"]),
 				json_to_vec3 (segment_node["mesh_center"])
 				);
 
