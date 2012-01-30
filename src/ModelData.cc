@@ -782,7 +782,8 @@ struct ColumnInfo {
 		frame (FramePtr()),
 		type (TypeUnknown),
 		axis (AxisUnknown),
-		is_time_column (false)
+		is_time_column (false),
+		is_empty (false)
 	{}
 	enum TransformType {
 		TypeUnknown = 0,
@@ -801,6 +802,7 @@ struct ColumnInfo {
 	AxisName axis;
 
 	bool is_time_column;
+	bool is_empty;
 };
 
 struct AnimationKeyPoses {
@@ -818,6 +820,9 @@ struct AnimationKeyPoses {
 
 		if (col_info.is_time_column) {
 			timestamp = value;
+			return true;
+		}
+		if (col_info.is_empty) {
 			return true;
 		}
 
@@ -946,7 +951,13 @@ bool ModelData::loadAnimationFromFile (const char* filename, bool strict) {
 					// cout << "Setting time column to " << column_index << endl;
 					continue;
 				}
-
+				if (tolower(column_def) == "empty") {
+					ColumnInfo column_info;
+					column_info.is_empty = true;
+					animation_keyposes.columns.push_back(column_info);
+					continue;
+				}
+				
 				std::vector<string> spec = tokenize(column_def, ":");
 				if (spec.size() != 3) {
 					cerr << "Error: parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
