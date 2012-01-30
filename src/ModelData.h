@@ -240,6 +240,7 @@ struct ModelData {
 	ModelData():
 		model_filename (""),
 		animation_filename (""),
+		is_radian(false),
 		frames_initialized(false)
 	{
 		// create the BASE frame
@@ -289,6 +290,10 @@ struct ModelData {
 
 	/// Marks whether the frame transformations have to be initialized
 	bool frames_initialized;
+	
+	//If the model is defined in radian, default is degree
+	bool is_radian;
+	
 	Animation animation;
 
 	void addFrame (

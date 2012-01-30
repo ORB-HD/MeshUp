@@ -703,6 +703,17 @@ bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 	// clear the model
 	clear();
 
+
+	// read if the model is defined in rad
+	//	if yes, transformation while readin will be performed
+	if ((root["configuration"]["unit"]=="deg") || (root["configuration"]["unit"]=="degree")) {
+		is_radian=false;
+	}
+	else if ((root["configuration"]["unit"]=="rad") || (root["configuration"]["unit"]=="radian")) {
+		is_radian=true;
+	}
+
+
 	// read the configuration, fill with default values if they do not exist
 	if (root["configuration"]["axis_front"].isNull())
 		root["configuration"]["axis_front"] = vec3_to_json (Vector3f (1.f, 0.f, 0.f));
@@ -716,6 +727,7 @@ bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 		root["configuration"]["rotation_order"][1] = 1;
 	if (root["configuration"]["rotation_order"][2].isNull())
 		root["configuration"]["rotation_order"][2] = 0;
+
 
 	configuration.axis_front = json_to_vec3(root["configuration"]["axis_front"]);
 	configuration.axis_up = json_to_vec3(root["configuration"]["axis_up"]);
@@ -1049,6 +1061,12 @@ bool ModelData::loadAnimationFromFile (const char* filename, bool strict) {
 				float value;
 				istringstream value_stream (columns[ci]);
 				value_stream >> value;
+				
+				//handle radian
+				if (is_radian && animation_keyposes.columns[ci].type==ColumnInfo::TypeRotation) {
+					value*=57.295779513;
+				}
+				
 				// cout << "  col value " << ci << " = " << value << endl;
 				animation_keyposes.setValue (ci, value, strict);
 
