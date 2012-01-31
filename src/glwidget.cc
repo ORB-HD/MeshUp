@@ -238,7 +238,9 @@ void GLWidget::initializeGL()
 	glClearDepth(1.0f);
   glDepthFunc(GL_LEQUAL);
 	glEnable (GL_DEPTH_TEST);
-	glEnable (GL_CULL_FACE);
+	
+	//Disabled, to see the flipped vertices in model
+	//glEnable (GL_CULL_FACE);
 
 	glEnable (GL_NORMALIZE);
 
