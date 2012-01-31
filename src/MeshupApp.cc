@@ -1,6 +1,7 @@
 #include <QtGui> 
 #include <QFile>
 #include <QDir>
+#include <QProgressDialog>
 
 #include "glwidget.h" 
 #include "MeshupApp.h"
@@ -24,6 +25,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	setupUi(this); // this sets up GUI
 
 	renderImageDialog = new RenderImageDialog(this);
+	renderImageSeriesDialog = new RenderImageSeriesDialog(this);
 
 	timer->setSingleShot(false);
 	timer->start(20);
@@ -61,6 +63,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
+
+	connect (actionRenderSeriesImage, SIGNAL (triggered()), this, SLOT (actionRenderSeriesAndSaveToFile()));
 
 	// view stettings
 	connect (checkBoxDrawBaseAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_base_axes(bool)));
@@ -338,4 +342,67 @@ void MeshupApp::actionRenderAndSaveToFile () {
 
 	QImage image = glWidget->renderContentOffscreen (w,h, renderImageDialog->TransparentBackgroundCheckBox->isChecked());
 	image.save (filename_stream.str().c_str(), 0, -1);
+}
+
+void MeshupApp::actionRenderSeriesAndSaveToFile () {
+	static int fps=25;
+	static bool doMencoder=true;
+	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
+	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->width());
+	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
+	renderImageSeriesDialog->mencoderBox->setChecked(doMencoder);
+
+	int result = renderImageSeriesDialog->exec();
+
+	if (result == QDialog::Rejected)
+		return;
+
+	doMencoder = renderImageSeriesDialog->mencoderBox->isChecked();
+	
+	string figure_name = string("./image-series") ;
+	stringstream filename_stream;
+	
+	int series_nr=0;
+	while (true) {
+		filename_stream.str("");
+		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-0000.png";
+		if (!QFile (filename_stream.str().c_str()).exists()) 
+			break;
+		series_nr++;
+	}
+
+
+	//~ cout << "starting offscreen rendering (this may take a while)..." << endl;
+	int w = renderImageSeriesDialog->WidthSpinBox->value();
+	int h = renderImageSeriesDialog->HeightSpinBox->value();
+	fps = renderImageSeriesDialog->FpsSpinBox->value();
+	
+	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->model_data.getAnimationDuration(), this);
+	pbar.setMinimumDuration(0);
+	pbar.show();
+
+	for(int i = 0; i < (float) fps*glWidget->model_data.getAnimationDuration(); i++) {
+		pbar.setValue(i);
+		pbar.show();
+		filename_stream.str("");
+		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
+		glWidget->model_data.setAnimationTime((float) i / fps);
+		QImage image = glWidget->renderContentOffscreen (w,h, false);
+		image.save (filename_stream.str().c_str(), 0, -1);
+		//not used:
+		//if (pbar.wasCanceled())
+		//	return;
+	}
+	if (doMencoder) {
+	
+		cout << "running mencoder to produce a movie" << endl;
+		stringstream mencoder;
+		mencoder << "mencoder mf://"  << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-"<< "*.png ";
+		mencoder << "-mf w=" << w << ":h="<< h << ":fps=" << fps << ":type=png -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
+		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".avi";
+		
+		cout << mencoder.str() << endl;
+		
+		system(mencoder.str().c_str());
+	}
 }

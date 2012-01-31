@@ -5,6 +5,7 @@
 #include <QTimeLine>
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
+#include "RenderImageSeriesDialog.h"
 
 class MeshupApp : public QMainWindow, public Ui::MainWindow
 {
@@ -21,6 +22,7 @@ protected:
 
 		bool playerPaused;
 		RenderImageDialog* renderImageDialog;
+		RenderImageSeriesDialog* renderImageSeriesDialog;
 
 public slots:
 		virtual void closeEvent(QCloseEvent *event);
@@ -41,6 +43,7 @@ public slots:
 		void timeslider_value_changed (int frame_index);
 
 		void actionRenderAndSaveToFile ();
+		void actionRenderSeriesAndSaveToFile ();
 };
  
 #endif

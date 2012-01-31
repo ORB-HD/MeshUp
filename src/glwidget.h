@@ -92,6 +92,7 @@ class GLWidget : public QGLWidget
 		void toggle_draw_shadows(bool status);
 
 		void actionRenderImage();
+		void actionRenderSeriesImage();
 
 		void setAnimationTime (float fraction);
 };

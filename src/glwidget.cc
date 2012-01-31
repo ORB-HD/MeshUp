@@ -100,6 +100,9 @@ void GLWidget::setAnimationTime (float fraction) {
 void GLWidget::actionRenderImage () {
 }
 
+void GLWidget::actionRenderSeriesImage () {
+}
+
 float GLWidget::getAnimationDuration() {
 	return model_data.getAnimationDuration();
 }

@@ -43,6 +43,7 @@ INCLUDE (${QT_USE_FILE})
 SET ( MainWindow_UIS
 	ui/MainWindow.ui
 	ui/RenderImageDialog.ui
+	ui/RenderImageSeriesDialog.ui
 	)
 
 QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
@@ -56,6 +57,7 @@ SET ( MeshupApp_SRCS
 QT4_WRAP_CPP ( MeshupApp_MOC_SRCS
 	src/MeshupApp.h
 	src/RenderImageDialog.h
+	src/RenderImageSeriesDialog.h
 	src/glwidget.h
 	)
 

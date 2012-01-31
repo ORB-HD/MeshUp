@@ -65,6 +65,7 @@
      <string>Render</string>
     </property>
     <addaction name="actionRenderImage"/>
+    <addaction name="actionRenderSeriesImage"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuControl_Panels"/>
@@ -259,6 +260,11 @@
   <action name="actionRenderImage">
    <property name="text">
     <string>Image</string>
+   </property>
+  </action>
+  <action name="actionRenderSeriesImage">
+   <property name="text">
+    <string>Image-Series</string>
    </property>
   </action>
   <action name="actionImage_Series">
