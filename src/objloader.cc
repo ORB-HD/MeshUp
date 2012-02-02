@@ -39,7 +39,11 @@ struct FaceInfo {
 };
 
 bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
-	string line;
+	return loadOBJ (mesh, filename, NULL, strict);
+}
+
+bool loadOBJ (MeshData *mesh, const char *filename, const char *object_name, bool strict) {
+	string line, original_line;
 	ifstream file_stream (filename);
 
 	if (!file_stream) {
@@ -53,10 +57,11 @@ bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
 
 	ReadState read_state = ReadStateUndefined;
 	bool read_object = false;
-	string object_name = "";
+	string current_object_name = "";
 	string material_library = "";
 	string material_name = "";
 	bool smooth_shading = false;
+	bool object_found = false;
 
 	std::vector<Vector4f> vertices;
 	std::vector<Vector3f> normals;
@@ -70,6 +75,7 @@ bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
 
 //		cout << "reading line " << line_index << endl;
 
+		original_line = line;
 		line = trim_line (line);
 		if (line.size() == 0)
 			continue;
@@ -102,11 +108,14 @@ bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
 		}
 
 		if (line[0] == 'o') {
-			if (object_name != "") {
-				cerr << "Warning: multiple objects in OBJ file detected! Using '" << object_name << "', discarding others" << endl;
-				break;
-			}
-			object_name = line.substr (2, line.size());
+			// we need a copy of the line that still contains the original case
+			// as line contains the line transformed to lowercase.
+			string object_line = strip_whitespaces(strip_comments(original_line));
+
+			current_object_name = object_line.substr (2, object_line.size());
+			cout << "current_object_name = " << current_object_name << endl;
+			if (object_name != NULL && current_object_name == object_name)
+				object_found = true;
 			
 			continue;
 		}
@@ -152,7 +161,9 @@ bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
 			continue;
 		}	
 
-		if (line.substr (0,2) == "f ") {
+		if (line.substr (0,2) == "f "
+				&& (object_name == NULL || current_object_name == object_name)
+				) {
 			std::vector<string> tokens = tokenize (line.substr (2, line.size()));
 			if (tokens.size() != 3) {
 				cerr << "Error: Faces must be triangles! (" << filename << ": " << line_index << ")" << endl;
@@ -237,6 +248,15 @@ bool loadOBJ (MeshData *mesh, const char *filename, bool strict) {
 
 			continue;
 		}
+	}
+
+	if (object_name != NULL && object_found == false) {
+		cerr << "Warning: could not find object '" << object_name << "' in OBJ file '" << filename << "'" << endl;
+
+		if (strict)
+			exit(1);
+
+		return false;
 	}
 
 //	cout << "found " << vertices.size() << " vertices" << endl;

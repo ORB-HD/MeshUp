@@ -280,11 +280,21 @@ void ModelData::addSegment (
 	// check whether we have the mesh, if not try to load it
 	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
 	if (mesh_iter == meshmap.end()) {
-		// load it
-		cout << "Loading mesh " << mesh_name << endl;
-
 		MeshPtr new_mesh (new MeshData);
-		loadOBJ (&(*new_mesh), mesh_name.c_str());
+
+		// check whether we want to extract a sub object within the obj file
+		string mesh_filename = mesh_name;
+		string submesh_name = "";
+		if (mesh_name.find (':') != string::npos) {
+			submesh_name = mesh_name.substr (mesh_name.find(':') + 1, mesh_name.size());
+			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
+			cout << "Loading sub object " << submesh_name << " from file " << mesh_filename << endl;
+			loadOBJ (&(*new_mesh), mesh_filename.c_str(), submesh_name.c_str());
+		} else {
+			cout << "Loading mesh " << mesh_name << endl;
+			loadOBJ (&(*new_mesh), mesh_filename.c_str());
+		}
+
 		new_mesh->generate_vbo();
 
 		meshmap[mesh_name] = new_mesh;
