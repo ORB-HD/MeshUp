@@ -391,19 +391,16 @@ void ModelData::draw() {
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
 		
-		//BENJAMIN
-		//~ cout << "dim: " << seg_iter->dimensions << endl;
-		//~ cout << "scale: " << seg_iter->scale << endl;
-		
 		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
 
 		Vector3f scale(1.0f,1.0f,1.0f) ;
+
 		//only scale, if the dimensions are valid, i.e. are set in json-File
 		if (seg_iter->dimensions[0] > 0.f) {
 			scale = Vector3f(
-					seg_iter->dimensions[0] / bbox_size[0],
-					seg_iter->dimensions[1] / bbox_size[1],
-					seg_iter->dimensions[2] / bbox_size[2]
+					fabs(seg_iter->dimensions[0]) / bbox_size[0],
+					fabs(seg_iter->dimensions[1]) / bbox_size[1],
+					fabs(seg_iter->dimensions[2]) / bbox_size[2]
 					);
 		} else if (seg_iter->scale[0] > 0.f) {
 			scale=seg_iter->scale;
