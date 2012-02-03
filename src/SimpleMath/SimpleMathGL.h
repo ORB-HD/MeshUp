@@ -101,10 +101,11 @@ class smQuaternion : public Vector4f {
 			assert (s != 0.f);
 
 			float angle = acos (dot(quat) / s);
-			if (angle == 0.f) {
+			if (angle == 0.f || isnan(angle)) {
 				return *this;
 			}
-	
+			assert(!isnan(angle));
+
 			float d = 1.f / sinf (angle);
 			float p0 = sinf ((1.f - alpha) * angle);
 			float p1 = sinf (alpha * angle);
@@ -112,7 +113,6 @@ class smQuaternion : public Vector4f {
 			if (dot (quat) < 0.f) {
 				return ( (*this) * p0 - quat * p1) * d;
 			}
-
 			return ( (*this) * p0 + quat * p1) * d;
 		}
 

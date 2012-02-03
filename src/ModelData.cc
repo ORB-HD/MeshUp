@@ -212,6 +212,7 @@ FramePose FrameAnimationTrack::interpolatePose (float time) {
 	end_pose.timestamp = start_pose.timestamp + fraction * (end_pose.timestamp - start_pose.timestamp);
 	end_pose.translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
 	end_pose.rotation = start_pose.rotation + fraction * (end_pose.rotation - start_pose.rotation);
+	
 	end_pose.rotation_quaternion = start_pose.rotation_quaternion.slerp (fraction, end_pose.rotation_quaternion);
 	end_pose.scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
 
