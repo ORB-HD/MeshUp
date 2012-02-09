@@ -180,7 +180,7 @@ struct Segment {
 		name ("unnamed"),
 		dimensions (-1.f, -1.f, -1.f),
 		scale (-1.f, -1.f, -1.f),
-		meshcenter (123.456f, 0.f, 0.f),
+		meshcenter (1/0.0, 0.f, 0.f),
 		translate (0.f, 0.f, 0.f),
 		frame (FramePtr()),
 		mesh_filename("")

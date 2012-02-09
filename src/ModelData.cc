@@ -409,7 +409,7 @@ void ModelData::draw() {
 		
 		Vector3f translate(0.0f,0.0f,0.0f);
 		//only translate with meshcenter if it is defined in json file
-		if (seg_iter->meshcenter[0]!=123.456f) {
+		if (!isnan(seg_iter->meshcenter[0])) {
 				Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
 				translate[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
 				translate[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
@@ -552,9 +552,9 @@ Json::Value vec3_to_json (const Vector3f &vec) {
 	return result;
 }
 
-Vector3f json_to_vec3 (const Json::Value &value) {
+Vector3f json_to_vec3 (const Json::Value &value, Vector3f defaultvalue=Vector3f (0.f, 0.f, 0.f)) {
 	if (value.isNull())
-		return Vector3f (0.f, 0.f, 0.f);
+		return defaultvalue;
 
 	Vector3f result (
 			value[0].asFloat(),
@@ -784,7 +784,7 @@ bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 				json_to_vec3 (segment_node["color"]),
 				segment_node["mesh_filename"].asString(),
 				json_to_vec3 (segment_node["translate"]),
-				json_to_vec3 (segment_node["mesh_center"])
+				json_to_vec3 (segment_node["mesh_center"], Vector3f(1/0.0,1/0.0,1/0.0))
 				);
 
 		node_iter++;
