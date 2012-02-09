@@ -815,7 +815,10 @@ struct ColumnInfo {
 		AxisUnknown = 0,
 		AxisX,
 		AxisY,
-		AxisZ
+		AxisZ,
+		AxisMX,
+		AxisMY,
+		AxisMZ
 	};
 	FramePtr frame;
 	TransformType type;
@@ -863,6 +866,15 @@ struct AnimationKeyPoses {
 			if (col_info.axis == ColumnInfo::AxisZ) {
 				frame_poses[frame].rotation[2] = value;
 			}
+			if (col_info.axis == ColumnInfo::AxisMX) {
+				frame_poses[frame].rotation[0] = -value;
+			}
+			if (col_info.axis == ColumnInfo::AxisMY) {
+				frame_poses[frame].rotation[1] = -value;
+			}
+			if (col_info.axis == ColumnInfo::AxisMZ) {
+				frame_poses[frame].rotation[2] = -value;
+			}
 		} else if (col_info.type == ColumnInfo::TypeTranslation) {
 			if (col_info.axis == ColumnInfo::AxisX) {
 				frame_poses[frame].translation[0] = value;
@@ -873,6 +885,15 @@ struct AnimationKeyPoses {
 			if (col_info.axis == ColumnInfo::AxisZ) {
 				frame_poses[frame].translation[2] = value;
 			}	
+			if (col_info.axis == ColumnInfo::AxisMX) {
+				frame_poses[frame].translation[0] = -value;
+			}
+			if (col_info.axis == ColumnInfo::AxisMY) {
+				frame_poses[frame].translation[1] = -value;
+			}
+			if (col_info.axis == ColumnInfo::AxisMZ) {
+				frame_poses[frame].translation[2] = -value;
+			}	
 		} else if (col_info.type == ColumnInfo::TypeScale) {
 			if (col_info.axis == ColumnInfo::AxisX) {
 				frame_poses[frame].scaling[0] = value;
@@ -882,6 +903,15 @@ struct AnimationKeyPoses {
 			}
 			if (col_info.axis == ColumnInfo::AxisZ) {
 				frame_poses[frame].scaling[2] = value;
+			}	
+			if (col_info.axis == ColumnInfo::AxisMX) {
+				frame_poses[frame].scaling[0] = -value;
+			}
+			if (col_info.axis == ColumnInfo::AxisMY) {
+				frame_poses[frame].scaling[1] = -value;
+			}
+			if (col_info.axis == ColumnInfo::AxisMZ) {
+				frame_poses[frame].scaling[2] = -value;
 			}	
 		} else {
 			cerr << "Error: invalid column info type: " << col_info.type << ". Something really weird happened!" << endl;
@@ -1029,6 +1059,12 @@ bool ModelData::loadAnimationFromFile (const char* filename, bool strict) {
 					axis_name = ColumnInfo::AxisY;
 				else if (axis_str == "z")
 					axis_name = ColumnInfo::AxisZ;
+				else if (axis_str == "-x")
+					axis_name = ColumnInfo::AxisMX;
+				else if (axis_str == "-y")
+					axis_name = ColumnInfo::AxisMY;
+				else if (axis_str == "-z")
+					axis_name = ColumnInfo::AxisMZ;
 				else {
 					cerr << "Error: Unknown axis name '" << spec[2] << "' in " << filename << " line " << line_number << endl;
 
