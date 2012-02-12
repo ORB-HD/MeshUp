@@ -47,13 +47,8 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_meshes (true),
 		draw_shadows (false)
 {
-	poi.setX(0.);
-	poi.setY(1.0);
-	poi.setZ(0.);
-
-	eye.setX(6.);
-	eye.setY(3.);
-	eye.setZ(6.);
+	poi.set (0.f, 1.f, 0.f);
+	eye.set (6.f, 3.f, 6.f);
 
 	updateSphericalCoordinates();
 
@@ -277,10 +272,10 @@ void GLWidget::initializeGL()
 }
 
 void GLWidget::updateSphericalCoordinates() {
-	QVector3D los = poi - eye;
-	r = los.length();
-	theta = acos (-los.y() / r);
-	phi = atan (los.z() / los.x());
+	Vector3f los = poi - eye;
+	r = los.norm();
+	theta = acos (-los[1] / r);
+	phi = atan (los[2] / los[0]);
 }
 
 void GLWidget::updateCamera() {
@@ -291,28 +286,28 @@ void GLWidget::updateCamera() {
 	s_phi = sin (phi);
 	c_phi = cos (phi);
 
-	eye.setX(r * s_theta * c_phi);
-	eye.setY(r * c_theta);
-	eye.setZ(r * s_theta * s_phi);
+	eye[0] = (r * s_theta * c_phi);
+	eye[1] = (r * c_theta);
+	eye[2] = (r * s_theta * s_phi);
 
 	eye += poi;
 
-	if (eye.y() < 0.)
-		eye.setY(0.f);
+	if (eye[1] < 0.)
+		eye[1];
 
-	QVector3D right (-s_phi, 0., c_phi);
+	Vector3f right (-s_phi, 0., c_phi);
 
-	QVector3D eye_normalized (eye);
+	Vector3f eye_normalized (eye);
 	eye_normalized.normalize();
 
-	up = QVector3D::crossProduct (right, eye_normalized);
+	up = right.cross (eye_normalized);
 
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
-	gluLookAt (eye.x(), eye.y(), eye.z(),
-			poi.x(), poi.y(), poi.z(),
-			up.x(), up.y(), up.z());
+	gluLookAt (eye[0], eye[1], eye[2],
+			poi[0], poi[1], poi[2],
+			up[0], up[1], up[2]);
 }
 
 void GLWidget::updateLightingMatrices () {
@@ -324,9 +319,9 @@ void GLWidget::updateLightingMatrices () {
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_projection_matrix.data());
 
 	glLoadIdentity();
-	gluLookAt(eye.x(), eye.y(), eye.z(),
-			poi.x(), poi.y(), poi.z(),
-			up.x(), up.y(), up.z());
+	gluLookAt(eye[0], eye[1], eye[2],
+			poi[0], poi[1], poi[2],
+			up[0], up[1], up[2]);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_view_matrix.data());
 
 	glLoadIdentity();
@@ -709,8 +704,8 @@ void GLWidget::mousePressEvent(QMouseEvent *event)
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-	int dx = event->x() - lastMousePos.x();
-	int dy = event->y() - lastMousePos.y();
+	float dx = static_cast<float>(event->x() - lastMousePos.x());
+	float dy = static_cast<float>(event->y() - lastMousePos.y());
 
 	if (event->buttons().testFlag(Qt::LeftButton)) {
 		// rotate
@@ -721,13 +716,13 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
 	} else if (event->buttons().testFlag(Qt::MiddleButton)) {
 		// move
-		QVector3D eye_normalized (poi - eye);
+		Vector3f eye_normalized (poi - eye);
 		eye_normalized.normalize();
 
-		QVector3D global_y (0., 1., 0.);
-		QVector3D right = QVector3D::crossProduct (up, eye_normalized);
-		poi += right * dx * 0.01 + global_y * dy * 0.01;
-		eye += right * dx * 0.01 + global_y * dy * 0.01;
+		Vector3f global_y (0.f, 1.f, 0.f);
+		Vector3f right = up.cross (eye_normalized);
+		poi += right * (float)dx * 0.01f + global_y * dy * (float)0.01f;
+		eye += right * (float)dx * 0.01f + global_y * dy * (float)0.01f;
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
 		// zoom
 		r += 0.05 * dy;

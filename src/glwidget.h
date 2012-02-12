@@ -2,7 +2,6 @@
 #define GLWIDGET_H
 
 #include <QGLWidget>
-#include <QVector3D>
 #include <QImage>
 
 #include <iostream>
@@ -67,9 +66,9 @@ class GLWidget : public QGLWidget
 		float r;
 		float fov;
 
-		QVector3D poi;
-		QVector3D eye;
-		QVector3D up;
+		Vector3f poi;
+		Vector3f eye;
+		Vector3f up;
 
 		unsigned int application_time_msec;
 		unsigned int first_frame_msec;
