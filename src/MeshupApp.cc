@@ -40,6 +40,11 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	timeLine->setUpdateInterval(20);
 	timeLine->setFrameRange(0, 1000);
+	
+	spinBoxSpeed->setMinimum(1);
+	spinBoxSpeed->setMaximum(1000);
+	spinBoxSpeed->setValue(100);
+	spinBoxSpeed->setSingleStep(5);
 
 	horizontalSliderTime->setMinimum(0);
 	horizontalSliderTime->setMaximum(1000.);
@@ -55,7 +60,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// player is paused on startup
 	playerPaused = true;
 
-	dockPlayerControls->setVisible(false);
+	dockPlayerControls->setVisible(true);
 	dockViewSettings->setVisible(false);
 
 	// the timer is used to continously redraw the OpenGL widget
@@ -291,7 +296,7 @@ void MeshupApp::timeline_frame_changed (int frame_index) {
 
 	horizontalSliderTime->setValue (frame_index);
 
-	timeLine->setDuration (glWidget->getAnimationDuration() * 1000.f);
+	timeLine->setDuration (glWidget->getAnimationDuration() * 1000.f /(spinBoxSpeed->value()/100.0));
 	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
 }
 
@@ -377,16 +382,16 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	int h = renderImageSeriesDialog->HeightSpinBox->value();
 	fps = renderImageSeriesDialog->FpsSpinBox->value();
 	
-	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->model_data.getAnimationDuration(), this);
+	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->model_data.getAnimationDuration()* 100.0 / spinBoxSpeed->value(), this);
 	pbar.setMinimumDuration(0);
 	pbar.show();
 
-	for(int i = 0; i < (float) fps*glWidget->model_data.getAnimationDuration(); i++) {
+	for(int i = 0; i < (float) fps*glWidget->model_data.getAnimationDuration()* 100.0 / spinBoxSpeed->value(); i++) {
 		pbar.setValue(i);
 		pbar.show();
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
-		glWidget->model_data.setAnimationTime((float) i / fps);
+		glWidget->model_data.setAnimationTime((float) i / fps*  spinBoxSpeed->value() / 100.0);
 		QImage image = glWidget->renderContentOffscreen (w,h, false);
 		image.save (filename_stream.str().c_str(), 0, -1);
 		//not used:
