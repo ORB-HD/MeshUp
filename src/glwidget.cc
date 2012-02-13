@@ -475,6 +475,7 @@ void GLWidget::shadowMapSetupPass1 () {
 	glViewport (0, 0, shadow_map_size, shadow_map_size);
 
 	// draw the back faces
+	glEnable (GL_CULL_FACE);
 	glCullFace (GL_FRONT);
 
 	// disable color writes and use cheap flat shading
@@ -652,6 +653,8 @@ void GLWidget::paintGL() {
 
 		shadowMapCleanup();
 	} else {
+		glDisable (GL_CULL_FACE);
+	
 		glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
 		glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd.data());
 		glEnable(GL_LIGHT0);	
