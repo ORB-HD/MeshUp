@@ -352,6 +352,7 @@ void MeshupApp::actionRenderAndSaveToFile () {
 void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	static int fps=25;
 	static bool doMencoder=true;
+	static bool doComposite=true;
 	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
 	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->width());
 	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
@@ -363,6 +364,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		return;
 
 	doMencoder = renderImageSeriesDialog->mencoderBox->isChecked();
+	doComposite = renderImageSeriesDialog->compositeBox->isChecked();
 	
 	string figure_name = string("./image-series") ;
 	stringstream filename_stream;
@@ -385,18 +387,29 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->model_data.getAnimationDuration()* 100.0 / spinBoxSpeed->value(), this);
 	pbar.setMinimumDuration(0);
 	pbar.show();
-
+	stringstream overlayFilename;
+	overlayFilename << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-overlay.png";
+	
 	for(int i = 0; i < (float) fps*glWidget->model_data.getAnimationDuration()* 100.0 / spinBoxSpeed->value(); i++) {
 		pbar.setValue(i);
 		pbar.show();
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
 		glWidget->model_data.setAnimationTime((float) i / fps*  spinBoxSpeed->value() / 100.0);
-		QImage image = glWidget->renderContentOffscreen (w,h, false);
+		QImage image = glWidget->renderContentOffscreen (w,h, true);
 		image.save (filename_stream.str().c_str(), 0, -1);
 		//not used:
 		//if (pbar.wasCanceled())
 		//	return;
+		if (doComposite) {
+			string cmd("composite -compose plus ");
+			if (i==0) {
+				cmd="cp "+filename_stream.str()+" "+overlayFilename.str();
+			} else {
+				cmd="composite -compose plus "+filename_stream.str()+" "+overlayFilename.str()+" "+overlayFilename.str();
+			}
+			system(cmd.c_str());
+		}
 	}
 	if (doMencoder) {
 	
@@ -410,4 +423,5 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		
 		system(mencoder.str().c_str());
 	}
+	
 }

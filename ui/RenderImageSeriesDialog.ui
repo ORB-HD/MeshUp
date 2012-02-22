@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>373</width>
-    <height>227</height>
+    <width>451</width>
+    <height>291</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>180</y>
+     <y>220</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -97,6 +97,19 @@
    </property>
    <property name="text">
     <string>Use MEncoder to produce .avi</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="compositeBox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>180</y>
+     <width>401</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Use composite  (from imagick)  to produce overlayed picture</string>
    </property>
   </widget>
  </widget>
