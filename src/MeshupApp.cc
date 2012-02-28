@@ -319,7 +319,7 @@ void MeshupApp::timeslider_value_changed (int frame_index) {
 
 void MeshupApp::actionRenderAndSaveToFile () {
 	renderImageDialog->WidthSpinBox->setValue(glWidget->width());
-	renderImageDialog->HeightSpinBox->setValue(glWidget->width());
+	renderImageDialog->HeightSpinBox->setValue(glWidget->height());
 
 	int result = renderImageDialog->exec();
 
@@ -354,7 +354,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	static bool doMencoder=true;
 	static bool doComposite=true;
 	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
-	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->width());
+	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->height());
 	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
 	renderImageSeriesDialog->mencoderBox->setChecked(doMencoder);
 
