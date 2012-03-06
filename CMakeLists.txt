@@ -32,8 +32,8 @@ ADD_LIBRARY ( glew
 	)
 
 ADD_LIBRARY ( MeshUp
-	src/ModelData.cc
-	src/objloader.cc
+	src/MeshupModel.cc
+	src/OBJMesh.cc
 	)
 
 ADD_DEFINITIONS (${QT_DEFINITIONS})

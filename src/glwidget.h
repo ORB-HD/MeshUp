@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-#include "ModelData.h"
+#include "MeshupModel.h"
 
 class GLWidget : public QGLWidget
 {
@@ -25,7 +25,7 @@ class GLWidget : public QGLWidget
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		ModelData model_data;
+		MeshupModel model_data;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;

@@ -1,6 +1,6 @@
 #include <UnitTest++.h>
 
-#include "ModelData.h"
+#include "MeshupModel.h"
 #include "SimpleMath/SimpleMathGL.h"
 
 #include <iostream>
@@ -11,7 +11,7 @@ const float TEST_PREC = 1.0e-6;
 
 TEST ( FrameTestSimple ) {
 	// Test whether the frame is at the desired position
-	ModelData model;
+	MeshupModel model;
 
 	model.addFrame (
 			"BASE",

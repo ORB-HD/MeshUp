@@ -1,6 +1,5 @@
 #include <UnitTest++.h>
 
-#include "ModelData.h"
 #include "SimpleMath/SimpleMathGL.h"
 
 #include <iostream>

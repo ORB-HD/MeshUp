@@ -1,5 +1,5 @@
-#ifndef _MODELDATA_H
-#define _MODELDATA_H
+#ifndef _MESHUPMODEL_H
+#define _MESHUPMODEL_H
 
 #include <vector>
 #include <list>
@@ -11,8 +11,10 @@
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
-struct FrameConfiguration {
-	FrameConfiguration() :
+#include "OBJMesh.h"
+
+struct FrameConfig {
+	FrameConfig() :
 		axis_front(1.f, 0.f, 0.f),
 		axis_up(0.f, 1.f, 0.f),
 		axis_right (0.f, 0.f, 1.f),
@@ -29,7 +31,7 @@ struct FrameConfiguration {
 
 	int rotation_order[3];
 
-	void update() {
+	void init() {
 		axes_rotation(0,0) = axis_front[0];
 		axes_rotation(1,0) = axis_front[1];
 		axes_rotation(2,0) = axis_front[2];
@@ -42,35 +44,34 @@ struct FrameConfiguration {
 		axes_rotation(1,2) = axis_right[1];
 		axes_rotation(2,2) = axis_right[2];
 	}
-};
 
-inline Matrix44f rotation_angles_to_matrix (const Vector3f rotation_angles, const FrameConfiguration &config) {
+	Matrix44f convertAnglesToMatrix (const Vector3f &rotation_angles) const {
 	return	smRotate (rotation_angles[0], 1.f, 0.f, 0.f)
 		* smRotate (rotation_angles[1], 0.f, 1.f, 0.f)
 		* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
-}
+	};
 
-inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angles, const FrameConfiguration &config) {
-	int a0 = config.rotation_order[2];
-	int a1 = config.rotation_order[1];
-	int a2 = config.rotation_order[0];
+	smQuaternion convertAnglesToQuaternion (const Vector3f &rotation_angles) const {
+	int a0 = rotation_order[2];
+	int a1 = rotation_order[1];
+	int a2 = rotation_order[0];
 
 	Vector3f axis_0 (
-			config.axes_rotation(a0, 0),
-			config.axes_rotation(a0, 1),
-			config.axes_rotation(a0, 2)
+			axes_rotation(a0, 0),
+			axes_rotation(a0, 1),
+			axes_rotation(a0, 2)
 				);
 
 	Vector3f axis_1 (
-			config.axes_rotation(a1, 0),
-			config.axes_rotation(a1, 1),
-			config.axes_rotation(a1, 2)
+			axes_rotation(a1, 0),
+			axes_rotation(a1, 1),
+			axes_rotation(a1, 2)
 				);
 
 	Vector3f axis_2 (
-			config.axes_rotation(a2, 0),
-			config.axes_rotation(a2, 1),
-			config.axes_rotation(a2, 2)
+			axes_rotation(a2, 0),
+			axes_rotation(a2, 1),
+			axes_rotation(a2, 2)
 				);
 
 	return smQuaternion::fromGLRotate (
@@ -85,56 +86,11 @@ inline smQuaternion rotation_angles_to_quaternion (const Vector3f rotation_angle
 				rotation_angles[a2],
 				axis_2[0], axis_2[1], axis_2[2]
 				);
-}
+	}
 
-struct MeshData {
-	MeshData() :
-		parented_segment(""),
-		vbo_id(0),
-		started(false),
-		smooth_shading(true),
-		bbox_min (std::numeric_limits<float>::max(),
-				std::numeric_limits<float>::max(),
-				std::numeric_limits<float>::max()),
-		bbox_max (-std::numeric_limits<float>::max(),
-				-std::numeric_limits<float>::max(),
-				-std::numeric_limits<float>::max())
-	{}
-
-	void begin();
-	void end();
-
-	void addVertice (float x, float y, float z);
-	void addVerticefv (float vert[3]);
-	void addNormal (float x, float y, float z);
-	void addNormalfv (float norm[3]);
-
-	unsigned int generate_vbo();
-	void delete_vbo();
-
-	void draw();
-
-	std::string parented_segment;
-
-	unsigned int vbo_id;
-	bool started;
-	bool smooth_shading;
-
-	Vector3f bbox_min;
-	Vector3f bbox_max;
-
-	std::vector<Vector3f> vertices;
-	std::vector<Vector3f> normals;
-	/// \note always 3 succeeding calls of addVertice are assumed to be a
-	// triangle!
-	std::vector<unsigned int> triangle_indices;
 };
-typedef boost::shared_ptr<MeshData> MeshPtr;
 
-bool loadOBJ (MeshData *mesh, const char *filename, bool strict = true);
-
-// only loads the object in the OBJ file of the given obj_name
-bool loadOBJ (MeshData *mesh, const char *filename, const char *sub_object_name, bool strict = true);
+typedef boost::shared_ptr<OBJMesh> MeshPtr;
 
 struct Frame;
 typedef boost::shared_ptr<Frame> FramePtr;
@@ -167,8 +123,8 @@ struct Frame {
 
 	std::vector<FramePtr> children;
 
-	void updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config);
-	void initFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config);
+	void updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
+	void initFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
 
 	Vector3f getFrameTransformTranslation() {
 		return Vector3f (frame_transform(3,0), frame_transform(3,1), frame_transform (3,2));
@@ -239,8 +195,8 @@ struct Animation {
 };
 typedef boost::shared_ptr<Animation> AnimationPtr;
 
-struct ModelData {
-	ModelData():
+struct MeshupModel {
+	MeshupModel():
 		model_filename (""),
 		animation_filename (""),
 		is_radian(false),
@@ -256,7 +212,7 @@ struct ModelData {
 		framemap["BASE"] = base_frame;
 	}
 
-	ModelData& operator= (const ModelData& other) {
+	MeshupModel& operator= (const MeshupModel& other) {
 		if (&other != this) {
 			model_filename = other.model_filename;
 			animation_filename = other.animation_filename;
@@ -289,7 +245,7 @@ struct ModelData {
 	typedef std::map<FramePtr, FrameAnimationTrack> FrameAnimationTrackMap;
 
 	/// Configuration how transformations are defined
-	FrameConfiguration configuration;
+	FrameConfig configuration;
 
 	/// Marks whether the frame transformations have to be initialized
 	bool frames_initialized;
@@ -340,7 +296,7 @@ struct ModelData {
 		framemap.clear();
 		animation.frametracks.clear();
 
-		*this = ModelData();
+		*this = MeshupModel();
 	}
 
 	void resetAnimation() {

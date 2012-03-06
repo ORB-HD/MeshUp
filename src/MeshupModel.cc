@@ -1,6 +1,6 @@
 #include "GL/glew.h"
 
-#include "ModelData.h"
+#include "MeshupModel.h"
 
 #include "SimpleMath/SimpleMathGL.h"
 #include "string_utils.h"
@@ -16,127 +16,12 @@
 
 using namespace std;
 
-const bool use_vbo = true;
 const string invalid_id_characters = "{}[],;: \r\n\t";
 
-void MeshData::begin() {
-	started = true;
-
-	vertices.resize(0);
-	normals.resize(0);
-	triangle_indices.resize(0);
-}
-
-void MeshData::end() {
-	if (normals.size()) {
-		if (normals.size() != triangle_indices.size()) {
-			std::cerr << "Error: number of normals must equal the number of vertices specified!" << endl;
-			exit (1);
-		}
-	}
-
-	started = false;
-}
-
-unsigned int MeshData::generate_vbo() {
-	assert (vbo_id == 0);
-	assert (started == false);
-	assert (vertices.size() != 0);
-	assert (vertices.size() % 3 == 0);
-	assert (normals.size() == vertices.size());
-
-//	cerr << __func__ << ": vert count = " << vertices.size() << endl;
-
-	// create the buffer
-	glGenBuffers (1, &vbo_id);
-
-	// initialize the buffer object
-	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
-	glBufferData (GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices.size() + normals.size()), NULL, GL_STATIC_DRAW);
-
-	// fill the data
-	
-	// multiple sub buffers
-	glBufferSubData (GL_ARRAY_BUFFER, 0, sizeof (float) * 3 * vertices.size(), &vertices[0]);
-	glBufferSubData (GL_ARRAY_BUFFER, sizeof(float) * 3 * vertices.size(), sizeof (float) * 3 * normals.size(), &normals[0]);
-
-	glBindBuffer (GL_ARRAY_BUFFER, 0);
-
-	return vbo_id;
-}
-
-void MeshData::delete_vbo() {
-	assert (vbo_id != 0);
-	glDeleteBuffers (1, &vbo_id);
-
-	vbo_id = 0;
-}
-
-void MeshData::addVertice (float x, float y, float z) {
-	Vector3f vertex;
-	vertex[0] = x;
-	vertex[1] = y;
-	vertex[2] = z;
-	vertices.push_back(vertex);
-
-	bbox_max[0] = max (vertex[0], bbox_max[0]);
-	bbox_max[1] = max (vertex[1], bbox_max[1]);
-	bbox_max[2] = max (vertex[2], bbox_max[2]);
-
-	bbox_min[0] = min (vertex[0], bbox_min[0]);
-	bbox_min[1] = min (vertex[1], bbox_min[1]);
-	bbox_min[2] = min (vertex[2], bbox_min[2]);
-
-	triangle_indices.push_back (vertices.size() - 1);
-}
-
-void MeshData::addVerticefv (float vert[3]) {
-	addVertice (vert[0], vert[1], vert[2]);
-}
-
-void MeshData::addNormal (float x, float y, float z) {
-	Vector3f normal;
-	normal[0] = x;
-	normal[1] = y;
-	normal[2] = z;
-	normals.push_back (normal);
-}
-
-void MeshData::addNormalfv (float normal[3]) {
-	addNormal (normal[0], normal[1], normal[2]);
-}
-
-void MeshData::draw() {
-	if (smooth_shading)
-		glShadeModel(GL_SMOOTH);
-	else
-		glShadeModel(GL_FLAT);
-
-	if (use_vbo) {
-		glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
-
-		glVertexPointer (3, GL_FLOAT, 0, 0);
-		glNormalPointer (GL_FLOAT, 0, (const GLvoid *) (vertices.size() * sizeof (float) * 3));
-
-		glEnableClientState (GL_VERTEX_ARRAY);
-		glEnableClientState (GL_NORMAL_ARRAY);
-
-		glDrawArrays (GL_TRIANGLES, 0, vertices.size());
-		glBindBuffer (GL_ARRAY_BUFFER, 0);
-	} else {
-		glBegin (GL_TRIANGLES);
-		for (int vi = 0; vi < vertices.size(); vi++) {
-			glNormal3fv (normals[vi].data());
-			glVertex3fv (vertices[vi].data());
-		}
-		glEnd();
-	}
-}
-
-/*********************************
+/*
  * Frame
- *********************************/
-void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfiguration &config) {
+ */
+void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config) {
 	// first translate, then rotate as specified in the angles
 	pose_transform = 
 		frame_transform
@@ -154,9 +39,9 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const Fr
 	}
 }
 
-void Frame::initFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfiguration &config) {
+void Frame::initFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfig &config) {
 	// first translate, then rotate as specified in the angles
-	frame_transform =	rotation_angles_to_matrix (parent_rotation, config)
+	frame_transform =	config.convertAnglesToMatrix (parent_rotation)
 		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
@@ -220,9 +105,9 @@ FramePose FrameAnimationTrack::interpolatePose (float time) {
 }
 
 /*********************************
- * ModelData
+ * MeshupModel
  *********************************/
-void ModelData::addFrame (
+void MeshupModel::addFrame (
 		const std::string &parent_frame_name,
 		const std::string &frame_name,
 		const Vector3f &parent_translation,
@@ -255,7 +140,7 @@ void ModelData::addFrame (
 	framemap[frame_name] = frame;
 }
 
-void ModelData::addSegment (
+void MeshupModel::addSegment (
 		const std::string &frame_name,
 		const std::string &segment_name,
 		const Vector3f &dimensions,
@@ -281,7 +166,7 @@ void ModelData::addSegment (
 	// check whether we have the mesh, if not try to load it
 	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
 	if (mesh_iter == meshmap.end()) {
-		MeshPtr new_mesh (new MeshData);
+		MeshPtr new_mesh (new OBJMesh);
 
 		// check whether we want to extract a sub object within the obj file
 		string mesh_filename = mesh_name;
@@ -290,10 +175,10 @@ void ModelData::addSegment (
 			submesh_name = mesh_name.substr (mesh_name.find(':') + 1, mesh_name.size());
 			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
 			cout << "Loading sub object " << submesh_name << " from file " << mesh_filename << endl;
-			loadOBJ (&(*new_mesh), mesh_filename.c_str(), submesh_name.c_str());
+			new_mesh->loadOBJ (mesh_filename.c_str(), submesh_name.c_str());
 		} else {
 			cout << "Loading mesh " << mesh_name << endl;
-			loadOBJ (&(*new_mesh), mesh_filename.c_str());
+			new_mesh->loadOBJ (mesh_filename.c_str());
 		}
 
 		new_mesh->generate_vbo();
@@ -311,7 +196,7 @@ void ModelData::addSegment (
 	segments.push_back (segment);
 }
 
-void ModelData::addFramePose (
+void MeshupModel::addFramePose (
 		const std::string &frame_name,
 		float time,
 		const Vector3f &frame_translation,
@@ -323,7 +208,7 @@ void ModelData::addFramePose (
 	pose.timestamp = time;
 	pose.translation = configuration.axes_rotation.transpose() * frame_translation;
 	pose.rotation = frame_rotation;
-	pose.rotation_quaternion = rotation_angles_to_quaternion (frame_rotation, configuration);
+	pose.rotation_quaternion = configuration.convertAnglesToQuaternion (frame_rotation);
 	pose.scaling = frame_scaling;
 
 	animation.frametracks[frame].poses.push_back(pose);
@@ -333,7 +218,7 @@ void ModelData::addFramePose (
 		animation.duration = time;
 }
 
-void ModelData::initFrameTransform() {
+void MeshupModel::initFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
 	for (unsigned int bi = 0; bi < frames.size(); bi++) {
@@ -343,7 +228,7 @@ void ModelData::initFrameTransform() {
 	frames_initialized = true;
 }
 
-void ModelData::updatePose() {
+void MeshupModel::updatePose() {
 	// if there is no animation we can return
 	if (animation.frametracks.size() != 0) {
 		if (animation.current_time > animation.duration) {
@@ -368,7 +253,7 @@ void ModelData::updatePose() {
 	}
 }
 
-void ModelData::updateFrames() {
+void MeshupModel::updateFrames() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
 	// check whether the frame transformations are valid
@@ -380,7 +265,7 @@ void ModelData::updateFrames() {
 	}
 }
 
-void ModelData::draw() {
+void MeshupModel::draw() {
 	// save current state of GL_NORMALIZE to properly restore the original
 	// state
 	bool normalize_enabled = glIsEnabled (GL_NORMALIZE);
@@ -438,7 +323,7 @@ void ModelData::draw() {
 		glDisable (GL_NORMALIZE);
 }
 
-void ModelData::drawFrameAxes() {
+void MeshupModel::drawFrameAxes() {
 	// backup the depth test and line width values
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
 	if (depth_test_enabled)
@@ -496,7 +381,7 @@ void ModelData::drawFrameAxes() {
 	glLineWidth (line_width);
 }
 
-void ModelData::drawBaseFrameAxes() {
+void MeshupModel::drawBaseFrameAxes() {
 	// backup the depth test and line width values
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
 	if (depth_test_enabled)
@@ -565,7 +450,7 @@ Vector3f json_to_vec3 (const Json::Value &value, Vector3f defaultvalue=Vector3f 
 	return result;
 }
 
-Json::Value frame_configuration_to_json_value (const FrameConfiguration &config) {
+Json::Value frame_configuration_to_json_value (const FrameConfig &config) {
 	using namespace Json;
 
 	Value result;
@@ -607,7 +492,7 @@ Json::Value segment_to_json_value (const Segment &segment) {
 	return result;
 }
 
-void ModelData::saveModelToFile (const char* filename) {
+void MeshupModel::saveModelToFile (const char* filename) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might wrongly formatted data. 
 	std::setlocale(LC_NUMERIC, "POSIX");
@@ -674,7 +559,7 @@ void ModelData::saveModelToFile (const char* filename) {
 	file_out.close();
 }
 
-bool ModelData::loadModelFromFile (const char* filename, bool strict) {
+bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might read false values due to the wrong conversion.
 	std::setlocale(LC_NUMERIC, "POSIX");
@@ -744,7 +629,7 @@ bool ModelData::loadModelFromFile (const char* filename, bool strict) {
 	configuration.rotation_order[1] = root["configuration"]["rotation_order"][1].asInt();
 	configuration.rotation_order[2] = root["configuration"]["rotation_order"][2].asInt();
 
-	configuration.update();
+	configuration.init();
 
 //	cout << "front: " << configuration.axis_front.transpose() << endl;
 //	cout << "up   : " << configuration.axis_up.transpose() << endl;
@@ -931,7 +816,7 @@ struct AnimationKeyPoses {
 	}
 };
 
-bool ModelData::loadAnimationFromFile (const char* filename, bool strict) {
+bool MeshupModel::loadAnimationFromFile (const char* filename, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {

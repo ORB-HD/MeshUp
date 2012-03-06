@@ -252,7 +252,7 @@ void MeshupApp::toggle_loop_animation (bool status) {
 }
 
 void MeshupApp::action_reload_files() {
-	ModelData test_model;
+	MeshupModel test_model;
 
 	string model_filename = glWidget->model_data.model_filename;
 	string animation_filename = glWidget->model_data.animation_filename;
