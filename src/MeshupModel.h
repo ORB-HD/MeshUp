@@ -138,6 +138,7 @@ struct Segment {
 		scale (-1.f, -1.f, -1.f),
 		meshcenter (1/0.0, 0.f, 0.f),
 		translate (0.f, 0.f, 0.f),
+		gl_matrix (Matrix44f::Identity(4,4)),
 		frame (FramePtr()),
 		mesh_filename("")
 	{}
@@ -150,6 +151,7 @@ struct Segment {
 	MeshPtr mesh;
 	Vector3f meshcenter;
 	Vector3f translate;
+	Matrix44f gl_matrix;
 	FramePtr frame;
 	std::string mesh_filename;
 };
@@ -315,19 +317,28 @@ struct MeshupModel {
 	/// Initializes the fixed frame transformations and sets frames_initialized to true
 	void initFrameTransform();
 
-	/** Update the animation state.
+	/** Updates the animation state.
 	 *
 	 * Updates the pose information of the frames by interpolating the
 	 * keyframes defined in Animation.
 	 */
 	void updatePose();
-	/** Update the Frame transformations.
+	/** \brief Updates the Frame transformations.
 	 *
 	 * Updates the full pose transformations recursively such that
 	 * Frame::pose_transformation contains the full Base->Pose
 	 * transformation.
 	 */
 	void updateFrames();
+	/** \brief Updates the segment transformations (scale, translation to mesh
+	 * center, etc).
+	 *
+	 * This function prepares all segments for the OpenGL drawer. The
+	 * drawer itself then only has to loop over all segments, query the
+	 * color and use Segment::gl_matrix to setup the OpenGL
+	 * transformation.
+	 */
+	void updateSegments();
 
 	void draw();
 	void drawFrameAxes();

@@ -265,18 +265,10 @@ void MeshupModel::updateFrames() {
 	}
 }
 
-void MeshupModel::draw() {
-	// save current state of GL_NORMALIZE to properly restore the original
-	// state
-	bool normalize_enabled = glIsEnabled (GL_NORMALIZE);
-	if (!normalize_enabled)
-		glEnable (GL_NORMALIZE);
-
+void MeshupModel::updateSegments() {
 	SegmentList::iterator seg_iter = segments.begin();
 
 	while (seg_iter != segments.end()) {
-		glPushMatrix();
-		
 		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
 
 		Vector3f scale(1.0f,1.0f,1.0f) ;
@@ -303,14 +295,34 @@ void MeshupModel::draw() {
 		translate+=seg_iter->translate;
 		
 		// we also have to apply the scaling after the transform:
-		Matrix44f transform_matrix = 
+		seg_iter->gl_matrix = 
 			smScale (scale[0], scale[1], scale[2])
 			* smTranslate (translate[0], translate[1], translate[2])
 			* seg_iter->frame->pose_transform;
-		glMultMatrixf (transform_matrix.data());
+
+		seg_iter++;
+	}
+}
+
+void MeshupModel::draw() {
+	// save current state of GL_NORMALIZE to properly restore the original
+	// state
+	bool normalize_enabled = glIsEnabled (GL_NORMALIZE);
+	if (!normalize_enabled)
+		glEnable (GL_NORMALIZE);
+
+	updateSegments();
+
+	SegmentList::iterator seg_iter = segments.begin();
+
+	while (seg_iter != segments.end()) {
+		glPushMatrix();
+		
+		glMultMatrixf (seg_iter->gl_matrix.data());
 
 		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
+		
 		seg_iter->mesh->draw();
 
 		glPopMatrix();
