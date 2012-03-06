@@ -113,7 +113,7 @@ bool loadOBJ (MeshData *mesh, const char *filename, const char *object_name, boo
 			string object_line = strip_whitespaces(strip_comments(original_line));
 
 			current_object_name = object_line.substr (2, object_line.size());
-			cout << "current_object_name = " << current_object_name << endl;
+//			cout << "current_object_name = " << current_object_name << endl;
 			if (object_name != NULL && current_object_name == object_name)
 				object_found = true;
 			
