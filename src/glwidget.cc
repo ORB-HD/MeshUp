@@ -717,7 +717,11 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 		theta = std::max(theta, 0.01f);
 		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
+#if QT_VERSION <= 0x040700
+	} else if (event->buttons().testFlag(Qt::MidButton)) {
+#else
 	} else if (event->buttons().testFlag(Qt::MiddleButton)) {
+#endif
 		// move
 		Vector3f eye_normalized (poi - eye);
 		eye_normalized.normalize();
