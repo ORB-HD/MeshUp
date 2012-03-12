@@ -230,6 +230,11 @@ bool OBJMesh::loadOBJ (const char *filename, const char *object_name, bool stric
 		}
 
 		if (line[0] == 'o') {
+			// If we have found our object already we can skip all following
+			// objects.
+			if (object_found)
+				break;
+
 			// we need a copy of the line that still contains the original case
 			// as line contains the line transformed to lowercase.
 			string object_line = strip_whitespaces(strip_comments(original_line));
