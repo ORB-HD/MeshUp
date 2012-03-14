@@ -728,8 +728,9 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 		Vector3f global_y (0.f, 1.f, 0.f);
 		Vector3f right = up.cross (eye_normalized);
-		poi += right * (float)dx * 0.01f + global_y * dy * (float)0.01f;
-		eye += right * (float)dx * 0.01f + global_y * dy * (float)0.01f;
+		Vector3f local_up = eye_normalized.cross(right);
+		poi += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
+		eye += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
 		// zoom
 		r += 0.05 * dy;
