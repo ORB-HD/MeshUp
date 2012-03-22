@@ -353,6 +353,8 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	static int fps=25;
 	static bool doMencoder=true;
 	static bool doComposite=true;
+	static bool render_transparent=false;
+
 	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
 	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->height());
 	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
@@ -365,6 +367,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 
 	doMencoder = renderImageSeriesDialog->mencoderBox->isChecked();
 	doComposite = renderImageSeriesDialog->compositeBox->isChecked();
+	render_transparent = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
 	
 	string figure_name = string("./image-series") ;
 	stringstream filename_stream;
@@ -396,7 +399,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
 		glWidget->model_data.setAnimationTime((float) i / fps*  spinBoxSpeed->value() / 100.0);
-		QImage image = glWidget->renderContentOffscreen (w,h, true);
+		QImage image = glWidget->renderContentOffscreen (w,h,render_transparent);
 		image.save (filename_stream.str().c_str(), 0, -1);
 		//not used:
 		//if (pbar.wasCanceled())
@@ -412,7 +415,6 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		}
 	}
 	if (doMencoder) {
-	
 		cout << "running mencoder to produce a movie" << endl;
 		stringstream mencoder;
 		mencoder << "mencoder mf://"  << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-"<< "*.png ";
