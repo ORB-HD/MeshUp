@@ -1,4 +1,4 @@
-MeshUp! A visualization tool for multi-body systems based on skeletal
+MeshUp - A visualization tool for multi-body systems based on skeletal
 animation and magic.
 
 AUTHOR: Martin Felis <martin.felis@iwr.uni-heidelberg.de>
@@ -10,9 +10,23 @@ FEATURES:
 	* Customizable frame definitions order of rotation angles
 	* Loading and interpolation of keyframed animation (see sampleanimation.txt)
 
-USAGE: meshup [model_file] [animation_file]
+USAGE: meshup [model_name] [animation_file]
 
 See meshup --help for more options.
+
+MODEL FILES
+
+MeshUp tries to find the model file by searching for a file called
+"<model_name>" or "<model_name>.json". It first checks in the local
+directory "./" and "./models/". After that MeshUp checks whether the
+environment variable MESHUP_PATH is set and checks for the file in
+$MESHUP_PATH/ or $MESHUP_PATH/models.
+
+MESHES
+
+Similar as in STORING MODEL FILES, MeshUp tries to find meshes in various
+places. Unlike for models, meshes are required to be in a subfolder called
+"meshes/".
 
 NOTES:
 

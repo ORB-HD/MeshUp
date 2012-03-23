@@ -13,6 +13,9 @@
 
 #include "OBJMesh.h"
 
+/** \brief Searches in various locations for the model. */
+std::string find_model_file_by_name (const std::string &model_name);
+
 struct FrameConfig {
 	FrameConfig() :
 		axis_front(1.f, 0.f, 0.f),

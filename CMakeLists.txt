@@ -95,7 +95,19 @@ TARGET_LINK_LIBRARIES ( meshup
 	MeshUp
 )
 
+# Installation
 INSTALL (TARGETS meshup
 RUNTIME DESTINATION bin
 LIBRARY DESTINATION lib
 )
+
+FILE ( GLOB model_files
+	models/*.json
+	)
+
+FILE ( GLOB mesh_files
+	meshes/*.obj
+	)
+
+INSTALL ( FILES ${model_files} DESTINATION shared/meshup/models )
+INSTALL ( FILES ${mesh_files} DESTINATION shared/meshup/meshes )

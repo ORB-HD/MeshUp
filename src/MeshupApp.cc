@@ -101,7 +101,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 }
 
 void print_usage() {
-	cout << "Usage: meshup [model_file] [animation_file] " << endl
+	cout << "Usage: meshup [model_name] [animation_file] " << endl
 		<< "Visualization tool for multi-body systems based on skeletal animation and magic." << endl
 		<< endl
 		<< "Report bugs to martin.felis@iwr.uni-heidelberg.de" << endl;
@@ -117,17 +117,18 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 			exit(1);
 		}
 
-		// qDebug () << "Argument " << i << ": " << argv[i];
-		QFile test_file (argv[i]);
-		if (test_file.exists()) {
-			// first file is assumed to be the model file
-			if (!model_loaded) {
-				glWidget->loadModel(argv[i]);
+		if (!model_loaded) {
+			string model_filename = find_model_file_by_name (argv[i]);
+			if (model_filename.size() != 0) {
+				glWidget->loadModel(model_filename.c_str());
 				model_loaded = true;
-			} else if (!animation_loaded) {
-				glWidget->loadAnimation(argv[i]);
-				animation_loaded = true;
+			} else {
+				cerr << "Model '" << argv[i] << "' not found! First parameter must be a model!" << endl;
+				exit(1);
 			}
+		} else if (!animation_loaded) {
+			glWidget->loadAnimation(argv[i]);
+			animation_loaded = true;
 		}
 	}
 }

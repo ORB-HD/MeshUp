@@ -22,7 +22,51 @@ using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t";
 
-std::string find_mesh_file (const std::string &filename) {
+std::string find_model_file_by_name (const std::string &model_name) {
+	std::string result;
+
+	std::vector<std::string> paths;
+	paths.push_back("./");
+	paths.push_back("./models/");
+
+	if (getenv ("MESHUP_PATH")) {
+		std::string env_meshup_dir (getenv("MESHUP_PATH"));
+
+		if (env_meshup_dir.size() != 0) {
+			if (env_meshup_dir[env_meshup_dir.size() - 1] != '/')
+				env_meshup_dir += '/';
+
+			paths.push_back (env_meshup_dir);
+			paths.push_back (env_meshup_dir + "models/");
+		}
+	}
+
+	paths.push_back("/usr/local/share/meshup/models/");
+	paths.push_back("/usr/share/meshup/models/");
+
+	std::vector<std::string>::iterator iter = paths.begin();
+	string model_filename;
+	for (iter; iter != paths.end(); iter++) {
+		model_filename = *iter + model_name;
+
+//		cout << "checking " << model_filename << endl;
+		if (boost::filesystem::is_regular_file(model_filename))
+			break;
+
+		model_filename += ".json";
+//		cout << "checking " << model_filename << endl;
+
+		if (boost::filesystem::is_regular_file(model_filename))
+			break;
+	}
+
+	if (iter != paths.end())
+		return model_filename;
+
+	return std::string("");
+}
+
+std::string find_mesh_file_by_name (const std::string &filename) {
 	std::string result;
 
 	std::vector<std::string> paths;
@@ -220,11 +264,11 @@ void MeshupModel::addSegment (
 		if (mesh_name.find (':') != string::npos) {
 			submesh_name = mesh_name.substr (mesh_name.find(':') + 1, mesh_name.size());
 			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
-			string mesh_file_location = find_mesh_file (mesh_filename);
+			string mesh_file_location = find_mesh_file_by_name (mesh_filename);
 			cout << "Loading sub object " << submesh_name << " from file " << mesh_file_location << endl;
 			new_mesh->loadOBJ (mesh_file_location.c_str(), submesh_name.c_str());
 		} else {
-			string mesh_file_location = find_mesh_file (mesh_name);
+			string mesh_file_location = find_mesh_file_by_name (mesh_name);
 			cout << "Loading mesh " << mesh_file_location << endl;
 			new_mesh->loadOBJ (mesh_file_location.c_str());
 		}
