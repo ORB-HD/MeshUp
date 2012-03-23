@@ -7,6 +7,8 @@
 
 #include "json/json.h"
 
+#include <cstdlib>
+#include <cstdio>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -14,9 +16,53 @@
 #include <stack>
 #include <limits>
 
+#include <boost/filesystem.hpp>
+
 using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t";
+
+std::string find_mesh_file (const std::string &filename) {
+	std::string result;
+
+	std::vector<std::string> paths;
+	paths.push_back("./");
+
+	if (getenv ("MESHUP_PATH")) {
+		std::string env_meshup_dir (getenv("MESHUP_PATH"));
+
+		if (env_meshup_dir.size() != 0) {
+			if (env_meshup_dir[env_meshup_dir.size() - 1] != '/')
+				env_meshup_dir += '/';
+
+			paths.push_back (env_meshup_dir);
+		}
+	}
+
+	paths.push_back("/usr/local/share/meshup/meshes/");
+	paths.push_back("/usr/share/meshup/meshes/");
+
+	std::vector<std::string>::iterator iter = paths.begin();
+	for (iter; iter != paths.end(); iter++) {
+		std::string test_path = *iter;
+
+		if (!boost::filesystem::is_regular_file(test_path + filename))
+			continue;
+
+		break;
+	}
+
+	if (iter != paths.end())
+		return (string(*iter) + string(filename));
+
+	cerr << "Could not find mesh file " << filename << ". Search path: " << endl;
+	for (iter = paths.begin(); iter != paths.end(); iter++) {
+		cout << "  " << *iter << endl;
+	}
+	exit(1);
+
+	return std::string("");
+}
 
 /*
  * Frame
@@ -174,11 +220,13 @@ void MeshupModel::addSegment (
 		if (mesh_name.find (':') != string::npos) {
 			submesh_name = mesh_name.substr (mesh_name.find(':') + 1, mesh_name.size());
 			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
-			cout << "Loading sub object " << submesh_name << " from file " << mesh_filename << endl;
-			new_mesh->loadOBJ (mesh_filename.c_str(), submesh_name.c_str());
+			string mesh_file_location = find_mesh_file (mesh_filename);
+			cout << "Loading sub object " << submesh_name << " from file " << mesh_file_location << endl;
+			new_mesh->loadOBJ (mesh_file_location.c_str(), submesh_name.c_str());
 		} else {
-			cout << "Loading mesh " << mesh_name << endl;
-			new_mesh->loadOBJ (mesh_filename.c_str());
+			string mesh_file_location = find_mesh_file (mesh_name);
+			cout << "Loading mesh " << mesh_file_location << endl;
+			new_mesh->loadOBJ (mesh_file_location.c_str());
 		}
 
 		new_mesh->generate_vbo();
