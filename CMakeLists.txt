@@ -109,5 +109,5 @@ FILE ( GLOB mesh_files
 	meshes/*.obj
 	)
 
-INSTALL ( FILES ${model_files} DESTINATION shared/meshup/models )
-INSTALL ( FILES ${mesh_files} DESTINATION shared/meshup/meshes )
+INSTALL ( FILES ${model_files} DESTINATION share/meshup/models )
+INSTALL ( FILES ${mesh_files} DESTINATION share/meshup/meshes )
