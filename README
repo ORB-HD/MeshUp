@@ -22,11 +22,42 @@ directory "./" and "./models/". After that MeshUp checks whether the
 environment variable MESHUP_PATH is set and checks for the file in
 $MESHUP_PATH/ or $MESHUP_PATH/models.
 
+Please note that as default MeshUp interprets all angular values as degree
+values, not radians.
+
 MESHES
 
 Similar as in STORING MODEL FILES, MeshUp tries to find meshes in various
 places. Unlike for models, meshes are required to be in a subfolder called
 "meshes/".
+
+ANIMATION FILES
+
+Animation files are designed so that they can be written to a comma or tab
+separated file and still be read by MeshUp. There is a small number of
+keywords that specify how the data is being interpreted.
+
+There are two sections in the animation file: COLUMNS and DATA.
+
+The COLUMNS section specifies the separate columns of the file and is
+started with a line that only contains "COLUMNS:". Each following entry
+that may be separated by commas or whitespaces specifies a single degree of
+freedom for a frame or the time. The first entry corresponds to the first
+column, the second for the second and so on.
+
+If a column contains the time values for the frames set the entry to
+"time".
+
+The mapping for joints is specified in the following syntax:
+  <frame name>:<joint type>:<axis>[:<unit>]
+<frame name> is the name of the frame used in the model.
+<joint type> can be 
+  t,translation for translational motions
+	r,rotation    for rotational motions
+	s,scale       for scaling motions
+<axis> can be either of x,y,z for the respective axes
+<unit> (optional) can be r,rad, or radian to specify that the columns
+  should be interpreted as radians instead of the default degrees.
 
 NOTES:
 

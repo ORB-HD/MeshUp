@@ -700,17 +700,6 @@ bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 	// clear the model
 	clear();
 
-
-	// read if the model is defined in rad
-	//	if yes, transformation while readin will be performed
-	if ((root["configuration"]["unit"]=="deg") || (root["configuration"]["unit"]=="degree")) {
-		is_radian=false;
-	}
-	else if ((root["configuration"]["unit"]=="rad") || (root["configuration"]["unit"]=="radian")) {
-		is_radian=true;
-	}
-
-
 	// read the configuration, fill with default values if they do not exist
 	if (root["configuration"]["axis_front"].isNull())
 		root["configuration"]["axis_front"] = vec3_to_json (Vector3f (1.f, 0.f, 0.f));
@@ -792,7 +781,8 @@ struct ColumnInfo {
 		type (TypeUnknown),
 		axis (AxisUnknown),
 		is_time_column (false),
-		is_empty (false)
+		is_empty (false),
+		is_radian (false)
 	{}
 	enum TransformType {
 		TypeUnknown = 0,
@@ -815,6 +805,7 @@ struct ColumnInfo {
 
 	bool is_time_column;
 	bool is_empty;
+	bool is_radian;
 };
 
 struct AnimationKeyPoses {
@@ -998,7 +989,7 @@ bool MeshupModel::loadAnimationFromFile (const char* filename, bool strict) {
 				}
 				
 				std::vector<string> spec = tokenize(column_def, ":");
-				if (spec.size() != 3) {
+				if (spec.size() < 3 || spec.size() > 4) {
 					cerr << "Error: parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
 
 					if (strict)
@@ -1063,12 +1054,20 @@ bool MeshupModel::loadAnimationFromFile (const char* filename, bool strict) {
 					return false;
 				}
 
+				bool unit_is_radian = false;
+				if (spec.size() == 4) {
+					string unit_str = tolower(strip_whitespaces(spec[3]));
+					if (unit_str == "r" || unit_str == "rad" || unit_str == "radians")
+						unit_is_radian = true;
+				}
+
 				ColumnInfo col_info;
 				col_info.frame = frame;
 				col_info.type = type;
 				col_info.axis = axis_name;
+				col_info.is_radian = unit_is_radian;
 
-				// cout << "Adding column " << column_index << " " << frame->name << ", " << type << ", " << axis_name << endl;
+				// cout << "Adding column " << column_index << " " << frame->name << ", " << type << ", " << axis_name << " radians = " << col_info.is_radian << endl;
 				animation_keyposes.columns.push_back(col_info);
 			}
 
@@ -1095,14 +1094,13 @@ bool MeshupModel::loadAnimationFromFile (const char* filename, bool strict) {
 				istringstream value_stream (columns[ci]);
 				value_stream >> value;
 				
-				//handle radian
-				if (is_radian && animation_keyposes.columns[ci].type==ColumnInfo::TypeRotation) {
-					value*=57.295779513;
+				// handle radian
+				if (animation_keyposes.columns[ci].type==ColumnInfo::TypeRotation && animation_keyposes.columns[ci].is_radian) {
+					value *= 180. / M_PI;
 				}
 				
 				// cout << "  col value " << ci << " = " << value << endl;
 				animation_keyposes.setValue (ci, value, strict);
-
 			}
 
 			// dispatch the time information to all frame poses
