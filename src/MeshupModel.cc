@@ -18,6 +18,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include "objloader.h"
+
 using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t";
@@ -256,7 +258,7 @@ void MeshupModel::addSegment (
 	// check whether we have the mesh, if not try to load it
 	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
 	if (mesh_iter == meshmap.end()) {
-		MeshPtr new_mesh (new OBJMesh);
+		MeshPtr new_mesh (new MeshVBO);
 
 		// check whether we want to extract a sub object within the obj file
 		string mesh_filename = mesh_name;
@@ -266,11 +268,11 @@ void MeshupModel::addSegment (
 			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
 			string mesh_file_location = find_mesh_file_by_name (mesh_filename);
 			cout << "Loading sub object " << submesh_name << " from file " << mesh_file_location << endl;
-			new_mesh->loadOBJ (mesh_file_location.c_str(), submesh_name.c_str());
+			load_obj (*new_mesh, mesh_file_location.c_str(), submesh_name.c_str());
 		} else {
 			string mesh_file_location = find_mesh_file_by_name (mesh_name);
 			cout << "Loading mesh " << mesh_file_location << endl;
-			new_mesh->loadOBJ (mesh_file_location.c_str());
+			load_obj (*new_mesh, mesh_file_location.c_str());
 		}
 
 		new_mesh->generate_vbo();

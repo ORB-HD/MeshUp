@@ -1,5 +1,5 @@
-#ifndef _OBJMESH_H
-#define _OBJMESH_H
+#ifndef _MESHVBO_H
+#define _MESHVBO_H
 
 #include <vector>
 #include <iostream>
@@ -9,11 +9,11 @@
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
-/** \brief Loads Wavefront OBJ files and prepares them for use in
+/** \brief Loads Wavefront VBO files and prepares them for use in
  * OpenGL.
  */
-struct OBJMesh {
-	OBJMesh() :
+struct MeshVBO {
+	MeshVBO() :
 		vbo_id(0),
 		started(false),
 		smooth_shading(true),
@@ -37,11 +37,6 @@ struct OBJMesh {
 	void delete_vbo();
 
 	void draw();
-
-	bool loadOBJ (const char *filename, bool strict = true);
-
-	// only loads the object in the OBJ file of the given obj_name
-	bool loadOBJ (const char *filename, const char *sub_object_name, bool strict = true);
 
 	unsigned int vbo_id;
 	bool started;

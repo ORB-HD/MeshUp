@@ -11,7 +11,7 @@
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
-#include "OBJMesh.h"
+#include "MeshVBO.h"
 
 /** \brief Searches in various locations for the model. */
 std::string find_model_file_by_name (const std::string &model_name);
@@ -93,7 +93,7 @@ struct FrameConfig {
 
 };
 
-typedef boost::shared_ptr<OBJMesh> MeshPtr;
+typedef boost::shared_ptr<MeshVBO> MeshPtr;
 
 struct Frame;
 typedef boost::shared_ptr<Frame> FramePtr;
