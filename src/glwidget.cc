@@ -78,15 +78,6 @@ void GLWidget::loadModel(const char* filename) {
 		// mark file for later loading
 		model_filename = filename;
 	}
-
-	int num_segments = 50;
-	for (int i = 0; i <= num_segments + 1; i++) {
-		float t = M_PI * 2. * static_cast<float>(i) / static_cast<float>(num_segments);
-
-		model_data.addCurvePoint ("testcurve", 
-				Vector3f (sinf(t), t * 0.25, cosf(t)),
-				Vector3f (1.f - t, t * 1.f, 1.f));
-	}
 }
 
 void GLWidget::loadAnimation(const char* filename) {
