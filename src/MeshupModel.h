@@ -296,6 +296,7 @@ struct MeshupModel {
 		frames.clear();
 		framemap.clear();
 		animation.frametracks.clear();
+		meshmap.clear();
 
 		*this = MeshupModel();
 	}
