@@ -33,6 +33,7 @@ class GLWidget : public QGLWidget
 		bool draw_floor;
 		bool draw_meshes;
 		bool draw_shadows;
+		bool draw_curves;
 
 	protected:
 		void update_timer();
@@ -89,6 +90,7 @@ class GLWidget : public QGLWidget
 		void toggle_draw_floor(bool status);
 		void toggle_draw_meshes(bool status);
 		void toggle_draw_shadows(bool status);
+		void toggle_draw_curves(bool status);
 
 		void actionRenderImage();
 		void actionRenderSeriesImage();

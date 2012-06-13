@@ -42,7 +42,7 @@
      <x>0</x>
      <y>0</y>
      <width>631</width>
-     <height>27</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -133,6 +133,13 @@
            <widget class="QCheckBox" name="checkBoxDrawShadows">
             <property name="text">
              <string>Shadows</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawCurves">
+            <property name="text">
+             <string>Curves</string>
             </property>
            </widget>
           </item>

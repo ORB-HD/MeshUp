@@ -56,6 +56,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawGrid->setChecked (glWidget->draw_grid);
 	checkBoxDrawMeshes->setChecked (glWidget->draw_meshes);
 	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
+	checkBoxDrawShadows->setChecked (glWidget->draw_curves);
 
 	// player is paused on startup
 	playerPaused = true;
@@ -78,6 +79,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawGrid, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_grid(bool)));
 	connect (checkBoxDrawMeshes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_meshes(bool)));
 	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
+	connect (checkBoxDrawCurves, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_curves(bool)));
 
 	// timeline & timeSlider
 	connect (timeLine, SIGNAL(frameChanged(int)), this, SLOT(timeline_frame_changed(int)));
@@ -152,6 +154,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["view"]["draw_grid"] = checkBoxDrawGrid->isChecked();
 	settings_json["configuration"]["view"]["draw_meshes"] = checkBoxDrawMeshes->isChecked();
 	settings_json["configuration"]["view"]["draw_shadows"] = checkBoxDrawShadows->isChecked();
+	settings_json["configuration"]["view"]["draw_curves"] = checkBoxDrawCurves->isChecked();
 
 	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
@@ -207,12 +210,13 @@ void MeshupApp::loadSettings () {
 		}
 	}
 
-	checkBoxDrawBaseAxes->setChecked(settings_json["configuration"]["view"].get("draw_base_axes", true).asBool());
-	checkBoxDrawFloor->setChecked(settings_json["configuration"]["view"].get("draw_floor", true).asBool());
-	checkBoxDrawFrameAxes->setChecked(settings_json["configuration"]["view"].get("draw_frame_axes", false).asBool());
-	checkBoxDrawGrid->setChecked(settings_json["configuration"]["view"].get("draw_grid", false).asBool());
-	checkBoxDrawMeshes->setChecked(settings_json["configuration"]["view"].get("draw_meshes", true).asBool());
-	checkBoxDrawShadows->setChecked(settings_json["configuration"]["view"].get("draw_shadows", false).asBool());
+	checkBoxDrawBaseAxes->setChecked(settings_json["configuration"]["view"].get("draw_base_axes", glWidget->draw_base_axes).asBool());
+	checkBoxDrawFloor->setChecked(settings_json["configuration"]["view"].get("draw_floor", glWidget->draw_floor).asBool());
+	checkBoxDrawFrameAxes->setChecked(settings_json["configuration"]["view"].get("draw_frame_axes", glWidget->draw_frame_axes).asBool());
+	checkBoxDrawGrid->setChecked(settings_json["configuration"]["view"].get("draw_grid", glWidget->draw_grid).asBool());
+	checkBoxDrawMeshes->setChecked(settings_json["configuration"]["view"].get("draw_meshes", glWidget->draw_meshes).asBool());
+	checkBoxDrawShadows->setChecked(settings_json["configuration"]["view"].get("draw_shadows", glWidget->draw_shadows).asBool());
+	checkBoxDrawCurves->setChecked(settings_json["configuration"]["view"].get("draw_curves", glWidget->draw_curves).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());

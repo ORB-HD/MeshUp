@@ -31,6 +31,11 @@ struct MeshVBO {
 				-std::numeric_limits<float>::max(),
 				-std::numeric_limits<float>::max())
 	{}
+	~MeshVBO() {
+		if (vbo_id == 0) {
+			delete_vbo();
+		}
+	}
 
 	void begin();
 	void end();

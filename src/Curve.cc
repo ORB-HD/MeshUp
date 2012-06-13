@@ -31,6 +31,11 @@ void Curve::generate_vbo() {
 }
 
 void Curve::draw() {
+	// Lazy compile the VBO if not yet done
+	if (meshVBO.vbo_id == 0) {
+		generate_vbo();
+	}
+
 	glLineWidth (width);
 	meshVBO.draw(GL_LINE_STRIP);
 }

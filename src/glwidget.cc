@@ -45,7 +45,8 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_grid (false),
 		draw_floor (true),
 		draw_meshes (true),
-		draw_shadows (false)
+		draw_shadows (false),
+		draw_curves (false)
 {
 	poi.set (0.f, 1.f, 0.f);
 	eye.set (6.f, 3.f, 6.f);
@@ -76,6 +77,15 @@ void GLWidget::loadModel(const char* filename) {
 	} else {
 		// mark file for later loading
 		model_filename = filename;
+	}
+
+	int num_segments = 50;
+	for (int i = 0; i <= num_segments + 1; i++) {
+		float t = M_PI * 2. * static_cast<float>(i) / static_cast<float>(num_segments);
+
+		model_data.addCurvePoint ("testcurve", 
+				Vector3f (sinf(t), t * 0.25, cosf(t)),
+				Vector3f (1.f - t, t * 1.f, 1.f));
 	}
 }
 
@@ -167,6 +177,9 @@ void GLWidget::toggle_draw_shadows (bool status) {
 	draw_shadows = status;
 }
 
+void GLWidget::toggle_draw_curves (bool status) {
+	draw_curves = status;
+}
 
 void GLWidget::update_timer() {
 	struct timeval clock_value;
@@ -453,6 +466,8 @@ void GLWidget::drawScene() {
 		model_data.drawBaseFrameAxes();
 	if (draw_frame_axes)
 		model_data.drawFrameAxes();
+	if (draw_curves)
+		model_data.drawCurves();
 
 	/*
 	if (draw_count % 100 == 0) {

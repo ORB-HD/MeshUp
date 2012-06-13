@@ -91,8 +91,8 @@ unsigned int MeshVBO::generate_vbo() {
 }
 
 void MeshVBO::delete_vbo() {
-	assert (vbo_id != 0);
-	glDeleteBuffers (1, &vbo_id);
+	if (vbo_id != 0) 
+		glDeleteBuffers (1, &vbo_id);
 
 	vbo_id = 0;
 }

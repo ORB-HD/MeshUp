@@ -314,6 +314,23 @@ void MeshupModel::addFramePose (
 		animation.duration = time;
 }
 
+void MeshupModel::addCurvePoint (
+		const std::string &curve_name,
+		const Vector3f &coords,
+		const Vector3f &color
+		) {
+	CurveMap::iterator curve_iter = curvemap.find(curve_name);
+	if (curve_iter == curvemap.end()) {
+		curvemap[curve_name] = CurvePtr (new Curve);
+	}
+
+	CurvePtr curve = curvemap[curve_name];
+	curve->addPointWithColor (
+			coords[0], coords[1], coords[2],
+			color[0], color[1], color[2]
+			);
+}
+
 void MeshupModel::initFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
@@ -426,21 +443,6 @@ void MeshupModel::draw() {
 		seg_iter++;
 	}
 
-	/*
-	Curve curve;
-
-	int num_segments = 50;
-	for (int i = 0; i <= num_segments + 1; i++) {
-		float t = M_PI * 2. * static_cast<float>(i) / static_cast<float>(num_segments);
-
-		curve.addPointWithColor(sinf(t), t * 0.25, cosf(t), 0.5f - t, t * 0.5f, t * 0.5f - 0.5f);
-	}
-	curve.generate_vbo();
-	curve.width = 3.;
-	curve.draw();
-	curve.delete_vbo();
-	*/
-
 	// disable normalize if it was previously not enabled
 	if (!normalize_enabled)
 		glDisable (GL_NORMALIZE);
@@ -549,6 +551,14 @@ void MeshupModel::drawBaseFrameAxes() {
 		glEnable (GL_LIGHTING);
 
 	glLineWidth (line_width);
+}
+
+void MeshupModel::drawCurves() {
+	CurveMap::iterator curve_iter = curvemap.begin();
+	while (curve_iter != curvemap.end()) {
+		curve_iter->second->draw();
+		curve_iter++;
+	}
 }
 
 Json::Value vec3_to_json (const Vector3f &vec) {

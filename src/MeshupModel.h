@@ -12,6 +12,7 @@
 #include "SimpleMath/SimpleMathGL.h"
 
 #include "MeshVBO.h"
+#include "Curve.h"
 
 /** \brief Searches in various locations for the model. */
 std::string find_model_file_by_name (const std::string &model_name);
@@ -94,6 +95,7 @@ struct FrameConfig {
 };
 
 typedef boost::shared_ptr<MeshVBO> MeshPtr;
+typedef boost::shared_ptr<Curve> CurvePtr;
 
 struct Frame;
 typedef boost::shared_ptr<Frame> FramePtr;
@@ -247,6 +249,8 @@ struct MeshupModel {
 	typedef std::map<std::string, FramePtr> FrameMap;
 	FrameMap framemap;
 	typedef std::map<FramePtr, FrameAnimationTrack> FrameAnimationTrackMap;
+	typedef std::map<std::string, CurvePtr> CurveMap;
+	CurveMap curvemap;
 
 	/// Configuration how transformations are defined
 	FrameConfig configuration;
@@ -280,6 +284,12 @@ struct MeshupModel {
 			const Vector3f &frame_scaling
 			);
 
+	void addCurvePoint (
+			const std::string &curve_name,
+			const Vector3f &coords,
+			const Vector3f &color
+			);
+
 	FramePtr findFrame (const char* frame_name) {
 		FrameMap::iterator frame_iter = framemap.find (frame_name);
 
@@ -297,6 +307,7 @@ struct MeshupModel {
 		framemap.clear();
 		animation.frametracks.clear();
 		meshmap.clear();
+		curvemap.clear();
 
 		*this = MeshupModel();
 	}
@@ -343,6 +354,7 @@ struct MeshupModel {
 	void draw();
 	void drawFrameAxes();
 	void drawBaseFrameAxes();
+	void drawCurves();
 
 	void saveModelToFile (const char* filename);
 	bool loadModelFromFile (const char* filename, bool strict = true);
