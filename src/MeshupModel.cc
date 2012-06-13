@@ -417,7 +417,7 @@ void MeshupModel::draw() {
 		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
 		
-		seg_iter->mesh->draw();
+		seg_iter->mesh->draw(GL_TRIANGLES);
 
 		glPopMatrix();
 

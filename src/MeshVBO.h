@@ -1,6 +1,8 @@
 #ifndef _MESHVBO_H
 #define _MESHVBO_H
 
+#include <GL/gl.h>
+
 #include <vector>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -32,11 +34,13 @@ struct MeshVBO {
 	void addVerticefv (float vert[3]);
 	void addNormal (float x, float y, float z);
 	void addNormalfv (float norm[3]);
+	void addColor (float x, float y, float z);
+	void addColorfv (float norm[3]);
 
 	unsigned int generate_vbo();
 	void delete_vbo();
 
-	void draw();
+	void draw(GLenum mode);
 
 	unsigned int vbo_id;
 	bool started;
@@ -47,6 +51,7 @@ struct MeshVBO {
 
 	std::vector<Vector3f> vertices;
 	std::vector<Vector3f> normals;
+	std::vector<Vector3f> colors;
 
 	/// \note always 3 succeeding calls of addVertice are assumed to be a
 	// triangle!

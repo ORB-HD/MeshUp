@@ -19,6 +19,7 @@ void MeshVBO::begin() {
 	vertices.resize(0);
 	normals.resize(0);
 	triangle_indices.resize(0);
+	colors.resize(0);
 }
 
 void MeshVBO::end() {
@@ -38,6 +39,7 @@ unsigned int MeshVBO::generate_vbo() {
 	assert (vertices.size() != 0);
 	assert (vertices.size() % 3 == 0);
 	assert (normals.size() == vertices.size());
+	assert ((colors.size() == 0) || (colors.size() == vertices.size()));
 
 //	cerr << __func__ << ": vert count = " << vertices.size() << endl;
 
@@ -46,13 +48,21 @@ unsigned int MeshVBO::generate_vbo() {
 
 	// initialize the buffer object
 	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
-	glBufferData (GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices.size() + normals.size()), NULL, GL_STATIC_DRAW);
+
+	if (colors.size() == 0)
+		glBufferData (GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices.size() + normals.size()), NULL, GL_STATIC_DRAW);
+	else {
+		glBufferData (GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices.size() + normals.size() + colors.size()), NULL, GL_STATIC_DRAW);
+	}
 
 	// fill the data
 	
 	// multiple sub buffers
 	glBufferSubData (GL_ARRAY_BUFFER, 0, sizeof (float) * 3 * vertices.size(), &vertices[0]);
 	glBufferSubData (GL_ARRAY_BUFFER, sizeof(float) * 3 * vertices.size(), sizeof (float) * 3 * normals.size(), &normals[0]);
+
+	if (colors.size() > 0)
+		glBufferSubData (GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices.size() + normals.size()), sizeof (float) * 3 * colors.size(), &colors[0]);
 
 	glBindBuffer (GL_ARRAY_BUFFER, 0);
 
@@ -100,7 +110,19 @@ void MeshVBO::addNormalfv (float normal[3]) {
 	addNormal (normal[0], normal[1], normal[2]);
 }
 
-void MeshVBO::draw() {
+void MeshVBO::addColor (float r, float g, float b) {
+	Vector3f color;
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
+	colors.push_back (color);
+}
+
+void MeshVBO::addColorfv (float color[3]) {
+	addColor (color[0], color[1], color[2]);
+}
+
+void MeshVBO::draw(GLenum mode) {
 	if (smooth_shading)
 		glShadeModel(GL_SMOOTH);
 	else
@@ -111,17 +133,25 @@ void MeshVBO::draw() {
 
 		glVertexPointer (3, GL_FLOAT, 0, 0);
 		glNormalPointer (GL_FLOAT, 0, (const GLvoid *) (vertices.size() * sizeof (float) * 3));
+	
+		if (colors.size() > 0) {
+			glColorPointer (3, GL_FLOAT, 0, (const GLvoid *) ((vertices.size() + normals.size()) * sizeof(float) * 3));
+			glEnableClientState (GL_COLOR_ARRAY);
+		}
 
 		glEnableClientState (GL_VERTEX_ARRAY);
 		glEnableClientState (GL_NORMAL_ARRAY);
-
-		glDrawArrays (GL_TRIANGLES, 0, vertices.size());
+		
+		glDrawArrays (mode, 0, vertices.size());
 		glBindBuffer (GL_ARRAY_BUFFER, 0);
 	} else {
-		glBegin (GL_TRIANGLES);
+		glBegin (mode);
 		for (int vi = 0; vi < vertices.size(); vi++) {
 			glNormal3fv (normals[vi].data());
 			glVertex3fv (vertices[vi].data());
+
+			if (colors.size() > 0)
+				glColor3fv (colors[vi].data());
 		}
 		glEnd();
 	}
