@@ -1,8 +1,6 @@
 #ifndef _MESHVBO_H
 #define _MESHVBO_H
 
-#include <GL/gl.h>
-
 #include <vector>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
@@ -10,6 +8,8 @@
 
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
+
+typedef ptrdiff_t GLsizeiptr;
 
 /** \brief Loads Wavefront VBO files and prepares them for use in
  * OpenGL.
@@ -19,6 +19,11 @@ struct MeshVBO {
 		vbo_id(0),
 		started(false),
 		smooth_shading(true),
+		have_normals (false),
+		have_colors (false),
+		buffer_size (0),
+		normal_offset (0),
+		color_offset (0),
 		bbox_min (std::numeric_limits<float>::max(),
 				std::numeric_limits<float>::max(),
 				std::numeric_limits<float>::max()),
@@ -40,12 +45,19 @@ struct MeshVBO {
 	unsigned int generate_vbo();
 	void delete_vbo();
 
-	void draw(GLenum mode);
+	void draw(unsigned int mode);
 
 	unsigned int vbo_id;
 	bool started;
 	bool smooth_shading;
 
+	bool have_normals;
+	bool have_colors;
+
+	GLsizeiptr buffer_size;
+	GLsizeiptr normal_offset;
+	GLsizeiptr color_offset;
+	
 	Vector3f bbox_min;
 	Vector3f bbox_max;
 

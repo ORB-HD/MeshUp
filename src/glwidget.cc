@@ -412,6 +412,7 @@ void GLWidget::drawGrid() {
 	zstep = fabs (zmin - zmax) / (float)count;
 
 	glColor3f (1.f, 1.f, 1.f);
+	glLineWidth(1.f);
 	glBegin (GL_LINES);
 	for (i = 0; i <= count; i++) {
 		glVertex3f (i * xstep + xmin, 0., zmin);
@@ -664,7 +665,11 @@ void GLWidget::paintGL() {
 		glDisable(GL_LIGHTING);
 	}
 
-	assert (glGetError() == GL_NO_ERROR);
+	GLenum gl_error = glGetError();
+	if (gl_error != GL_NO_ERROR) {
+		cout << "OpenGL Error: " << gluErrorString(gl_error) << endl;
+		abort();
+	}
 }
 
 void GLWidget::resizeGL(int width, int height)

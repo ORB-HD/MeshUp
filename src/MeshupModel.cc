@@ -20,6 +20,8 @@
 
 #include "objloader.h"
 
+#include "Curve.h"
+
 using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t";
@@ -423,6 +425,21 @@ void MeshupModel::draw() {
 
 		seg_iter++;
 	}
+
+	/*
+	Curve curve;
+
+	int num_segments = 50;
+	for (int i = 0; i <= num_segments + 1; i++) {
+		float t = M_PI * 2. * static_cast<float>(i) / static_cast<float>(num_segments);
+
+		curve.addPointWithColor(sinf(t), t * 0.25, cosf(t), 0.5f - t, t * 0.5f, t * 0.5f - 0.5f);
+	}
+	curve.generate_vbo();
+	curve.width = 3.;
+	curve.draw();
+	curve.delete_vbo();
+	*/
 
 	// disable normalize if it was previously not enabled
 	if (!normalize_enabled)

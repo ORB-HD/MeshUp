@@ -35,6 +35,7 @@ ADD_LIBRARY ( glew
 ADD_LIBRARY ( MeshUp
 	src/MeshupModel.cc
 	src/MeshVBO.cc
+	src/Curve.cc
 	src/objloader.cc
 	)
 
