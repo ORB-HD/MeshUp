@@ -46,10 +46,11 @@ freedom for a frame or the time. The first entry corresponds to the first
 column, the second for the second and so on.
 
 If a column contains the time values for the frames set the entry to
-"time".
+"time". If a column should be ignored by MeshUp set the entry to "empty".
 
 The mapping for joints is specified in the following syntax:
   <frame name>:<joint type>:<axis>[:<unit>]
+
 <frame name> is the name of the frame used in the model.
 <joint type> can be 
   t,translation for translational motions
@@ -65,23 +66,23 @@ NOTES:
 
 Wavefront OBJ restrictions:
   - Faces of the model must be triangles
-	- Textures are not supported
-	- Materials are not supported
+  - Textures are not supported
+  - Materials are not supported
 
 Exporting Meshes from Blender:
 
   When exporting meshes as Wavefront OBJ files from Blender, make sure to
-	apply the following settings:
-	  [X] Selection Only
-		[X] Apply Modifiers
-		[X] Include Edges
-		[X] Include Normals
-		[X] Triangulate Faces
-		[X] Objects as OBJ Objects
-		Forward   : -X Forward
-		Up        :  Y Up
-		Path Mode : Auto
+  apply the following settings:
+    [X] Selection Only
+    [X] Apply Modifiers
+    [X] Include Edges
+    [X] Include Normals
+    [X] Triangulate Faces
+    [X] Objects as OBJ Objects
+    Forward   : -X Forward
+    Up        :  Y Up
+    Path Mode : Auto
   You can save these settings as "Operator Presets" to simplify the export
-	in the future.
+  in the future.
 
 Report bugs to martin.felis@iwr.uni-heidelberg.de

@@ -14,6 +14,12 @@
 #include "MeshVBO.h"
 #include "Curve.h"
 
+typedef boost::shared_ptr<MeshVBO> MeshPtr;
+typedef boost::shared_ptr<Curve> CurvePtr;
+
+struct Frame;
+typedef boost::shared_ptr<Frame> FramePtr;
+
 /** \brief Searches in various locations for the model. */
 std::string find_model_file_by_name (const std::string &model_name);
 
@@ -50,55 +56,49 @@ struct FrameConfig {
 	}
 
 	Matrix44f convertAnglesToMatrix (const Vector3f &rotation_angles) const {
-	return	smRotate (rotation_angles[0], 1.f, 0.f, 0.f)
-		* smRotate (rotation_angles[1], 0.f, 1.f, 0.f)
-		* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
+		return	smRotate (rotation_angles[0], 1.f, 0.f, 0.f)
+			* smRotate (rotation_angles[1], 0.f, 1.f, 0.f)
+			* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
 	};
 
 	smQuaternion convertAnglesToQuaternion (const Vector3f &rotation_angles) const {
-	int a0 = rotation_order[2];
-	int a1 = rotation_order[1];
-	int a2 = rotation_order[0];
+		int a0 = rotation_order[2];
+		int a1 = rotation_order[1];
+		int a2 = rotation_order[0];
 
-	Vector3f axis_0 (
-			axes_rotation(a0, 0),
-			axes_rotation(a0, 1),
-			axes_rotation(a0, 2)
+		Vector3f axis_0 (
+				axes_rotation(a0, 0),
+				axes_rotation(a0, 1),
+				axes_rotation(a0, 2)
 				);
 
-	Vector3f axis_1 (
-			axes_rotation(a1, 0),
-			axes_rotation(a1, 1),
-			axes_rotation(a1, 2)
+		Vector3f axis_1 (
+				axes_rotation(a1, 0),
+				axes_rotation(a1, 1),
+				axes_rotation(a1, 2)
 				);
 
-	Vector3f axis_2 (
-			axes_rotation(a2, 0),
-			axes_rotation(a2, 1),
-			axes_rotation(a2, 2)
+		Vector3f axis_2 (
+				axes_rotation(a2, 0),
+				axes_rotation(a2, 1),
+				axes_rotation(a2, 2)
 				);
 
-	return smQuaternion::fromGLRotate (
+		return smQuaternion::fromGLRotate (
 				rotation_angles[a0],
 				axis_0[0], axis_0[1], axis_0[2]
 				)
 			* smQuaternion::fromGLRotate (
-				rotation_angles[a1],
-				axis_1[0], axis_1[1], axis_1[2]
-				)
+					rotation_angles[a1],
+					axis_1[0], axis_1[1], axis_1[2]
+					)
 			* smQuaternion::fromGLRotate (
-				rotation_angles[a2],
-				axis_2[0], axis_2[1], axis_2[2]
-				);
+					rotation_angles[a2],
+					axis_2[0], axis_2[1], axis_2[2]
+					);
 	}
 
 };
-
-typedef boost::shared_ptr<MeshVBO> MeshPtr;
-typedef boost::shared_ptr<Curve> CurvePtr;
-
-struct Frame;
-typedef boost::shared_ptr<Frame> FramePtr;
 
 struct Frame {
 	Frame() :
@@ -128,8 +128,14 @@ struct Frame {
 
 	std::vector<FramePtr> children;
 
+	/// \brief Recursively updates the pose of the Frame and its children
 	void updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
-	void initFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
+	/** \brief Recursively updates all frames in neutral pose.
+	 *
+	 * As the pose information is superimposed onto the default pose we have
+	 * to compute the default transformations first. This is done in this function.
+	 * */
+	void initDefaultFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
 
 	Vector3f getFrameTransformTranslation() {
 		return Vector3f (frame_transform(3,0), frame_transform(3,1), frame_transform (3,2));
@@ -326,7 +332,7 @@ struct MeshupModel {
 	}
 
 	/// Initializes the fixed frame transformations and sets frames_initialized to true
-	void initFrameTransform();
+	void initDefaultFrameTransform();
 
 	/** Updates the animation state.
 	 *
