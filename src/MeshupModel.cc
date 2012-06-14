@@ -133,13 +133,13 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const Fr
 	}
 }
 
-void Frame::initFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfig &config) {
+void Frame::initDefaultFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfig &config) {
 	// first translate, then rotate as specified in the angles
 	frame_transform =	config.convertAnglesToMatrix (parent_rotation)
 		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
-		children[ci]->initFrameTransform (frame_transform, config);
+		children[ci]->initDefaultFrameTransform (frame_transform, config);
 	}
 }
 
@@ -331,11 +331,11 @@ void MeshupModel::addCurvePoint (
 			);
 }
 
-void MeshupModel::initFrameTransform() {
+void MeshupModel::initDefaultFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
 	for (unsigned int bi = 0; bi < frames.size(); bi++) {
-		frames[bi]->initFrameTransform (base_transform, configuration);
+		frames[bi]->initDefaultFrameTransform (base_transform, configuration);
 	}
 
 	frames_initialized = true;
@@ -371,7 +371,7 @@ void MeshupModel::updateFrames() {
 
 	// check whether the frame transformations are valid
 	if (frames_initialized == false)
-		initFrameTransform();
+		initDefaultFrameTransform();
 
 	for (unsigned int bi = 0; bi < frames.size(); bi++) {
 		frames[bi]->updatePoseTransform (base_transform, configuration);
@@ -797,7 +797,7 @@ bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 		node_iter++;
 	}
 
-	initFrameTransform();
+	initDefaultFrameTransform();
 
 	model_filename = filename;
 
