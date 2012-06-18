@@ -13,11 +13,13 @@ TEST ( FrameTestSimple ) {
 	// Test whether the frame is at the desired position
 	MeshupModel model;
 
+	Matrix44f parent_transform = model.configuration.convertAnglesToMatrix (Vector3f( 0., 0., 0.)) 
+		* smTranslate (1., 2., 3.);
+
 	model.addFrame (
 			"BASE",
 			"TEST_FRAME",
-			Vector3f (1.f, 2.f, 3.f),
-			Vector3f (0.f, 0.f, 0.f)
+			parent_transform
 			);
 
 	model.updateFrames();

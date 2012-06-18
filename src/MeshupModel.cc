@@ -147,8 +147,7 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const Fr
 
 void Frame::initDefaultFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfig &config) {
 	// first translate, then rotate as specified in the angles
-	frame_transform =	config.convertAnglesToMatrix (parent_rotation)
-		* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
+	frame_transform =	parent_transform;
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
 		children[ci]->initDefaultFrameTransform (frame_transform, config);
@@ -216,8 +215,7 @@ FramePose FrameAnimationTrack::interpolatePose (float time) {
 void MeshupModel::addFrame (
 		const std::string &parent_frame_name,
 		const std::string &frame_name,
-		const Vector3f &parent_translation,
-		const Vector3f &parent_rotation) {
+		const Matrix44f &parent_transform) {
 	// mark frame transformations as dirty
 	frames_initialized = false;
 
@@ -232,8 +230,7 @@ void MeshupModel::addFrame (
 	// create the frame
 	FramePtr frame (new Frame);
 	frame->name = frame_name;
-	frame->parent_translation = configuration.axes_rotation.transpose() * parent_translation;
-	frame->parent_rotation = parent_rotation;
+	frame->parent_transform = parent_transform;
 
 	// first find the frame
 	FramePtr parent_frame = findFrame (parent_frame_name.c_str());
@@ -616,8 +613,11 @@ Json::Value frame_to_json_value (const FramePtr &frame) {
 	Value result;
 
 	result["name"] = frame->name;
-	result["parent_translation"] = vec3_to_json(frame->parent_translation);
-	result["parent_rotation"] = vec3_to_json(frame->parent_rotation);
+
+	assert (0 && !"Not supported conversion");
+	abort();
+//	result["parent_translation"] = vec3_to_json(frame->parent_translation);
+//	result["parent_rotation"] = vec3_to_json(frame->parent_rotation);
 
 	return result;
 }
@@ -811,12 +811,16 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	while (node_iter != root["frames"].end()) {
 		Value frame_node = *node_iter;
 
+		Vector3f parent_translation = json_to_vec3(frame_node["parent_translation"]);
+		Vector3f parent_rotation = configuration.axes_rotation.transpose() * json_to_vec3(frame_node["parent_rotation"]);
+
+		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation) 
+			* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
+
 		addFrame (
 				frame_node["parent"].asString(),
 				frame_node["name"].asString(),
-				json_to_vec3 (frame_node["parent_translation"]),
-				json_to_vec3 (frame_node["parent_rotation"])
-				);
+				parent_transform);
 
 		node_iter++;
 	}
@@ -971,7 +975,9 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			return false;
 		}
 
-		addFrame (frame_name, parent_frame, parent_translation, parent_rotation);
+		Matrix44f parent_transform; 
+		abort();
+		addFrame (frame_name, parent_frame, parent_transform);
 
 		ostringstream meshes_path ("frames.");
 		meshes_path << i << ".meshes";

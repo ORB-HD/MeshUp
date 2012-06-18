@@ -103,19 +103,16 @@ struct FrameConfig {
 struct Frame {
 	Frame() :
 		name (""),
-		parent_translation (0.f, 0.f, 0.f),
-		parent_rotation (0.f, 0.f, 0.f),
 		pose_translation (0.f, 0.f, 0.f),
 		pose_rotation (0.f, 0.f, 0.f),
 		pose_rotation_quaternion (0.f, 0.f, 0.f, 1.f),
 		pose_scaling (1.f, 1.f, 1.f),
 		frame_transform (Matrix44f::Identity ()),
+		parent_transform (Matrix44f::Identity ()),
 		pose_transform (Matrix44f::Identity ())
 	{}
 
 	std::string name;
-	Vector3f parent_translation;
-	Vector3f parent_rotation;
 
 	Vector3f pose_translation;
 	Vector3f pose_rotation;
@@ -124,6 +121,7 @@ struct Frame {
 
 	/** Transformation from base to pose */
 	Matrix44f frame_transform;
+	Matrix44f parent_transform;
 	Matrix44f pose_transform;
 
 	std::vector<FramePtr> children;
@@ -217,8 +215,7 @@ struct MeshupModel {
 		// create the BASE frame
 		FramePtr base_frame (new (Frame));
 		base_frame->name = "BASE";
-		base_frame->parent_translation.setZero();
-		base_frame->parent_rotation.setZero();
+		base_frame->parent_transform = Matrix44f::Identity();
 
 		frames.push_back (base_frame);
 		framemap["BASE"] = base_frame;
@@ -269,8 +266,7 @@ struct MeshupModel {
 	void addFrame (
 			const std::string &parent_frame_name,
 			const std::string &frame_name,
-			const Vector3f &parent_translation,
-			const Vector3f &parent_rotation);
+			const Matrix44f &parent_transform);
 
 	void addSegment (
 			const std::string &frame_name,
