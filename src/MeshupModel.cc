@@ -811,8 +811,8 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	while (node_iter != root["frames"].end()) {
 		Value frame_node = *node_iter;
 
-		Vector3f parent_translation = json_to_vec3(frame_node["parent_translation"]);
-		Vector3f parent_rotation = configuration.axes_rotation.transpose() * json_to_vec3(frame_node["parent_rotation"]);
+		Vector3f parent_translation = configuration.axes_rotation.transpose() * json_to_vec3(frame_node["parent_translation"]);
+		Vector3f parent_rotation = json_to_vec3(frame_node["parent_rotation"]);
 
 		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation) 
 			* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
