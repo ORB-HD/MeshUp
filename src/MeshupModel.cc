@@ -625,7 +625,7 @@ Json::Value segment_to_json_value (const Segment &segment) {
 	return result;
 }
 
-void MeshupModel::saveModelToFile (const char* filename) {
+void MeshupModel::saveModelToJsonFile (const char* filename) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might wrongly formatted data. 
 	std::setlocale(LC_NUMERIC, "POSIX");
@@ -692,7 +692,7 @@ void MeshupModel::saveModelToFile (const char* filename) {
 	file_out.close();
 }
 
-bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
+bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might read false values due to the wrong conversion.
 	std::setlocale(LC_NUMERIC, "POSIX");

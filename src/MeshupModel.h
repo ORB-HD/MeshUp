@@ -362,8 +362,8 @@ struct MeshupModel {
 	void drawBaseFrameAxes();
 	void drawCurves();
 
-	void saveModelToFile (const char* filename);
-	bool loadModelFromFile (const char* filename, bool strict = true);
+	void saveModelToJsonFile (const char* filename);
+	bool loadModelFromJsonFile (const char* filename, bool strict = true);
 	bool loadAnimationFromFile (const char* filename, bool strict = true);
 };
 

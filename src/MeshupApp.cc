@@ -267,14 +267,14 @@ void MeshupApp::action_reload_files() {
 		return;
 
 	bool status;
-	status = test_model.loadModelFromFile(model_filename.c_str(), false);
+	status = test_model.loadModelFromJsonFile(model_filename.c_str(), false);
 
 	if (!status) {
 		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
 		return;
 	}
 
-	glWidget->model_data.loadModelFromFile( model_filename.c_str());
+	glWidget->model_data.loadModelFromJsonFile( model_filename.c_str());
 
 	// no animation to reload
 	if (animation_filename.size() == 0)
@@ -416,7 +416,11 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 			} else {
 				cmd="composite -compose plus "+filename_stream.str()+" "+overlayFilename.str()+" "+overlayFilename.str();
 			}
-			system(cmd.c_str());
+			if (system(cmd.c_str()) == -1) {
+				cerr << "Error occured when running command:" << endl;
+				cerr << "  " << cmd << endl;
+				abort();
+			}
 		}
 	}
 	if (doMencoder) {
@@ -428,7 +432,11 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		
 		cout << mencoder.str() << endl;
 		
-		system(mencoder.str().c_str());
+		if (system(mencoder.str().c_str()) == -1) {
+			cerr << "Error occured when running command:" << endl;
+			cerr << "  " << mencoder.str()<< endl;
+			abort();
+		}
 	}
 	
 }
