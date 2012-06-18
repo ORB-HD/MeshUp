@@ -18,18 +18,16 @@ SET( QT_WRAP_CPP TRUE )
 FIND_PACKAGE (Qt4 REQUIRED)
 FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (Boost COMPONENTS filesystem system REQUIRED)
+FIND_PACKAGE (Lua51 REQUIRED)
 
-INCLUDE_DIRECTORIES ( glew/include )
+INCLUDE_DIRECTORIES ( 
+	glew/include 
+	${LUA_INCLUDE_DIR}
+	src/luatables )
 
 SUBDIRS ( 
 	tests/ 
 	jsoncpp/
-	)
-
-ADD_LIBRARY ( glew
-	glew/src/glew.c
-	glew/src/glewinfo.c
-	glew/src/visualinfo.c
 	)
 
 ADD_LIBRARY ( MeshUp
@@ -37,6 +35,13 @@ ADD_LIBRARY ( MeshUp
 	src/MeshVBO.cc
 	src/Curve.cc
 	src/objloader.cc
+	src/luatables/luatables.cc
+	)
+
+ADD_LIBRARY ( glew
+	glew/src/glew.c
+	glew/src/glewinfo.c
+	glew/src/visualinfo.c
 	)
 
 ADD_DEFINITIONS (${QT_DEFINITIONS})
@@ -86,6 +91,7 @@ SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
 TARGET_LINK_LIBRARIES ( MeshUp
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}
+	${LUA_LIBRARIES}
 	glew
 	json
 	)

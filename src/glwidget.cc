@@ -73,7 +73,7 @@ GLWidget::~GLWidget() {
 
 void GLWidget::loadModel(const char* filename) {
 	if (opengl_initialized) {
-		model_data.loadModelFromJsonFile (filename);
+		model_data.loadModelFromFile (filename);
 	} else {
 		// mark file for later loading
 		model_filename = filename;

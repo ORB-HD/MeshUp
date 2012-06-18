@@ -267,14 +267,14 @@ void MeshupApp::action_reload_files() {
 		return;
 
 	bool status;
-	status = test_model.loadModelFromJsonFile(model_filename.c_str(), false);
+	status = test_model.loadModelFromFile(model_filename.c_str(), false);
 
 	if (!status) {
 		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
 		return;
 	}
 
-	glWidget->model_data.loadModelFromJsonFile( model_filename.c_str());
+	glWidget->model_data.loadModelFromFile( model_filename.c_str());
 
 	// no animation to reload
 	if (animation_filename.size() == 0)

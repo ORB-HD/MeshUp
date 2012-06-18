@@ -18,13 +18,25 @@
 
 #include <boost/filesystem.hpp>
 
-#include "objloader.h"
+extern "C"
+{
+   #include <lua.h>
+   #include <lauxlib.h>
+   #include <lualib.h>
+}
+#include "luatables.h"
 
+#include "objloader.h"
 #include "Curve.h"
 
 using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t";
+
+void bail(lua_State *L, const char *msg){
+	std::cerr << msg << lua_tostring(L, -1) << endl;
+	abort();
+}
 
 std::string find_model_file_by_name (const std::string &model_name) {
 	std::string result;
@@ -692,6 +704,34 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 	file_out.close();
 }
 
+void saveModelToLuaFile (const char* filename) {
+}
+
+bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
+	string filename_str (filename);
+
+	if (filename_str.size() < 5) {
+		cerr << "Error: Filename " << filename << " too short. Must be at least 5 characters." << endl;
+
+		if (strict)
+			abort();
+
+		return false;
+	}
+
+	if (tolower(filename_str.substr(filename_str.size() - 4, 4)) == ".lua")
+		return loadModelFromLuaFile (filename, strict);
+	else if (tolower(filename_str.substr(filename_str.size() - 5, 5)) == ".json")
+		return loadModelFromJsonFile (filename, strict);
+
+	cerr << "Error: Could not determine filetype for model " << filename << ". Must be either .lua or .json file." << endl;
+
+	if (strict)
+		abort();
+
+	return false;
+}
+
 bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	// we absoulutely have to set the locale to english for numbers.
 	// Otherwise we might read false values due to the wrong conversion.
@@ -707,7 +747,8 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 		cerr << "Error opening file " << filename << "!" << endl;
 		
 		if (strict)
-			exit(1);
+			abort();
+
 		return false;
 	}
 
@@ -722,7 +763,8 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 		cerr << "Error reading model: " << reader.getFormattedErrorMessages();
 
 		if (strict)
-			exit (1);
+			abort ();
+
 		return false;
 	}
 
@@ -804,6 +846,176 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	return true;
 }
 
+Vector3f get_vector3f (lua_State *L, const string &path, int index = -1) {
+	Vector3f result;
+
+	std::vector<double> array = get_array (L, path, index);
+	if (array.size() != 3) {
+		cerr << "Invalid array size for 3d vector variable '" << path << "'." << endl;
+		abort();
+	}
+
+	for (unsigned int i = 0; i < 3; i++) {
+		result[i] = static_cast<float>(array[i]);
+	}
+
+	return result;
+}
+
+Matrix33f get_matrix3f (lua_State *L, const string &path) {
+	Matrix33f result;
+
+	// two ways either as flat array or as a lua table with three columns
+	if (get_length (L, path, -1) == 3) {
+		Vector3f row = get_vector3f (L, path, 1);
+		result(0,0) = row[0];
+		result(0,1) = row[1];
+		result(0,2) = row[2];
+
+		row = get_vector3f (L, path, 2);
+		result(1,0) = row[0];
+		result(1,1) = row[1];
+		result(1,2) = row[2];
+
+		row = get_vector3f (L, path, 3);
+		result(1,0) = row[0];
+		result(1,1) = row[1];
+		result(1,2) = row[2];
+
+		return result;
+	}
+
+	std::vector<double> array = get_array (L, path, -1);
+	if (array.size() != 9) {
+		cerr << "Invalid array size for 3d matrix variable '" << path << "'." << endl;
+		abort();
+	}
+
+	for (unsigned int i = 0; i < 9; i++) {
+		result.data()[i] = static_cast<float>(array[i]);
+	}
+
+	return result;
+}
+
+bool read_frame_params (
+		string &frame_name,
+		string &parent_name,
+		Vector3f &parent_translation,
+		Vector3f &parent_rotation ) {
+	return false;
+}
+
+bool read_mesh_params (
+		const std::string &segment_name,
+		const Vector3f &dimensions,
+		const Vector3f &scale,
+		const Vector3f &color,
+		const std::string &mesh_name,
+		const Vector3f &translate,
+		const Vector3f &mesh_center) {
+	return false;
+}
+
+bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
+	lua_State *L;
+	L = luaL_newstate();
+	luaL_openlibs(L);
+
+	if (luaL_loadfile(L, filename) || lua_pcall (L, 0, 1, 0)) {
+		cerr <<  "Error running file: ";
+		std::cerr << lua_tostring(L, -1) << endl;
+		if (strict)
+			abort();
+
+		return false;
+	}
+
+	clear();
+	
+	// configuration
+	if (value_exists (L, "configuration.axis_front")) {
+		configuration.axis_front = get_vector3f (L, "configuration.axis_front");	
+	}
+	if (value_exists (L, "configuration.axis_up")) {
+		configuration.axis_up = get_vector3f (L, "configuration.axis_up");	
+	}
+	if (value_exists (L, "configuration.axis_right")) {
+		configuration.axis_right = get_vector3f (L, "configuration.axis_right");	
+	}
+	if (value_exists (L, "configuration.rotation_order")) {
+		Vector3f rotation_order = get_vector3f (L, "configuration.rotation_order");
+		configuration.rotation_order[0] = static_cast<int>(rotation_order[0]);
+		configuration.rotation_order[1] = static_cast<int>(rotation_order[1]);
+		configuration.rotation_order[2] = static_cast<int>(rotation_order[2]);
+	}
+
+	// frames
+	vector<string> frame_keys = get_keys (L, "frames");
+
+	for (unsigned int i = 0; i < frame_keys.size(); i++) {
+		string parent_frame;
+		string frame_name;
+		Vector3f parent_translation;
+		Vector3f parent_rotation;
+
+		if (!read_frame_params (
+					frame_name,
+					parent_frame,
+					parent_translation,
+					parent_rotation)) {
+			cerr << "Error reading frame " << frame_keys[i] << "." << endl;
+			if (strict)
+				abort();
+
+			return false;
+		}
+
+		addFrame (frame_name, parent_frame, parent_translation, parent_rotation);
+
+		ostringstream meshes_path ("frames.");
+		meshes_path << i << ".meshes";
+		if (!value_exists (L, meshes_path.str())) {
+			continue;
+		} else {
+			vector<string> mesh_keys = get_keys (L, meshes_path.str());
+
+			for (unsigned int j = 0; j < mesh_keys.size(); j++) {
+				string mesh_key = meshes_path.str() + string (".") + string(mesh_keys[j]);
+
+				string segment_name;
+				Vector3f dimensions;
+				Vector3f scale;
+				Vector3f color;
+				string mesh_name;
+				Vector3f translate;
+				Vector3f mesh_center;
+
+				if (!read_mesh_params (
+							segment_name,
+							dimensions,
+							scale,
+							color,
+							mesh_name,
+							translate,
+							mesh_center)) {
+					cerr << "Error reading mesh information " << mesh_key << "." << endl;
+
+					if (strict)
+						abort();
+
+					return false;
+				}
+
+				addSegment (frame_name, segment_name, dimensions,
+						scale, color, mesh_name, translate, mesh_center);
+			}
+		}
+	}
+
+	return true;
+}
+	
 struct ColumnInfo {
 	ColumnInfo() :
 		frame (FramePtr()),
