@@ -135,6 +135,14 @@ struct Frame {
 	 * */
 	void initDefaultFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
 
+	Matrix33f getFrameTransformRotation() {
+		return Matrix33f (
+				frame_transform(0,0), frame_transform(1,0), frame_transform(2,0),
+				frame_transform(0,1), frame_transform(1,1), frame_transform(2,1),
+				frame_transform(0,2), frame_transform(1,2), frame_transform(2,2)
+				);
+	}
+
 	Vector3f getFrameTransformTranslation() {
 		return Vector3f (frame_transform(3,0), frame_transform(3,1), frame_transform (3,2));
 	}

@@ -30,4 +30,13 @@ TEST ( FrameTestSimple ) {
 			(test_frame->getFrameTransformTranslation()).data(),
 			3,
 			TEST_PREC);
+
+	CHECK_ARRAY_CLOSE (Matrix33f (
+				1.f, 0.f, 0.f,
+				0.f, 1.f, 0.f,
+				0.f, 0.f, 1.f
+				).data(),
+			(test_frame->getFrameTransformRotation()).data(),
+			9,
+			TEST_PREC);
 }
