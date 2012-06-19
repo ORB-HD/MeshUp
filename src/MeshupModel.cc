@@ -614,9 +614,8 @@ Json::Value frame_to_json_value (const FramePtr &frame) {
 
 	result["name"] = frame->name;
 
-	assert (0 && !"Not supported conversion");
-	abort();
-//	result["parent_translation"] = vec3_to_json(frame->parent_translation);
+	result["parent_translation"] = vec3_to_json(frame->getFrameTransformTranslation());
+	cerr << "Warning: cannot convert rotation to Json!" << endl;
 //	result["parent_rotation"] = vec3_to_json(frame->parent_rotation);
 
 	return result;
@@ -704,7 +703,164 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 	file_out.close();
 }
 
-void saveModelToLuaFile (const char* filename) {
+string convertToStringWithoutBrackets (const Vector3f &vector) {
+	ostringstream out;
+	out << vector[0] << ", " << vector[1] << ", " << vector[2];
+
+	return out.str();
+}
+
+string convertFrameToLuaString (const FramePtr frame, const string &parent_name, vector<string> meshes, int indent = 0) {
+	ostringstream out;
+	string indent_str;
+
+	for (int i = 0; i < indent; i++)
+		indent_str += "  ";
+
+	out << indent_str << "{" << endl
+		<< indent_str << "  name = \"" << frame->name << "\"," << endl
+		<< indent_str << "  parent = \"" << parent_name << "\"," << endl;
+
+	Vector3f translation = frame->getFrameTransformTranslation();
+	Matrix33f rotation = frame->getFrameTransformRotation();
+
+	if (Vector3f::Zero() != translation
+			|| Matrix33f::Identity() != rotation) {
+		out << indent_str << "  joint_transform = {" << endl;
+
+		if (Vector3f::Zero() != translation)
+			out << indent_str << "    r = { " << convertToStringWithoutBrackets (translation) << " }," << endl;
+
+		if (Matrix33f::Identity() != rotation) {
+			out << indent_str << "    E = {" << endl;
+			for (unsigned int i = 0; i < 3; i++) {
+			out << indent_str << "      { ";
+				for (unsigned int j = 0; j < 2; j++) {
+					out << setiosflags(ios_base::fixed) << rotation(i,j) << ", ";
+				}
+				out << setiosflags(ios_base::fixed) << rotation(i,2) << " }," << endl;
+			}
+			out << indent_str << "    }," << endl;
+		}
+		out << indent_str << "  }," << endl;
+
+		if (meshes.size() > 0) {
+			out << indent_str << "  visuals = {" << endl;
+
+			for (unsigned int i = 0; i < meshes.size(); i++) {
+				out << indent_str << "    " << meshes[i] << "," << endl;
+			}
+
+			out << indent_str << "  }," << endl;
+		}
+	}
+
+	out << indent_str << "}";
+
+	return out.str();
+}
+
+string convertSegmentToLuaString (const Segment &segment, int indent = 0) {
+	ostringstream out;
+	string indent_str;
+
+	for (int i = 0; i < indent; i++)
+		indent_str += "  ";
+
+	out << indent_str << segment.name << " = {" << endl
+		<< indent_str << "  name = \"" << segment.name << "\"," << endl;
+	if (Vector3f::Zero() != segment.dimensions)
+		out << indent_str << "  dimensions = { " << convertToStringWithoutBrackets(segment.dimensions) << "}," << endl;
+
+	if (Vector3f::Zero() != segment.scale)
+		out	<< indent_str << "  scale = { " << convertToStringWithoutBrackets(segment.scale) << "}," << endl;
+
+	if (Vector3f::Zero() != segment.meshcenter)
+		out	<< indent_str << "  meshcenter = { " << convertToStringWithoutBrackets(segment.meshcenter) << "}," << endl;
+
+	if (Vector3f::Zero() != segment.translate)
+		out	<< indent_str << "  translate = { " << convertToStringWithoutBrackets(segment.translate) << "}," << endl;
+
+	out	<< indent_str << "  src = \"" << segment.mesh_filename << "\"," << endl;
+	out << indent_str << "}," << endl;
+
+	return out.str();
+}
+
+void MeshupModel::saveModelToLuaFile (const char* filename) {
+	ofstream file_out (filename, ios::trunc);
+
+	map<string, vector<string> > frame_segment_map;
+
+	// write all segments
+	file_out << "meshes = {" << endl;
+	SegmentList::iterator seg_iter = segments.begin();
+	while (seg_iter != segments.end()) {
+		file_out << convertSegmentToLuaString (*seg_iter, 1);
+
+		frame_segment_map[seg_iter->frame->name].push_back(string("meshes.") + seg_iter->name);
+
+		seg_iter++;
+	}
+	file_out << "}" << endl << endl;
+
+	// write configuration
+	file_out << "model = {" << endl
+		<< "  configuration = {" << endl
+		<< "    axis_front = { " << convertToStringWithoutBrackets(configuration.axis_front) << " }," << endl
+		<< "    axis_up    = { " << convertToStringWithoutBrackets(configuration.axis_up) << " }," << endl
+		<< "    axis_right = { " << convertToStringWithoutBrackets(configuration.axis_right) << " }," << endl
+		<< "    rotation_order = { " << configuration.rotation_order[0] << ", "
+			<< configuration.rotation_order[1] << ", "
+			<< configuration.rotation_order[2] << "}," << endl
+		<< "  }," << endl << endl;
+
+	// write frames
+	file_out << "  frames = {" << endl;
+	int frame_index = 0;
+	// we have to write out the frames recursively
+	for (int bi = 0; bi < frames.size(); bi++) {
+		stack<FramePtr> frame_stack;
+		frame_stack.push (frames[bi]);
+
+		stack<int> child_index_stack;
+		if (frame_stack.top()->children.size() > 0) {
+			child_index_stack.push(0);
+		}
+
+		if (frame_stack.top()->name != "BASE") {
+			file_out << convertFrameToLuaString(frame_stack.top(), "ROOT", frame_segment_map["BASE"], 2) << "," << endl;
+			frame_index++;
+		}
+
+		while (frame_stack.size() > 0) {
+			FramePtr cur_frame = frame_stack.top();
+			int child_idx = child_index_stack.top();
+
+			if (child_idx < cur_frame->children.size()) {
+				FramePtr child_frame = cur_frame->children[child_idx];
+
+				file_out << convertFrameToLuaString(child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
+				frame_index++;
+				
+				child_index_stack.pop();
+				child_index_stack.push (child_idx + 1);
+
+				if (child_frame->children.size() > 0) {
+					frame_stack.push (child_frame);
+					child_index_stack.push(0);
+				}
+			} else {
+				frame_stack.pop();
+				child_index_stack.pop();
+			}
+		}
+	}
+	file_out << "  }" << endl;
+	file_out << "}" << endl << endl;
+	file_out << "return model" << endl;
+
+	file_out.close();
 }
 
 bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
@@ -846,6 +1002,10 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	initDefaultFrameTransform();
 
 	model_filename = filename;
+
+	// convert it to lua file
+	saveModelToLuaFile ("convert_luamodel.lua");
+	saveModelToJsonFile ("convert_jsonmodel.json");
 
 	return true;
 }

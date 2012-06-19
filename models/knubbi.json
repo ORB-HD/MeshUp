@@ -157,7 +157,7 @@
 			"dimensions" : [ 0.40, 0.450, 0.40 ],
 			"frame" : "HEAD",
 			"mesh_center" : [ 0.0, 0.2750, 0.0 ],
-			"mesh_filename" : "meshes/knubbi_head.obj",
+			"mesh_filename" : "meshes/knubbi.obj:Head",
 			"name" : "Head"
 		},
 

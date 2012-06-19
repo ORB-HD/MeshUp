@@ -767,6 +767,8 @@ class Matrix {
 			return *this * -1.;
 		}
 
+		// output formatting
+
 	private:
 		val_type mData[nrows * ncols];
 };
