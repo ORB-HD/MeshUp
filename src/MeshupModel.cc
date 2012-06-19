@@ -823,7 +823,6 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 	while (seg_iter != segments.end()) {
 		file_out << convertSegmentToLuaString (*seg_iter, configuration, 1);
 
-		cout << "pushing pack [" << seg_iter->frame->name << "] meshes." << seg_iter->name << endl;
 		frame_segment_map[seg_iter->frame->name].push_back(string("meshes.") + seg_iter->name);
 
 		seg_iter++;
@@ -865,7 +864,6 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 
 			if (child_idx < cur_frame->children.size()) {
 				FramePtr child_frame = cur_frame->children[child_idx];
-				cout << "Frame " << child_frame->name << " has " << frame_segment_map[child_frame->name].size() << " meshes" << endl;
 
 				file_out << convertFrameToLuaString(child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
 				frame_index++;
