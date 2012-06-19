@@ -75,7 +75,7 @@ ADD_EXECUTABLE ( meshup
 	${MainWindow_UIS_H}
 )
 
-ADD_EXECUTABLE (model_converter
+ADD_EXECUTABLE (meshup_model_converter
 	converter/converter.cc
 )
 
@@ -107,7 +107,7 @@ TARGET_LINK_LIBRARIES ( meshup
 	MeshUp
 )
 
-TARGET_LINK_LIBRARIES ( model_converter
+TARGET_LINK_LIBRARIES ( meshup_model_converter
 	${OPENGL_LIBRARIES}
 	MeshUp
 )

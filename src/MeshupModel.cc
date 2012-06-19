@@ -718,14 +718,14 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 	file_out.close();
 }
 
-string convertToStringWithoutBrackets (const Vector3f &vector) {
+string vec3_to_string_no_brackets (const Vector3f &vector) {
 	ostringstream out;
 	out << vector[0] << ", " << vector[1] << ", " << vector[2];
 
 	return out.str();
 }
 
-string convertFrameToLuaString (const FramePtr frame, const string &parent_name, vector<string> meshes, int indent = 0) {
+string frame_to_lua_string (const FramePtr frame, const string &parent_name, vector<string> meshes, int indent = 0) {
 	ostringstream out;
 	string indent_str;
 
@@ -745,7 +745,7 @@ string convertFrameToLuaString (const FramePtr frame, const string &parent_name,
 		out << indent_str << "  joint_transform = {" << endl;
 
 		if (Vector3f::Zero() != translation)
-			out << indent_str << "    r = { " << convertToStringWithoutBrackets (translation) << " }," << endl;
+			out << indent_str << "    r = { " << vec3_to_string_no_brackets (translation) << " }," << endl;
 
 		if (Matrix33f::Identity() != rotation) {
 			out << indent_str << "    E = {" << endl;
@@ -777,7 +777,7 @@ string convertFrameToLuaString (const FramePtr frame, const string &parent_name,
 	return out.str();
 }
 
-string convertSegmentToLuaString (const Segment &segment, FrameConfig frame_config, int indent = 0) {
+string segment_to_lua_string (const Segment &segment, FrameConfig frame_config, int indent = 0) {
 	ostringstream out;
 	string indent_str;
 
@@ -788,22 +788,22 @@ string convertSegmentToLuaString (const Segment &segment, FrameConfig frame_conf
 		<< indent_str << "  name = \"" << segment.name << "\"," << endl;
 	if (Vector3f::Zero() != segment.dimensions)
 		out << indent_str << "  dimensions = { " 
-			<< convertToStringWithoutBrackets(frame_config.axes_rotation * segment.dimensions) 
+			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.dimensions) 
 			<< "}," << endl;
 
 	if (Vector3f::Zero() != segment.scale)
-		out	<< indent_str << "  scale = { " << convertToStringWithoutBrackets(segment.scale) << "}," << endl;
+		out	<< indent_str << "  scale = { " << vec3_to_string_no_brackets(segment.scale) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.color)
-		out	<< indent_str << "  color = { " << convertToStringWithoutBrackets(segment.color) << "}," << endl;
+		out	<< indent_str << "  color = { " << vec3_to_string_no_brackets(segment.color) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.meshcenter)
 		out	<< indent_str << "  mesh_center = { " 
-			<< convertToStringWithoutBrackets(frame_config.axes_rotation * segment.meshcenter)
+			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.meshcenter)
 			<< "}," << endl;
 
 	if (Vector3f::Zero() != segment.translate)
-		out	<< indent_str << "  translate = { " << convertToStringWithoutBrackets(segment.translate) << "}," << endl;
+		out	<< indent_str << "  translate = { " << vec3_to_string_no_brackets(segment.translate) << "}," << endl;
 
 	out	<< indent_str << "  src = \"" << segment.mesh_filename << "\"," << endl;
 	out << indent_str << "}," << endl;
@@ -821,7 +821,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 	file_out << "meshes = {" << endl;
 	SegmentList::iterator seg_iter = segments.begin();
 	while (seg_iter != segments.end()) {
-		file_out << convertSegmentToLuaString (*seg_iter, configuration, 1);
+		file_out << segment_to_lua_string (*seg_iter, configuration, 1);
 
 		frame_segment_map[seg_iter->frame->name].push_back(string("meshes.") + seg_iter->name);
 
@@ -832,9 +832,9 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 	// write configuration
 	file_out << "model = {" << endl
 		<< "  configuration = {" << endl
-		<< "    axis_front = { " << convertToStringWithoutBrackets(configuration.axis_front) << " }," << endl
-		<< "    axis_up    = { " << convertToStringWithoutBrackets(configuration.axis_up) << " }," << endl
-		<< "    axis_right = { " << convertToStringWithoutBrackets(configuration.axis_right) << " }," << endl
+		<< "    axis_front = { " << vec3_to_string_no_brackets(configuration.axis_front) << " }," << endl
+		<< "    axis_up    = { " << vec3_to_string_no_brackets(configuration.axis_up) << " }," << endl
+		<< "    axis_right = { " << vec3_to_string_no_brackets(configuration.axis_right) << " }," << endl
 		<< "    rotation_order = { " << configuration.rotation_order[0] << ", "
 			<< configuration.rotation_order[1] << ", "
 			<< configuration.rotation_order[2] << "}," << endl
@@ -854,7 +854,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 		}
 
 		if (frame_stack.top()->name != "BASE") {
-			file_out << convertFrameToLuaString(frame_stack.top(), "BASE", frame_segment_map["BASE"], 2) << "," << endl;
+			file_out << frame_to_lua_string(frame_stack.top(), "BASE", frame_segment_map["BASE"], 2) << "," << endl;
 			frame_index++;
 		}
 
@@ -865,7 +865,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 			if (child_idx < cur_frame->children.size()) {
 				FramePtr child_frame = cur_frame->children[child_idx];
 
-				file_out << convertFrameToLuaString(child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
+				file_out << frame_to_lua_string(child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
 				frame_index++;
 				
 				child_index_stack.pop();
@@ -1050,7 +1050,7 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 	return true;
 }
 
-Vector3f get_vector3f (lua_State *L, const string &path, int index = -1) {
+Vector3f lua_get_vector3f (lua_State *L, const string &path, int index = -1) {
 	Vector3f result;
 
 	std::vector<double> array = get_array (L, path, index);
@@ -1066,22 +1066,22 @@ Vector3f get_vector3f (lua_State *L, const string &path, int index = -1) {
 	return result;
 }
 
-Matrix33f get_matrix3f (lua_State *L, const string &path) {
+Matrix33f lua_get_matrix3f (lua_State *L, const string &path) {
 	Matrix33f result;
 
 	// two ways either as flat array or as a lua table with three columns
 	if (get_length (L, path, -1) == 3) {
-		Vector3f row = get_vector3f (L, path, 1);
+		Vector3f row = lua_get_vector3f (L, path, 1);
 		result(0,0) = row[0];
 		result(0,1) = row[1];
 		result(0,2) = row[2];
 
-		row = get_vector3f (L, path, 2);
+		row = lua_get_vector3f (L, path, 2);
 		result(1,0) = row[0];
 		result(1,1) = row[1];
 		result(1,2) = row[2];
 
-		row = get_vector3f (L, path, 3);
+		row = lua_get_vector3f (L, path, 3);
 		result(1,0) = row[0];
 		result(1,1) = row[1];
 		result(1,2) = row[2];
@@ -1102,7 +1102,7 @@ Matrix33f get_matrix3f (lua_State *L, const string &path) {
 	return result;
 }
 
-bool read_frame_params (
+bool lua_read_frame (
 		lua_State *L,
 		const string &frame_path,
 		string &frame_name,
@@ -1127,18 +1127,18 @@ bool read_frame_params (
 	parent_rotation = Matrix33f::Identity();
 	if (value_exists (L, frame_path + ".joint_transform")) {
 		if (value_exists (L, frame_path + ".joint_transform.r")) {
-			parent_translation = get_vector3f (L, frame_path + ".joint_transform.r");
+			parent_translation = lua_get_vector3f (L, frame_path + ".joint_transform.r");
 		}
 
 		if (value_exists (L, frame_path + ".joint_transform.E")) {
-			parent_rotation = get_matrix3f (L, frame_path + ".joint_transform.E");
+			parent_rotation = lua_get_matrix3f (L, frame_path + ".joint_transform.E");
 		}
 	}
 
 	return true;
 }
 
-bool read_visual_params (
+bool lua_read_visual_info (
 		lua_State *L,
 		const string &visual_path,	
 		std::string &segment_name,
@@ -1153,19 +1153,19 @@ bool read_visual_params (
 		segment_name = get_string (L, visual_path + ".name");
 
 	if (value_exists (L, visual_path + ".dimensions"))
-		dimensions = get_vector3f (L, visual_path + ".dimensions");
+		dimensions = lua_get_vector3f (L, visual_path + ".dimensions");
 
 	if (value_exists (L, visual_path + ".scale"))
-		scale = get_vector3f (L, visual_path + ".scale");
+		scale = lua_get_vector3f (L, visual_path + ".scale");
 
 	if (value_exists (L, visual_path + ".color"))
-		color = get_vector3f (L, visual_path + ".color");
+		color = lua_get_vector3f (L, visual_path + ".color");
 
 	if (value_exists (L, visual_path + ".translate"))
-		translate = get_vector3f (L, visual_path + ".translate");
+		translate = lua_get_vector3f (L, visual_path + ".translate");
 
 	if (value_exists (L, visual_path + ".mesh_center"))
-		mesh_center = get_vector3f (L, visual_path + ".mesh_center");
+		mesh_center = lua_get_vector3f (L, visual_path + ".mesh_center");
 
 	if (value_exists (L, visual_path + ".src"))
 		mesh_filename = get_string (L, visual_path + ".src");
@@ -1191,16 +1191,16 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 	
 	// configuration
 	if (value_exists (L, "configuration.axis_front")) {
-		configuration.axis_front = get_vector3f (L, "configuration.axis_front");	
+		configuration.axis_front = lua_get_vector3f (L, "configuration.axis_front");	
 	}
 	if (value_exists (L, "configuration.axis_up")) {
-		configuration.axis_up = get_vector3f (L, "configuration.axis_up");	
+		configuration.axis_up = lua_get_vector3f (L, "configuration.axis_up");	
 	}
 	if (value_exists (L, "configuration.axis_right")) {
-		configuration.axis_right = get_vector3f (L, "configuration.axis_right");	
+		configuration.axis_right = lua_get_vector3f (L, "configuration.axis_right");	
 	}
 	if (value_exists (L, "configuration.rotation_order")) {
-		Vector3f rotation_order = get_vector3f (L, "configuration.rotation_order");
+		Vector3f rotation_order = lua_get_vector3f (L, "configuration.rotation_order");
 		configuration.rotation_order[0] = static_cast<int>(rotation_order[0]);
 		configuration.rotation_order[1] = static_cast<int>(rotation_order[1]);
 		configuration.rotation_order[2] = static_cast<int>(rotation_order[2]);
@@ -1220,7 +1220,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 		ostringstream frame_path;
 		frame_path << "frames." << frame_keys[i];
 
-		if (!read_frame_params (
+		if (!lua_read_frame (
 					L,
 					frame_path.str(),
 					frame_name,
@@ -1256,7 +1256,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 				Vector3f translate (0., 0., 0.);
 				Vector3f mesh_center (0., 0., 0.);
 
-				if (!read_visual_params (
+				if (!lua_read_visual_info (
 							L,
 							visual_path,
 							segment_name,
