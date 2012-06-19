@@ -145,6 +145,10 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const Fr
 	}
 }
 
+/**
+ *
+ * \todo get rid of initDefaultFrametransform
+ */
 void Frame::initDefaultFrameTransform(const Matrix44f &parent_frame_transform, const FrameConfig &config) {
 	// first translate, then rotate as specified in the angles
 	frame_transform =	parent_transform;
@@ -216,6 +220,11 @@ void MeshupModel::addFrame (
 		const std::string &parent_frame_name,
 		const std::string &frame_name,
 		const Matrix44f &parent_transform) {
+	// cout << "addFrame(" << endl
+	//	<< "  parent_frame_name = " << parent_frame_name << endl
+	//	<< "  frame_name = " << frame_name << endl
+	//	<< "  parent_transform = " << endl << parent_transform << endl;
+
 	// mark frame transformations as dirty
 	frames_initialized = false;
 
@@ -231,6 +240,7 @@ void MeshupModel::addFrame (
 	FramePtr frame (new Frame);
 	frame->name = frame_name;
 	frame->parent_transform = parent_transform;
+	frame->frame_transform = parent_transform;
 
 	// first find the frame
 	FramePtr parent_frame = findFrame (parent_frame_name.c_str());
@@ -780,8 +790,11 @@ string convertSegmentToLuaString (const Segment &segment, int indent = 0) {
 	if (Vector3f::Zero() != segment.scale)
 		out	<< indent_str << "  scale = { " << convertToStringWithoutBrackets(segment.scale) << "}," << endl;
 
+	if (Vector3f::Zero() != segment.color)
+		out	<< indent_str << "  color = { " << convertToStringWithoutBrackets(segment.color) << "}," << endl;
+
 	if (Vector3f::Zero() != segment.meshcenter)
-		out	<< indent_str << "  meshcenter = { " << convertToStringWithoutBrackets(segment.meshcenter) << "}," << endl;
+		out	<< indent_str << "  mesh_center = { " << convertToStringWithoutBrackets(segment.meshcenter) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.translate)
 		out	<< indent_str << "  translate = { " << convertToStringWithoutBrackets(segment.translate) << "}," << endl;
@@ -1087,22 +1100,74 @@ Matrix33f get_matrix3f (lua_State *L, const string &path) {
 }
 
 bool read_frame_params (
+		lua_State *L,
+		const string &frame_path,
 		string &frame_name,
 		string &parent_name,
 		Vector3f &parent_translation,
-		Vector3f &parent_rotation ) {
-	return false;
+		Matrix33f &parent_rotation ) {
+	string path;
+
+	if (!value_exists (L, frame_path + ".name")) {
+		cerr << "Error: required value .name does not exist for frame '" << frame_path << "'!" << endl;
+		return false;
+	}
+	frame_name = get_string (L, frame_path + ".name");
+
+	if (!value_exists (L, frame_path + ".parent")) {
+		cerr << "Error: required value .parent does not exist for frame '" << frame_name << "'!" << endl;
+		return false;
+	}
+	parent_name = get_string (L, frame_path + ".parent");
+
+	parent_translation = Vector3f::Zero();
+	parent_rotation = Matrix33f::Identity();
+	if (value_exists (L, frame_path + ".joint_transform")) {
+		if (value_exists (L, frame_path + ".joint_transform.r")) {
+			parent_translation = get_vector3f (L, frame_path + ".joint_transform.r");
+		}
+
+		if (value_exists (L, frame_path + ".joint_transform.E")) {
+			parent_rotation = get_matrix3f (L, frame_path + ".joint_transform.E");
+		}
+	}
+
+	return true;
 }
 
-bool read_mesh_params (
-		const std::string &segment_name,
-		const Vector3f &dimensions,
-		const Vector3f &scale,
-		const Vector3f &color,
-		const std::string &mesh_name,
-		const Vector3f &translate,
-		const Vector3f &mesh_center) {
-	return false;
+bool read_visual_params (
+		lua_State *L,
+		const string &visual_path,	
+		std::string &segment_name,
+		Vector3f &dimensions,
+		Vector3f &scale,
+		Vector3f &color,
+		std::string &mesh_filename,
+		Vector3f &translate,
+		Vector3f &mesh_center) {
+
+	if (value_exists (L, visual_path + ".name")) 
+		segment_name = get_string (L, visual_path + ".name");
+
+	if (value_exists (L, visual_path + ".dimensions"))
+		dimensions = get_vector3f (L, visual_path + ".dimensions");
+
+	if (value_exists (L, visual_path + ".scale"))
+		scale = get_vector3f (L, visual_path + ".scale");
+
+	if (value_exists (L, visual_path + ".color"))
+		color = get_vector3f (L, visual_path + ".color");
+
+	if (value_exists (L, visual_path + ".translate"))
+		translate = get_vector3f (L, visual_path + ".translate");
+
+	if (value_exists (L, visual_path + ".mesh_center"))
+		mesh_center = get_vector3f (L, visual_path + ".mesh_center");
+
+	if (value_exists (L, visual_path + ".src"))
+		mesh_filename = get_string (L, visual_path + ".src");
+
+	return true;
 }
 
 bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
@@ -1145,9 +1210,14 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 		string parent_frame;
 		string frame_name;
 		Vector3f parent_translation;
-		Vector3f parent_rotation;
+		Matrix33f parent_rotation;
+
+		ostringstream frame_path;
+		frame_path << "frames." << frame_keys[i];
 
 		if (!read_frame_params (
+					L,
+					frame_path.str(),
 					frame_name,
 					parent_frame,
 					parent_translation,
@@ -1159,37 +1229,39 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			return false;
 		}
 
-		Matrix44f parent_transform; 
-		abort();
-		addFrame (frame_name, parent_frame, parent_transform);
+		Matrix44f parent_transform = Matrix44f::Identity(); 
+		parent_transform.block<3,3>(0,0) = parent_rotation.transpose();
+		parent_transform.block<1,3>(3,0) = parent_translation.transpose();
+		addFrame (parent_frame, frame_name, parent_transform);
 
-		ostringstream meshes_path ("frames.");
-		meshes_path << i << ".meshes";
-		if (!value_exists (L, meshes_path.str())) {
+		string visuals_path = frame_path.str() + ".visuals";
+		if (!value_exists (L, visuals_path)) {
 			continue;
 		} else {
-			vector<string> mesh_keys = get_keys (L, meshes_path.str());
+			vector<string> visuals_keys = get_keys (L, visuals_path);
 
-			for (unsigned int j = 0; j < mesh_keys.size(); j++) {
-				string mesh_key = meshes_path.str() + string (".") + string(mesh_keys[j]);
+			for (unsigned int j = 0; j < visuals_keys.size(); j++) {
+				string visual_path = visuals_path + string (".") + string(visuals_keys[j]);
 
 				string segment_name;
-				Vector3f dimensions;
-				Vector3f scale;
-				Vector3f color;
-				string mesh_name;
-				Vector3f translate;
-				Vector3f mesh_center;
+				Vector3f dimensions (0., 0., 0.);
+				Vector3f scale (1., 1., 1.);
+				Vector3f color (1., 1., 1.);
+				string mesh_filename;
+				Vector3f translate (0., 0., 0.);
+				Vector3f mesh_center (0., 0., 0.);
 
-				if (!read_mesh_params (
+				if (!read_visual_params (
+							L,
+							visual_path,
 							segment_name,
 							dimensions,
 							scale,
 							color,
-							mesh_name,
+							mesh_filename,
 							translate,
 							mesh_center)) {
-					cerr << "Error reading mesh information " << mesh_key << "." << endl;
+					cerr << "Error reading mesh information " << visual_path << "." << endl;
 
 					if (strict)
 						abort();
@@ -1198,7 +1270,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 				}
 
 				addSegment (frame_name, segment_name, dimensions,
-						scale, color, mesh_name, translate, mesh_center);
+						scale, color, mesh_filename, translate, mesh_center);
 			}
 		}
 	}
