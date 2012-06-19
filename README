@@ -5,10 +5,10 @@ AUTHOR: Martin Felis <martin.felis@iwr.uni-heidelberg.de>
 
 FEATURES:
   * Simple definition of models (see directory models/ for examples)
-	* Model serialization to and from JSON files
-	* Lading of Wavefront OBJ files that can be attached to the meshes
-	* Customizable frame definitions order of rotation angles
-	* Loading and interpolation of keyframed animation (see sampleanimation.txt)
+  * Model serialization to and from JSON files
+  * Lading of Wavefront OBJ files that can be attached to the meshes
+  * Customizable frame definitions order of rotation angles
+  * Loading and interpolation of keyframed animation (see sampleanimation.txt)
 
 USAGE: meshup [model_name] [animation_file]
 
