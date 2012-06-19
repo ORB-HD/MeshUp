@@ -1,6 +1,7 @@
 #include <QtGui> 
 #include <QFile>
 #include <QDir>
+#include <QFileDialog>
 #include <QProgressDialog>
 
 #include "glwidget.h" 
@@ -91,12 +92,13 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (toolButtonPlay, SIGNAL (clicked(bool)), this, SLOT (toggle_play_animation(bool)));
 	connect (checkBoxLoopAnimation, SIGNAL (toggled(bool)), this, SLOT (toggle_loop_animation(bool)));
 
-	// quit when we want to quit
-	connect (actionQuit, SIGNAL( triggered() ), qApp, SLOT( quit() ));
+	// action_quit() makes sure to set the settings before we quit
+	connect (actionQuit, SIGNAL( triggered() ), this, SLOT( action_quit() ));
 
 	// keyboard shortcuts
+	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
+	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
-//	connect (actionQuit, SIGNAL ( triggered() ), this, SLOT(action_quit()));
 
 	loadSettings();
 	saveSettings();
@@ -172,6 +174,8 @@ void MeshupApp::saveSettings () {
 	if (!settings_dir.exists()) {
 		settings_dir.mkdir((home_dir + string ("/.meshup")).c_str());
 	}
+
+	cout << "Saving MeshUp settings to " << home_dir << "/.meshup/settings.json" << endl;
 
 	string settings_filename = home_dir + string ("/.meshup/settings.json");
 
@@ -256,6 +260,28 @@ void MeshupApp::toggle_loop_animation (bool status) {
 	}
 }
 
+void MeshupApp::action_load_model() {
+	QFileDialog file_dialog (this, "Select Model File");
+
+	file_dialog.setNameFilter(tr("MeshupModels (*.json *lua)"));
+	file_dialog.setFileMode(QFileDialog::ExistingFile);
+
+	if (file_dialog.exec()) {
+		glWidget->loadModel (file_dialog.selectedFiles().at(0).toStdString().c_str());
+	}	
+}
+
+void MeshupApp::action_load_animation() {
+	QFileDialog file_dialog (this, "Select Animation File");
+
+	file_dialog.setNameFilter(tr("MeshupAnimation (*.txt *.csv)"));
+	file_dialog.setFileMode(QFileDialog::ExistingFile);
+
+	if (file_dialog.exec()) {
+		glWidget->loadAnimation (file_dialog.selectedFiles().at(0).toStdString().c_str());
+	}	
+}
+
 void MeshupApp::action_reload_files() {
 	MeshupModel test_model;
 
@@ -293,7 +319,8 @@ void MeshupApp::action_reload_files() {
 }
 
 void MeshupApp::action_quit () {
-	qDebug () << "quit" << endl;
+	saveSettings();
+	qApp->quit();
 }
 
 void MeshupApp::timeline_frame_changed (int frame_index) {

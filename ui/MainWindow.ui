@@ -49,6 +49,9 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionLoadModel"/>
+    <addaction name="actionLoadAnimation"/>
+    <addaction name="separator"/>
     <addaction name="actionReloadFiles"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -305,6 +308,16 @@
    </property>
    <property name="shortcut">
     <string>F5</string>
+   </property>
+  </action>
+  <action name="actionLoadModel">
+   <property name="text">
+    <string>Load Model...</string>
+   </property>
+  </action>
+  <action name="actionLoadAnimation">
+   <property name="text">
+    <string>Load Animation...</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>

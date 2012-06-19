@@ -21,6 +21,7 @@ class GLWidget : public QGLWidget
 
 		void loadModel (const char *filename);
 		void loadAnimation (const char *filename);
+
 		float getAnimationDuration();
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);

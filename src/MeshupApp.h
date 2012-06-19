@@ -32,9 +32,12 @@ public slots:
 		void saveSettings ();
 		void loadSettings ();
 
+
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);
 
+		void action_load_model();
+		void action_load_animation();
 		void action_reload_files ();
 		void action_quit();
 
