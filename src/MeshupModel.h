@@ -218,7 +218,8 @@ struct MeshupModel {
 	MeshupModel():
 		model_filename (""),
 		animation_filename (""),
-		frames_initialized(false)
+		frames_initialized(false),
+		skip_vbo_generation(false)
 	{
 		// create the BASE frame
 		FramePtr base_frame (new (Frame));
@@ -268,6 +269,10 @@ struct MeshupModel {
 
 	/// Marks whether the frame transformations have to be initialized
 	bool frames_initialized;
+
+	/// Skips vbo generation when adding segments (useful when no OpenGL
+	// available)
+	bool skip_vbo_generation;
 	
 	Animation animation;
 
@@ -367,6 +372,7 @@ struct MeshupModel {
 	void drawCurves();
 
 	bool loadModelFromFile (const char* filename, bool strict = true);
+	void saveModelToFile (const char* filename);
 
 	bool loadModelFromJsonFile (const char* filename, bool strict = true);
 	bool loadModelFromLuaFile (const char* filename, bool strict = true);

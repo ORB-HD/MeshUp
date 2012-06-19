@@ -286,7 +286,8 @@ void MeshupModel::addSegment (
 			load_obj (*new_mesh, mesh_file_location.c_str());
 		}
 
-		new_mesh->generate_vbo();
+		if (!skip_vbo_generation)
+			new_mesh->generate_vbo();
 
 		meshmap[mesh_name] = new_mesh;
 
@@ -615,8 +616,12 @@ Json::Value frame_to_json_value (const FramePtr &frame) {
 	result["name"] = frame->name;
 
 	result["parent_translation"] = vec3_to_json(frame->getFrameTransformTranslation());
-	cerr << "Warning: cannot convert rotation to Json!" << endl;
-//	result["parent_rotation"] = vec3_to_json(frame->parent_rotation);
+	
+	Matrix33f rotation = frame->getFrameTransformRotation();
+	if (Matrix33f::Identity() != rotation) {
+		cerr << "Error: cannot convert non-zero parent_rotation to Json value." << endl;
+		abort();
+	}
 
 	return result;
 }
@@ -886,6 +891,25 @@ bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 		abort();
 
 	return false;
+}
+
+void MeshupModel::saveModelToFile (const char* filename) {
+	string filename_str (filename);
+
+	if (filename_str.size() < 5) {
+		cerr << "Error: Filename " << filename << " too short. Must be at least 5 characters." << endl;
+		abort();
+	}
+
+	if (tolower(filename_str.substr(filename_str.size() - 4, 4)) == ".lua")
+		saveModelToLuaFile (filename);
+	else if (tolower(filename_str.substr(filename_str.size() - 5, 5)) == ".json")
+		saveModelToJsonFile (filename);
+
+	else {
+		cerr << "Error: Could not determine filetype for model " << filename << ". Must be either .lua or .json file." << endl;
+		abort();
+	}
 }
 
 bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
