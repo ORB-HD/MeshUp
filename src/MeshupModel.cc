@@ -618,14 +618,14 @@ Json::Value frame_configuration_to_json_value (const FrameConfig &config) {
 	return result;
 }
 
-Json::Value frame_to_json_value (const FramePtr &frame) {
+Json::Value frame_to_json_value (const FramePtr &frame, FrameConfig frame_config) {
 	using namespace Json;
 
 	Value result;
 
 	result["name"] = frame->name;
 
-	result["parent_translation"] = vec3_to_json(frame->getFrameTransformTranslation());
+	result["parent_translation"] = vec3_to_json(frame_config.axes_rotation * frame->getFrameTransformTranslation());
 	
 	Matrix33f rotation = frame->getFrameTransformRotation();
 	if (Matrix33f::Identity() != rotation) {
@@ -636,15 +636,15 @@ Json::Value frame_to_json_value (const FramePtr &frame) {
 	return result;
 }
 
-Json::Value segment_to_json_value (const Segment &segment) {
+Json::Value segment_to_json_value (const Segment &segment, FrameConfig frame_config) {
 	using namespace Json;
 
 	Value result;
 
 	result["name"] = segment.name;
-	result["dimensions"] = vec3_to_json (segment.dimensions);
+	result["dimensions"] = vec3_to_json (frame_config.axes_rotation * segment.dimensions);
 	result["color"] = vec3_to_json (segment.color);
-	result["mesh_center"] = vec3_to_json (segment.meshcenter);
+	result["mesh_center"] = vec3_to_json (frame_config.axes_rotation * segment.meshcenter);
 	result["mesh_filename"] = segment.mesh_filename;
 	result["frame"] = segment.frame->name;
 
@@ -671,7 +671,7 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 		}
 
 		if (frame_stack.top()->name != "BASE") {
-			root_node["frames"][frame_index] = frame_to_json_value(frame_stack.top());
+			root_node["frames"][frame_index] = frame_to_json_value(frame_stack.top(), configuration);
 			frame_index++;
 		}
 
@@ -682,7 +682,7 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 			if (child_idx < cur_frame->children.size()) {
 				FramePtr child_frame = cur_frame->children[child_idx];
 
-				root_node["frames"][frame_index] = frame_to_json_value(child_frame);
+				root_node["frames"][frame_index] = frame_to_json_value(child_frame, configuration);
 				root_node["frames"][frame_index]["parent"] = cur_frame->name;
 				frame_index++;
 				
@@ -707,7 +707,7 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 	int segment_index = 0;
 	SegmentList::iterator seg_iter = segments.begin();
 	while (seg_iter != segments.end()) {
-		root_node["segments"][segment_index] = segment_to_json_value (*seg_iter);
+		root_node["segments"][segment_index] = segment_to_json_value (*seg_iter, configuration);
 
 		segment_index++;
 		seg_iter++;
@@ -739,6 +739,7 @@ string convertFrameToLuaString (const FramePtr frame, const string &parent_name,
 	Vector3f translation = frame->getFrameTransformTranslation();
 	Matrix33f rotation = frame->getFrameTransformRotation();
 
+	// only write joint_transform if we actually have a transformation
 	if (Vector3f::Zero() != translation
 			|| Matrix33f::Identity() != rotation) {
 		out << indent_str << "  joint_transform = {" << endl;
@@ -758,16 +759,17 @@ string convertFrameToLuaString (const FramePtr frame, const string &parent_name,
 			out << indent_str << "    }," << endl;
 		}
 		out << indent_str << "  }," << endl;
+	}
 
-		if (meshes.size() > 0) {
-			out << indent_str << "  visuals = {" << endl;
+	// output of the meshes
+	if (meshes.size() > 0) {
+		out << indent_str << "  visuals = {" << endl;
 
-			for (unsigned int i = 0; i < meshes.size(); i++) {
-				out << indent_str << "    " << meshes[i] << "," << endl;
-			}
-
-			out << indent_str << "  }," << endl;
+		for (unsigned int i = 0; i < meshes.size(); i++) {
+			out << indent_str << "    " << meshes[i] << "," << endl;
 		}
+
+		out << indent_str << "  }," << endl;
 	}
 
 	out << indent_str << "}";
@@ -775,7 +777,7 @@ string convertFrameToLuaString (const FramePtr frame, const string &parent_name,
 	return out.str();
 }
 
-string convertSegmentToLuaString (const Segment &segment, int indent = 0) {
+string convertSegmentToLuaString (const Segment &segment, FrameConfig frame_config, int indent = 0) {
 	ostringstream out;
 	string indent_str;
 
@@ -785,7 +787,9 @@ string convertSegmentToLuaString (const Segment &segment, int indent = 0) {
 	out << indent_str << segment.name << " = {" << endl
 		<< indent_str << "  name = \"" << segment.name << "\"," << endl;
 	if (Vector3f::Zero() != segment.dimensions)
-		out << indent_str << "  dimensions = { " << convertToStringWithoutBrackets(segment.dimensions) << "}," << endl;
+		out << indent_str << "  dimensions = { " 
+			<< convertToStringWithoutBrackets(frame_config.axes_rotation * segment.dimensions) 
+			<< "}," << endl;
 
 	if (Vector3f::Zero() != segment.scale)
 		out	<< indent_str << "  scale = { " << convertToStringWithoutBrackets(segment.scale) << "}," << endl;
@@ -794,7 +798,9 @@ string convertSegmentToLuaString (const Segment &segment, int indent = 0) {
 		out	<< indent_str << "  color = { " << convertToStringWithoutBrackets(segment.color) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.meshcenter)
-		out	<< indent_str << "  mesh_center = { " << convertToStringWithoutBrackets(segment.meshcenter) << "}," << endl;
+		out	<< indent_str << "  mesh_center = { " 
+			<< convertToStringWithoutBrackets(frame_config.axes_rotation * segment.meshcenter)
+			<< "}," << endl;
 
 	if (Vector3f::Zero() != segment.translate)
 		out	<< indent_str << "  translate = { " << convertToStringWithoutBrackets(segment.translate) << "}," << endl;
@@ -806,6 +812,7 @@ string convertSegmentToLuaString (const Segment &segment, int indent = 0) {
 }
 
 void MeshupModel::saveModelToLuaFile (const char* filename) {
+	cout << __func__ << endl;
 	ofstream file_out (filename, ios::trunc);
 
 	map<string, vector<string> > frame_segment_map;
@@ -814,8 +821,9 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 	file_out << "meshes = {" << endl;
 	SegmentList::iterator seg_iter = segments.begin();
 	while (seg_iter != segments.end()) {
-		file_out << convertSegmentToLuaString (*seg_iter, 1);
+		file_out << convertSegmentToLuaString (*seg_iter, configuration, 1);
 
+		cout << "pushing pack [" << seg_iter->frame->name << "] meshes." << seg_iter->name << endl;
 		frame_segment_map[seg_iter->frame->name].push_back(string("meshes.") + seg_iter->name);
 
 		seg_iter++;
@@ -847,7 +855,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 		}
 
 		if (frame_stack.top()->name != "BASE") {
-			file_out << convertFrameToLuaString(frame_stack.top(), "ROOT", frame_segment_map["BASE"], 2) << "," << endl;
+			file_out << convertFrameToLuaString(frame_stack.top(), "BASE", frame_segment_map["BASE"], 2) << "," << endl;
 			frame_index++;
 		}
 
@@ -857,6 +865,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 
 			if (child_idx < cur_frame->children.size()) {
 				FramePtr child_frame = cur_frame->children[child_idx];
+				cout << "Frame " << child_frame->name << " has " << frame_segment_map[child_frame->name].size() << " meshes" << endl;
 
 				file_out << convertFrameToLuaString(child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
 				frame_index++;
@@ -1040,10 +1049,6 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 
 	model_filename = filename;
 
-	// convert it to lua file
-	saveModelToLuaFile ("convert_luamodel.lua");
-	saveModelToJsonFile ("convert_jsonmodel.json");
-
 	return true;
 }
 
@@ -1202,6 +1207,8 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 		configuration.rotation_order[1] = static_cast<int>(rotation_order[1]);
 		configuration.rotation_order[2] = static_cast<int>(rotation_order[2]);
 	}
+
+	configuration.init();
 
 	// frames
 	vector<string> frame_keys = get_keys (L, "frames");
