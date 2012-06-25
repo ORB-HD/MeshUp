@@ -101,7 +101,6 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
 	loadSettings();
-	saveSettings();
 }
 
 void print_usage() {
