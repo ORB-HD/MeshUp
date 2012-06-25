@@ -31,7 +31,7 @@ extern "C"
 
 using namespace std;
 
-const string invalid_id_characters = "{}[],;: \r\n\t";
+const string invalid_id_characters = "{}[],;: \r\n\t#";
 
 void bail(lua_State *L, const char *msg){
 	std::cerr << msg << lua_tostring(L, -1) << endl;
@@ -124,22 +124,22 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 	return std::string("");
 }
 
-std::string sanitize_frame_name (const std::string &frame_name) {
-	string frame_name_sanitized = frame_name;
-	if (is_numeric(frame_name)) {
-		cerr << "Warning invalid frame name '" << frame_name << "': frame name should not be numeric only!" << endl;
-		frame_name_sanitized = string("_") + frame_name;
+std::string sanitize_name (const std::string &name) {
+	string name_sanitized = name;
+	if (is_numeric(name)) {
+		cerr << "Warning invalid name '" << name << "': name should not be numeric only!" << endl;
+		name_sanitized = string("_") + name;
 	}
 
 	// check for invalid characters
-	if (frame_name.find_first_of (invalid_id_characters) != string::npos) {
+	if (name.find_first_of (invalid_id_characters) != string::npos) {
 		cerr << "Error: Found invalid character '"
-			<< frame_name[frame_name.find_first_of (invalid_id_characters)]
-			<< "' in frame name '" << frame_name << "'!" << endl;
+			<< name[name.find_first_of (invalid_id_characters)]
+			<< "' in name '" << name << "'!" << endl;
 		exit (1);
 	}
 
-	return frame_name_sanitized;
+	return name_sanitized;
 }
 
 /*
@@ -246,8 +246,8 @@ void MeshupModel::addFrame (
 	// mark frame transformations as dirty
 	frames_initialized = false;
 
-	string frame_name_sanitized = sanitize_frame_name (frame_name);
-	string parent_frame_name_sanitized = sanitize_frame_name (parent_frame_name);
+	string frame_name_sanitized = sanitize_name (frame_name);
+	string parent_frame_name_sanitized = sanitize_name (parent_frame_name);
 
 	// create the frame
 	FramePtr frame (new Frame);
@@ -276,7 +276,19 @@ void MeshupModel::addSegment (
 		const Vector3f &translate,
 		const Vector3f &mesh_center) {
 	Segment segment;
-	segment.name = segment_name;
+
+	// cout << "addSegment( " << frame_name << "," << endl
+	// 	<< "  " << segment_name << "," << endl
+	// 	<< "  " << dimensions.transpose() << "," << endl
+	// 	<< "  " << scale.transpose() << "," << endl
+	// 	<< "  " << color.transpose() << "," << endl
+	// 	<< "  " << mesh_name << "," << endl
+	// 	<< "  " << translate.transpose() << "," << endl
+	// 	<< "  " << mesh_center.transpose() << ")" << endl << endl;
+
+	string sanitized_segment_name = sanitize_name(segment_name);
+
+	segment.name = sanitized_segment_name;
 	segment.dimensions = configuration.axes_rotation.transpose() * dimensions;
 
 	//~ // make sure that the dimensions are all positive
@@ -319,7 +331,7 @@ void MeshupModel::addSegment (
 
 	segment.mesh = mesh_iter->second;
 	segment.meshcenter = configuration.axes_rotation.transpose() * mesh_center;
-	segment.frame = findFrame (sanitize_frame_name(frame_name).c_str());
+	segment.frame = findFrame (sanitize_name(frame_name).c_str());
 	segment.mesh_filename = mesh_name;
 	assert (segment.frame != NULL);
 	segments.push_back (segment);
@@ -332,7 +344,7 @@ void MeshupModel::addFramePose (
 		const Vector3f &frame_rotation,
 		const Vector3f &frame_scaling
 		) {
-	FramePtr frame = findFrame (sanitize_frame_name(frame_name).c_str());
+	FramePtr frame = findFrame (sanitize_name(frame_name).c_str());
 	FramePose pose;
 	pose.timestamp = time;
 	pose.translation = configuration.axes_rotation.transpose() * frame_translation;
@@ -817,13 +829,13 @@ string segment_to_lua_string (const Segment &segment, FrameConfig frame_config, 
 			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.dimensions) 
 			<< "}," << endl;
 
-	if (Vector3f(1.f, 1.f, 1.f) != segment.scale)
+	if (Vector3f(0.f, 0.f, 0.f) != segment.scale)
 		out	<< indent_str << "  scale = { " << vec3_to_string_no_brackets(segment.scale) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.color)
 		out	<< indent_str << "  color = { " << vec3_to_string_no_brackets(segment.color) << "}," << endl;
 
-	if (Vector3f::Zero() != segment.meshcenter)
+	if (Vector3f::Zero() != segment.meshcenter && !isnan(segment.meshcenter[0]))
 		out	<< indent_str << "  mesh_center = { " 
 			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.meshcenter)
 			<< "}," << endl;
@@ -838,7 +850,6 @@ string segment_to_lua_string (const Segment &segment, FrameConfig frame_config, 
 }
 
 void MeshupModel::saveModelToLuaFile (const char* filename) {
-	cout << __func__ << endl;
 	ofstream file_out (filename, ios::trunc);
 
 	map<string, vector<string> > frame_segment_map;
@@ -1275,12 +1286,12 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 				string visual_path = visuals_path + string (".") + string(visuals_keys[j]);
 
 				string segment_name;
-				Vector3f dimensions (0., 0., 0.);
-				Vector3f scale (1., 1., 1.);
-				Vector3f color (1., 1., 1.);
+				Vector3f dimensions (0.f, 0.f, 0.f);
+				Vector3f scale (0.f, 0.f, 0.f);
+				Vector3f color (1.f, 1.f, 1.f);
 				string mesh_filename;
-				Vector3f translate (0., 0., 0.);
-				Vector3f mesh_center (0., 0., 0.);
+				Vector3f translate (0.f, 0.f, 0.f);
+				Vector3f mesh_center (1.f/0.f, 1.f/0.f, 1.f/0.f);
 
 				if (!lua_read_visual_info (
 							L,
@@ -1305,6 +1316,10 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			}
 		}
 	}
+
+	initDefaultFrameTransform();
+
+	model_filename = filename;
 
 	return true;
 }
