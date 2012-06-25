@@ -71,4 +71,12 @@ inline int count_char (const std::string &line_in, const std::string characters)
 	return count;
 }
 
+inline bool is_numeric (const std::string &line) {
+	for (unsigned int i = 0; i < line.size(); i++) {
+		if (!isdigit(line[i]))
+			return false;
+	}
+
+	return true;
+}
 #endif

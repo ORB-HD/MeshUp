@@ -124,6 +124,24 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 	return std::string("");
 }
 
+std::string sanitize_frame_name (const std::string &frame_name) {
+	string frame_name_sanitized = frame_name;
+	if (is_numeric(frame_name)) {
+		cerr << "Warning invalid frame name '" << frame_name << "': frame name should not be numeric only!" << endl;
+		frame_name_sanitized = string("_") + frame_name;
+	}
+
+	// check for invalid characters
+	if (frame_name.find_first_of (invalid_id_characters) != string::npos) {
+		cerr << "Error: Found invalid character '"
+			<< frame_name[frame_name.find_first_of (invalid_id_characters)]
+			<< "' in frame name '" << frame_name << "'!" << endl;
+		exit (1);
+	}
+
+	return frame_name_sanitized;
+}
+
 /*
  * Frame
  */
@@ -228,29 +246,24 @@ void MeshupModel::addFrame (
 	// mark frame transformations as dirty
 	frames_initialized = false;
 
-	// check for invalid characters
-	if (frame_name.find_first_of (invalid_id_characters) != string::npos) {
-		cerr << "Error: Found invalid character '"
-			<< frame_name[frame_name.find_first_of (invalid_id_characters)]
-			<< "' in frame name '" << frame_name << "'!" << endl;
-		exit (1);
-	}
+	string frame_name_sanitized = sanitize_frame_name (frame_name);
+	string parent_frame_name_sanitized = sanitize_frame_name (parent_frame_name);
 
 	// create the frame
 	FramePtr frame (new Frame);
-	frame->name = frame_name;
+	frame->name = frame_name_sanitized;
 	frame->parent_transform = parent_transform;
 	frame->frame_transform = parent_transform;
 
 	// first find the frame
-	FramePtr parent_frame = findFrame (parent_frame_name.c_str());
+	FramePtr parent_frame = findFrame (parent_frame_name_sanitized.c_str());
 	if (parent_frame == NULL) {
-		cerr << "Could not find frame '" << parent_frame_name << "'!" << endl;
+		cerr << "Could not find frame '" << parent_frame_name_sanitized << "'!" << endl;
 		exit (1);
 	}
 
 	parent_frame->children.push_back (frame);
-	framemap[frame_name] = frame;
+	framemap[frame->name] = frame;
 }
 
 void MeshupModel::addSegment (
@@ -306,7 +319,7 @@ void MeshupModel::addSegment (
 
 	segment.mesh = mesh_iter->second;
 	segment.meshcenter = configuration.axes_rotation.transpose() * mesh_center;
-	segment.frame = findFrame (frame_name.c_str());
+	segment.frame = findFrame (sanitize_frame_name(frame_name).c_str());
 	segment.mesh_filename = mesh_name;
 	assert (segment.frame != NULL);
 	segments.push_back (segment);
@@ -319,7 +332,7 @@ void MeshupModel::addFramePose (
 		const Vector3f &frame_rotation,
 		const Vector3f &frame_scaling
 		) {
-	FramePtr frame = findFrame (frame_name.c_str());
+	FramePtr frame = findFrame (sanitize_frame_name(frame_name).c_str());
 	FramePose pose;
 	pose.timestamp = time;
 	pose.translation = configuration.axes_rotation.transpose() * frame_translation;
@@ -590,9 +603,9 @@ Json::Value vec3_to_json (const Vector3f &vec) {
 	return result;
 }
 
-Vector3f json_to_vec3 (const Json::Value &value, Vector3f defaultvalue=Vector3f (0.f, 0.f, 0.f)) {
+Vector3f json_to_vec3 (const Json::Value &value, Vector3f default_value=Vector3f (0.f, 0.f, 0.f)) {
 	if (value.isNull())
-		return defaultvalue;
+		return default_value;
 
 	Vector3f result (
 			value[0].asFloat(),
@@ -642,9 +655,22 @@ Json::Value segment_to_json_value (const Segment &segment, FrameConfig frame_con
 	Value result;
 
 	result["name"] = segment.name;
-	result["dimensions"] = vec3_to_json (frame_config.axes_rotation * segment.dimensions);
-	result["color"] = vec3_to_json (segment.color);
-	result["mesh_center"] = vec3_to_json (frame_config.axes_rotation * segment.meshcenter);
+
+	if (Vector3f::Zero() != segment.dimensions)
+		result["dimensions"] = vec3_to_json (frame_config.axes_rotation * segment.dimensions);
+
+	if (Vector3f::Zero() != segment.color)
+		result["color"] = vec3_to_json (segment.color);
+
+	if (Vector3f::Zero() != segment.scale)
+		result["scale"] = vec3_to_json (segment.scale);
+
+	if (!isnan(segment.meshcenter[0])) {
+		result["mesh_center"] = vec3_to_json (frame_config.axes_rotation * segment.meshcenter);
+	} else {
+		result["translate"] = vec3_to_json (frame_config.axes_rotation * segment.translate);
+	}
+
 	result["mesh_filename"] = segment.mesh_filename;
 	result["frame"] = segment.frame->name;
 
@@ -791,7 +817,7 @@ string segment_to_lua_string (const Segment &segment, FrameConfig frame_config, 
 			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.dimensions) 
 			<< "}," << endl;
 
-	if (Vector3f::Zero() != segment.scale)
+	if (Vector3f(1.f, 1.f, 1.f) != segment.scale)
 		out	<< indent_str << "  scale = { " << vec3_to_string_no_brackets(segment.scale) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.color)
