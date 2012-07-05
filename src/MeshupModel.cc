@@ -615,10 +615,10 @@ string frame_to_lua_string (const FramePtr frame, const string &parent_name, vec
 	Vector3f translation = frame->getFrameTransformTranslation();
 	Matrix33f rotation = frame->getFrameTransformRotation();
 
-	// only write joint_transform if we actually have a transformation
+	// only write joint_frame if we actually have a transformation
 	if (Vector3f::Zero() != translation
 			|| Matrix33f::Identity() != rotation) {
-		out << indent_str << "  joint_transform = {" << endl;
+		out << indent_str << "  joint_frame = {" << endl;
 
 		if (Vector3f::Zero() != translation)
 			out << indent_str << "    r = { " << vec3_to_string_no_brackets (translation) << " }," << endl;
@@ -892,6 +892,11 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation) 
 			* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
 
+		if (frame_node["parent"].asString() == "BASE") {
+			cerr << "Warning: global frame should be 'ROOT' instead of 'BASE'!" << endl;
+			frame_node["parent"] = "ROOT";
+		}
+
 		addFrame (
 				frame_node["parent"].asString(),
 				frame_node["name"].asString(),
@@ -1000,13 +1005,13 @@ bool lua_read_frame (
 
 	parent_translation = Vector3f::Zero();
 	parent_rotation = Matrix33f::Identity();
-	if (value_exists (L, frame_path + ".joint_transform")) {
-		if (value_exists (L, frame_path + ".joint_transform.r")) {
-			parent_translation = lua_get_vector3f (L, frame_path + ".joint_transform.r");
+	if (value_exists (L, frame_path + ".joint_frame")) {
+		if (value_exists (L, frame_path + ".joint_frame.r")) {
+			parent_translation = lua_get_vector3f (L, frame_path + ".joint_frame.r");
 		}
 
-		if (value_exists (L, frame_path + ".joint_transform.E")) {
-			parent_rotation = lua_get_matrix3f (L, frame_path + ".joint_transform.E");
+		if (value_exists (L, frame_path + ".joint_frame.E")) {
+			parent_rotation = lua_get_matrix3f (L, frame_path + ".joint_frame.E");
 		}
 	}
 
