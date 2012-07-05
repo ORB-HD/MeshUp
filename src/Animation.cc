@@ -35,6 +35,13 @@ using namespace std;
 const string invalid_id_characters = "{}[],;: \r\n\t#";
 
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
+		if (frame_iter->second->name == "ROOT") {
+	Matrix44f transform_matrix = axes_rotation_matrix * framemap["ROOT"]->pose_transform;
+		if (frame_stack.top()->name != "ROOT") {
+		if (frame_stack.top()->name != "ROOT") {
+			file_out << frame_to_lua_string(frame_stack.top(), "ROOT", frame_segment_map["ROOT"], 2) << "," << endl;
+	// cout << "configuration.axes_rotation = " << endl << configuration.axes_rotation << endl;
+		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 
 /** \brief Description of the description of a column section entry. */
 struct ColumnInfo {

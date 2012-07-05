@@ -353,7 +353,7 @@ void MeshupModel::drawFrameAxes() {
 	FrameMap::iterator frame_iter = framemap.begin();
 
 	while (frame_iter != framemap.end()) {
-		if (frame_iter->second->name == "BASE") {
+		if (frame_iter->second->name == "ROOT") {
 			frame_iter++;
 			continue;
 		}
@@ -410,7 +410,7 @@ void MeshupModel::drawBaseFrameAxes() {
 
 	glPushMatrix();
 
-	Matrix44f transform_matrix = axes_rotation_matrix * framemap["BASE"]->pose_transform;
+	Matrix44f transform_matrix = axes_rotation_matrix * framemap["ROOT"]->pose_transform;
 	glMultMatrixf (transform_matrix.data());
 
 	glBegin (GL_LINES);
@@ -546,7 +546,7 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 			child_index_stack.push(0);
 		}
 
-		if (frame_stack.top()->name != "BASE") {
+		if (frame_stack.top()->name != "ROOT") {
 			root_node["frames"][frame_index] = frame_to_json_value(frame_stack.top(), configuration);
 			frame_index++;
 		}
@@ -728,8 +728,8 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 			child_index_stack.push(0);
 		}
 
-		if (frame_stack.top()->name != "BASE") {
-			file_out << frame_to_lua_string(frame_stack.top(), "BASE", frame_segment_map["BASE"], 2) << "," << endl;
+		if (frame_stack.top()->name != "ROOT") {
+			file_out << frame_to_lua_string(frame_stack.top(), "ROOT", frame_segment_map["ROOT"], 2) << "," << endl;
 			frame_index++;
 		}
 
@@ -1082,6 +1082,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 	}
 
 	configuration.init();
+	// cout << "configuration.axes_rotation = " << endl << configuration.axes_rotation << endl;
 
 	// frames
 	vector<string> frame_keys = get_keys (L, "frames");
@@ -1111,7 +1112,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 
 		Matrix44f parent_transform = Matrix44f::Identity(); 
 		parent_transform.block<3,3>(0,0) = parent_rotation.transpose();
-		parent_transform.block<1,3>(3,0) = parent_translation.transpose();
+		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 		addFrame (parent_frame, frame_name, parent_transform);
 
 		string visuals_path = frame_path.str() + ".visuals";

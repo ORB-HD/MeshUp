@@ -51,6 +51,8 @@ struct Animation {
 		duration (0.f),
 		loop (false)
 	{}
+		base_frame->name = "ROOT";
+		framemap["ROOT"] = base_frame;
 
 	/** \brief Adds a keyframe for a single frame
 	 *
