@@ -211,8 +211,6 @@ struct MeshupModel {
 	
 	void saveModelToJsonFile (const char* filename);
 	void saveModelToLuaFile (const char* filename);
-
-	bool loadAnimationFromFile (const char* filename, bool strict = true);
 };
 
 typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;

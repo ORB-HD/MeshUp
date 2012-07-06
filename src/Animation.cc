@@ -36,6 +36,7 @@ const string invalid_id_characters = "{}[],;: \r\n\t#";
 
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 
+/** \brief Description of the description of a column section entry. */
 struct ColumnInfo {
 	ColumnInfo() :
 		frame_name (""),
@@ -69,7 +70,12 @@ struct ColumnInfo {
 	bool is_radian;
 };
 
-/** \brief Keeps transformation information for all model frames at a single keyframe */
+/** \brief Keeps transformation information for all model frames at a single keyframe 
+ *
+ * This struct is used to assemble the pose information for all model
+ * frames in a single keyframe. It maps from the column index to the actual
+ * model frame and transformation type.
+ */
 struct AnimationKeyPoses {
 	float timestamp;
 	std::vector<ColumnInfo> columns;
@@ -534,5 +540,3 @@ void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, flo
 
 	UpdateModelSegmentTransformations(model);
 }
-
-

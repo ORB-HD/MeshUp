@@ -87,7 +87,17 @@ typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;
 struct Frame;
 typedef boost::shared_ptr<Frame> FramePtr;
 
-void InterpolateModelFramePose (FramePtr frame, const FramePoseInfo &start_pose, const FramePoseInfo &end_pose, const float fraction);
+/** \brief Performs the interpolation by filling frame->pose_<> values */
+void InterpolateModelFramePose (
+		FramePtr frame,
+		const FramePoseInfo &start_pose,
+		const FramePoseInfo &end_pose, const float fraction
+		);
+
+/** \brief Searches for the proper animation interpolants and updates the
+ * poses */
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
+
+/** \brief Updates the transformations within the model for drawing */
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 #endif
