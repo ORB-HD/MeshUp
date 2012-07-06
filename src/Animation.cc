@@ -443,6 +443,7 @@ void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_sta
 	if (duration == 0.f) {
 		pose_end = *(frame_prev_iter);
 		fraction = 0.;
+		return;
 	}
 
 	fraction = (time - pose_start.timestamp) / (duration);
