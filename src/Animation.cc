@@ -194,7 +194,7 @@ void Animation::addFramePose (
 		duration = time;
 }
 
-bool Animation::loadAnimationFromFile (const char* filename, bool strict) {
+bool Animation::loadFromFile (const char* filename, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
@@ -384,8 +384,7 @@ bool Animation::loadAnimationFromFile (const char* filename, bool strict) {
 			AnimationKeyPoses::FramePoseMap::iterator frame_pose_iter = animation_keyposes.frame_poses.begin();
 			while (frame_pose_iter != animation_keyposes.frame_poses.end()) {
 				// call addFramePose()
-				FramePtr frame = frame_pose_iter->first;
-				FramePose pose = frame_pose_iter->second;
+				FramePoseInfo pose = frame_pose_iter->second;
 
 				// cout << "addFramePose("
 				// 	<< "  " << frame->name << endl
@@ -394,10 +393,10 @@ bool Animation::loadAnimationFromFile (const char* filename, bool strict) {
 				// 	<< "  " << pose.rotation.transpose() << endl
 				// 	<< "  " << pose.scaling.transpose() << endl;
 
-				addFramePose (frame->name.c_str(),
+				addFramePose (frame_pose_iter->first,
 						pose.timestamp,
 						pose.translation,
-						pose.rotation,
+						pose.rotation_angles,
 						pose.scaling
 						);
 
@@ -412,13 +411,13 @@ bool Animation::loadAnimationFromFile (const char* filename, bool strict) {
 	return true;
 }
 
-void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_start, FramePoseInfo &pose_end, float &fraction)
+void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_start, FramePoseInfo &pose_end, float &fraction) {
 	if (keyframes.size() == 0) {
 		pose_start = FramePoseInfo();
 		pose_end = FramePoseInfo();
 		fraction = 0.;
 	} else if (keyframes.size() == 1) {
-		pose_start = *(keyframes.begin())
+		pose_start = *(keyframes.begin());
 		pose_end = *(keyframes.begin());
 		fraction = 0.;
 	}
@@ -437,7 +436,7 @@ void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_sta
 		frame_next_iter = frame_prev_iter;
 	}
 
-	pose_start = *(frame_prev_iter)
+	pose_start = *(frame_prev_iter);
 	pose_end = *(frame_next_iter);
 
 	float duration = frame_next_iter->timestamp - frame_prev_iter->timestamp;
@@ -462,38 +461,36 @@ void InterpolateModelFramePose (FramePtr frame, const FramePoseInfo &start_pose,
 
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
 	// update the time
-	animation.current_time = time;
+	animation->current_time = time;
 
-	if (animation.keyframes.size() != 0) {
-		if (animation.current_time > animation.duration) {
-			if (animation.loop) {
-				while (animation.current_time > animation.duration)
-					animation.current_time -= animation.duration;
-			} else {
-				animation.current_time = animation.duration;
-			}
+	if (animation->current_time > animation->duration) {
+		if (animation->loop) {
+			while (animation->current_time > animation->duration)
+				animation->current_time -= animation->duration;
+		} else {
+			animation->current_time = animation->duration;
 		}
 	}
 
 	// loop over the animation tracks and update the pose informations in the
 	// model frames
-	AnimationTrackList::iterator track_iter = animation.frane_animation_tracks.begin();
-	while (track_iter != animation.tracks.end()) {
+	AnimationTrackMap::iterator track_iter = animation->frame_animation_tracks.begin();
+	while (track_iter != animation->frame_animation_tracks.end()) {
 		FramePtr model_frame = model->findFrame ((track_iter->first).c_str());
 		FramePoseInfo start_pose, end_pose;
 		float fraction;
 	
-		track_iter->findInterpolationPoses (time, start_pose, end_pose, fraction);
-		InterpolateModelFramePose (frame, start_pose, end_pose, fraction);
+		track_iter->second.findInterpolationPoses (time, start_pose, end_pose, fraction);
+		InterpolateModelFramePose (model_frame, start_pose, end_pose, fraction);
 
 		track_iter++;
 	}
 }
 
 void UpdateModelSegmentTransformations (MeshupModelPtr model) {
-	SegmentList::iterator seg_iter = segments.begin();
+	MeshupModel::SegmentList::iterator seg_iter = model->segments.begin();
 
-	while (seg_iter != segments.end()) {
+	while (seg_iter != model->segments.end()) {
 		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
 
 		Vector3f scale(1.0f,1.0f,1.0f) ;
@@ -529,11 +526,9 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 	}
 }
 
-void UpdateModelFromAnimation (MeshupModelPtr model) {
-	assert (0 && !"Not yet implemented");
-
+void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
 	InterpolateModelFramesFromAnimation (model, animation, time);
-	UpdateModelSegmentTransformations(model, animation);
+	UpdateModelSegmentTransformations(model);
 }
 
 

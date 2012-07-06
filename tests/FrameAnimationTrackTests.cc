@@ -1,6 +1,6 @@
 #include <UnitTest++.h>
 
-#include "MeshupModel.h"
+#include "Animation.h"
 #include "SimpleMath/SimpleMathGL.h"
 
 #include <iostream>

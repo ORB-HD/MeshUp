@@ -7,6 +7,8 @@
 #include <iostream>
 
 #include "MeshupModel.h"
+struct Animation;
+typedef boost::shared_ptr<Animation> AnimationPtr;
 
 class GLWidget : public QGLWidget
 {
@@ -26,7 +28,8 @@ class GLWidget : public QGLWidget
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		MeshupModel model_data;
+		MeshupModelPtr model_data;
+		AnimationPtr animation_data;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;

@@ -10,6 +10,7 @@ CMakeFiles
 cmake_install.cmake
 install_manifest.txt
 debug
+Debug/
 tags
 Makefile
 include/config.h

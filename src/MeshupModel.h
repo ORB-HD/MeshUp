@@ -213,4 +213,6 @@ struct MeshupModel {
 	bool loadAnimationFromFile (const char* filename, bool strict = true);
 };
 
+typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;
+
 #endif

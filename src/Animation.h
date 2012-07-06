@@ -45,6 +45,8 @@ typedef std::map<std::string, AnimationTrack> AnimationTrackMap;
 
 struct Animation {
 	Animation() :
+		name (""),
+		animation_filename(""),
 		current_time (0.f),
 		duration (0.f),
 		loop (false)
@@ -64,9 +66,11 @@ struct Animation {
 			const Vector3f &frame_scaling
 			);
 
-	bool loadAnimationFromFile (const char* filename, bool strict = true);
+	bool loadFromFile (const char* filename, bool strict = true);
 
 	std::string name;
+	std::string animation_filename;
+
 	float current_time;
 	float duration;
 	bool loop;

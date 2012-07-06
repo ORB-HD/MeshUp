@@ -16,6 +16,7 @@
 #include <GL/glu.h>
 
 #include "timer.h"
+#include "Animation.h"
 
 using namespace std;
 
@@ -63,6 +64,9 @@ GLWidget::GLWidget(QWidget *parent)
 
 	setFocusPolicy(Qt::StrongFocus);
 	setMouseTracking(true);
+
+	model_data = MeshupModelPtr (new MeshupModel());
+	animation_data = AnimationPtr (new Animation());
 }
 
 GLWidget::~GLWidget() {
@@ -73,7 +77,7 @@ GLWidget::~GLWidget() {
 
 void GLWidget::loadModel(const char* filename) {
 	if (opengl_initialized) {
-		model_data.loadModelFromFile (filename);
+		model_data->loadModelFromFile (filename);
 	} else {
 		// mark file for later loading
 		model_filename = filename;
@@ -82,7 +86,7 @@ void GLWidget::loadModel(const char* filename) {
 
 void GLWidget::loadAnimation(const char* filename) {
 	if (opengl_initialized) {
-		model_data.loadAnimationFromFile (filename);
+		animation_data->loadFromFile(filename);
 	} else {
 		// mark file for later loading
 		animation_filename = filename;
@@ -90,7 +94,7 @@ void GLWidget::loadAnimation(const char* filename) {
 }
 
 void GLWidget::setAnimationTime (float fraction) {
-	model_data.setAnimationTime(fraction * model_data.getAnimationDuration());
+	animation_data->current_time = fraction * animation_data->duration;
 }
 
 void GLWidget::actionRenderImage () {
@@ -100,7 +104,7 @@ void GLWidget::actionRenderSeriesImage () {
 }
 
 float GLWidget::getAnimationDuration() {
-	return model_data.getAnimationDuration();
+	return animation_data->duration;
 }
 
 QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool use_alpha) {
@@ -272,7 +276,7 @@ void GLWidget::initializeGL()
 
 	opengl_initialized = true;
 
-	model_data.setAnimationLoop(true);
+	animation_data->loop = true;
 }
 
 void GLWidget::updateSphericalCoordinates() {
@@ -448,17 +452,17 @@ void GLWidget::drawScene() {
 	timer_start (&timer_info);
 
 	if (draw_meshes)
-		model_data.draw();
+		model_data->draw();
 
 	draw_time += timer_stop(&timer_info);
 	draw_count++;
 
 	if (draw_base_axes)
-		model_data.drawBaseFrameAxes();
+		model_data->drawBaseFrameAxes();
 	if (draw_frame_axes)
-		model_data.drawFrameAxes();
+		model_data->drawFrameAxes();
 	if (draw_curves)
-		model_data.drawCurves();
+		model_data->drawCurves();
 
 	/*
 	if (draw_count % 100 == 0) {
@@ -641,10 +645,7 @@ void GLWidget::paintGL() {
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// update the animation state
-	model_data.updatePose ();
-	// update the transformations of the frames
-	model_data.updateFrames ();
+	UpdateModelFromAnimation (model_data, animation_data, animation_data->current_time);
 
 	if (draw_shadows) {
 		// start the shadow mapping magic!

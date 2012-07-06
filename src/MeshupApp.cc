@@ -6,6 +6,7 @@
 
 #include "glwidget.h" 
 #include "MeshupApp.h"
+#include "Animation.h"
 
 #include <assert.h>
 #include <iostream>
@@ -282,37 +283,38 @@ void MeshupApp::action_load_animation() {
 }
 
 void MeshupApp::action_reload_files() {
-	MeshupModel test_model;
+	MeshupModelPtr test_model (new MeshupModel());
+	AnimationPtr test_animation (new Animation());
 
-	string model_filename = glWidget->model_data.model_filename;
-	string animation_filename = glWidget->model_data.animation_filename;
+	string model_filename = glWidget->model_data->model_filename;
+	string animation_filename = glWidget->animation_data->animation_filename;
 
 	// no model to reload
 	if (model_filename.size() == 0) 
 		return;
 
 	bool status;
-	status = test_model.loadModelFromFile(model_filename.c_str(), false);
+	status = test_model->loadModelFromFile(model_filename.c_str(), false);
 
 	if (!status) {
 		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
 		return;
 	}
 
-	glWidget->model_data.loadModelFromFile( model_filename.c_str());
+	glWidget->model_data = test_model;
 
 	// no animation to reload
 	if (animation_filename.size() == 0)
 		return;
 
-	status = test_model.loadAnimationFromFile(animation_filename.c_str(), false);
+	status = test_animation->loadFromFile(animation_filename.c_str(), false);
 	if (!status) {
 		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
 		return;
 	}
 
 	// everything worked fine -> replace the current model
-	glWidget->model_data.loadAnimationFromFile ( animation_filename.c_str());	
+	glWidget->animation_data = test_animation;
 
 	return;
 }
@@ -418,18 +420,18 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	int h = renderImageSeriesDialog->HeightSpinBox->value();
 	fps = renderImageSeriesDialog->FpsSpinBox->value();
 	
-	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->model_data.getAnimationDuration()* 100.0 / spinBoxSpeed->value(), this);
+	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->animation_data->duration* 100.0 / spinBoxSpeed->value(), this);
 	pbar.setMinimumDuration(0);
 	pbar.show();
 	stringstream overlayFilename;
 	overlayFilename << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-overlay.png";
 	
-	for(int i = 0; i < (float) fps*glWidget->model_data.getAnimationDuration()* 100.0 / spinBoxSpeed->value(); i++) {
+	for(int i = 0; i < (float) fps*glWidget->animation_data->duration* 100.0 / spinBoxSpeed->value(); i++) {
 		pbar.setValue(i);
 		pbar.show();
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
-		glWidget->model_data.setAnimationTime((float) i / fps*  spinBoxSpeed->value() / 100.0);
+		glWidget->animation_data->current_time = (float) i / fps*  spinBoxSpeed->value() / 100.0;
 		QImage image = glWidget->renderContentOffscreen (w,h,render_transparent);
 		image.save (filename_stream.str().c_str(), 0, -1);
 		//not used:
