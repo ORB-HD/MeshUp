@@ -17,7 +17,7 @@ TEST ( FrameTestSimple ) {
 		* smTranslate (1., 2., 3.);
 
 	model.addFrame (
-			"BASE",
+			"ROOT",
 			"TEST_FRAME",
 			parent_transform
 			);

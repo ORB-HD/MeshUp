@@ -105,11 +105,11 @@ struct MeshupModel {
 	{
 		// create the BASE frame
 		FramePtr base_frame (new (Frame));
-		base_frame->name = "BASE";
+		base_frame->name = "ROOT";
 		base_frame->parent_transform = Matrix44f::Identity();
 
 		frames.push_back (base_frame);
-		framemap["BASE"] = base_frame;
+		framemap["ROOT"] = base_frame;
 	}
 
 	MeshupModel& operator= (const MeshupModel& other) {
@@ -171,6 +171,8 @@ struct MeshupModel {
 			const Vector3f &coords,
 			const Vector3f &color
 			);
+
+	void updateFrames();
 
 	FramePtr findFrame (const char* frame_name) {
 		FrameMap::iterator frame_iter = framemap.find (frame_name);

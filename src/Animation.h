@@ -84,6 +84,10 @@ typedef boost::shared_ptr<Animation> AnimationPtr;
 struct MeshupModel;
 typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;
 
+struct Frame;
+typedef boost::shared_ptr<Frame> FramePtr;
+
+void InterpolateModelFramePose (FramePtr frame, const FramePoseInfo &start_pose, const FramePoseInfo &end_pose, const float fraction);
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 #endif

@@ -280,6 +280,18 @@ void MeshupModel::addCurvePoint (
 			);
 }
 
+void MeshupModel::updateFrames() {
+	Matrix44f base_transform (Matrix44f::Identity());
+
+	// check whether the frame transformations are valid
+	if (frames_initialized == false)
+		initDefaultFrameTransform();
+
+	for (unsigned int bi = 0; bi < frames.size(); bi++) {
+		frames[bi]->updatePoseTransform (base_transform, configuration);
+	}
+}
+
 void MeshupModel::initDefaultFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
