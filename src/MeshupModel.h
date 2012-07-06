@@ -105,11 +105,11 @@ struct MeshupModel {
 	{
 		// create the BASE frame
 		FramePtr base_frame (new (Frame));
-		base_frame->name = "ROOT";
+		base_frame->name = "BASE";
 		base_frame->parent_transform = Matrix44f::Identity();
 
 		frames.push_back (base_frame);
-		framemap["ROOT"] = base_frame;
+		framemap["BASE"] = base_frame;
 	}
 
 	MeshupModel& operator= (const MeshupModel& other) {

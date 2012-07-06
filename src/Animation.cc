@@ -528,6 +528,9 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
 	InterpolateModelFramesFromAnimation (model, animation, time);
+
+	model->updateFrames();
+
 	UpdateModelSegmentTransformations(model);
 }
 
