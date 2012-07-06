@@ -32,6 +32,7 @@ SUBDIRS (
 
 ADD_LIBRARY ( MeshUp
 	src/MeshupModel.cc
+	src/Animation.cc
 	src/MeshVBO.cc
 	src/Curve.cc
 	src/objloader.cc

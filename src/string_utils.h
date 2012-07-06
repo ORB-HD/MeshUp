@@ -5,6 +5,7 @@
 #include <vector>
 
 const std::string whitespaces_std (" \t\n\r");
+const std::string invalid_name_characters = "{}[],;: \r\n\t#";
 
 inline std::string strip_comments (const std::string &line) {
 	return line.substr (0, line.find ('#'));
@@ -79,4 +80,24 @@ inline bool is_numeric (const std::string &line) {
 
 	return true;
 }
+
+inline std::string sanitize_name (const std::string &name) {
+	std::string name_sanitized = name;
+	if (is_numeric(name)) {
+		std::cerr << "Warning invalid name '" << name << "': name should not be numeric only!" << std::endl;
+		name_sanitized = std::string("_") + name;
+	}
+
+	// check for invalid characters
+	if (name.find_first_of (invalid_name_characters) != std::string::npos) {
+		std::cerr << "Error: Found invalid character '"
+			<< name[name.find_first_of (invalid_name_characters)]
+			<< "' in name '" << name << "'!" << std::endl;
+		abort();
+	}
+
+	return name_sanitized;
+}
+
+
 #endif
