@@ -35,32 +35,6 @@ using namespace std;
 const string invalid_id_characters = "{}[],;: \r\n\t#";
 
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
-		if (frame_iter->second->name == "ROOT") {
-	Matrix44f transform_matrix = axes_rotation_matrix * framemap["ROOT"]->pose_transform;
-		if (frame_stack.top()->name != "ROOT") {
-		if (frame_stack.top()->name != "ROOT") {
-			file_out << frame_to_lua_string(frame_stack.top(), "ROOT", frame_segment_map["ROOT"], 2) << "," << endl;
-	// cout << "configuration.axes_rotation = " << endl << configuration.axes_rotation << endl;
-		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
-		if (frame_iter->second->name == "ROOT") {
-	Matrix44f transform_matrix = axes_rotation_matrix * framemap["ROOT"]->pose_transform;
-		if (frame_stack.top()->name != "ROOT") {
-	// only write joint_frame if we actually have a transformation
-		out << indent_str << "  joint_frame = {" << endl;
-		if (frame_stack.top()->name != "ROOT") {
-			file_out << frame_to_lua_string(frame_stack.top(), "ROOT", frame_segment_map["ROOT"], 2) << "," << endl;
-		if (frame_node["parent"].asString() == "BASE") {
-			cerr << "Warning: global frame should be 'ROOT' instead of 'BASE'!" << endl;
-			frame_node["parent"] = "ROOT";
-		}
-
-	if (value_exists (L, frame_path + ".joint_frame")) {
-		if (value_exists (L, frame_path + ".joint_frame.r")) {
-			parent_translation = lua_get_vector3f (L, frame_path + ".joint_frame.r");
-		if (value_exists (L, frame_path + ".joint_frame.E")) {
-			parent_rotation = lua_get_matrix3f (L, frame_path + ".joint_frame.E");
-	// cout << "configuration.axes_rotation = " << endl << configuration.axes_rotation << endl;
-		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 
 /** \brief Description of the description of a column section entry. */
 struct ColumnInfo {
