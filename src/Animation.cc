@@ -180,11 +180,61 @@ struct AnimationKeyPoses {
 };
 
 float Animation::getPrevKeyFrameTime () const {
-	return 0.;	
+	AnimationTrackMap::const_iterator track_iter = frame_animation_tracks.begin();
+
+	float closest = 0.f;
+
+	while (track_iter != frame_animation_tracks.end()) {
+		KeyFrameList::const_iterator keyframe_iter = track_iter->second.keyframes.begin();
+
+		bool time_before_current_time = true;
+		float closest_for_track = 0.f;
+
+		while (keyframe_iter != track_iter->second.keyframes.end()) {
+			if (keyframe_iter->timestamp >= current_time) {
+				break;
+			}
+
+			closest_for_track = keyframe_iter->timestamp;
+			keyframe_iter++;
+		}
+
+		if (closest_for_track > closest)
+			closest = closest_for_track;
+
+		track_iter++;
+	}
+
+	return closest;	
 }
 
 float Animation::getNextKeyFrameTime () const {
-	return duration;	
+	AnimationTrackMap::const_iterator track_iter = frame_animation_tracks.begin();
+
+	float closest = duration;
+
+	while (track_iter != frame_animation_tracks.end()) {
+		KeyFrameList::const_iterator keyframe_iter = track_iter->second.keyframes.begin();
+
+		bool time_before_current_time = true;
+		float closest_for_track = duration;
+
+		while (keyframe_iter != track_iter->second.keyframes.end()) {
+			if (keyframe_iter->timestamp <= current_time) {
+				keyframe_iter++;
+				continue;
+			}
+			closest_for_track = keyframe_iter->timestamp;
+			break;
+		}
+
+		if (closest_for_track < closest)
+			closest = closest_for_track;
+
+		track_iter++;
+	}
+
+	return closest;	
 }
 
 void Animation::addFramePose (

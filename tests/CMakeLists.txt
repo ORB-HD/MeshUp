@@ -7,6 +7,7 @@ LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../CMake )
 
 SET ( TESTS_SRCS
 	main.cc
+	AnimationTests.cc
 	FrameAnimationTrackTests.cc
 	FrameTests.cc
 	QuaternionTests.cc
