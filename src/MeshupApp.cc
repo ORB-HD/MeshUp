@@ -64,7 +64,9 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawCurves->setChecked (glWidget->draw_curves);
 
 	// animation editor
-	animationValuesTableView->setModel (new AnimationEditModel(NULL));
+	animation_edit_model = new AnimationEditModel (this);	
+	animation_edit_model->setGlWidget (glWidget);
+	animationValuesTableView->setModel (animation_edit_model);
 
 	// player is paused on startup
 	playerPaused = true;
@@ -110,6 +112,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
+
+	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
 
 	loadSettings();
 }
@@ -334,6 +338,10 @@ void MeshupApp::action_reload_files() {
 void MeshupApp::action_quit () {
 	saveSettings();
 	qApp->quit();
+}
+
+void MeshupApp::animation_loaded() {
+	animation_edit_model->call_reset();
 }
 
 void MeshupApp::action_next_keyframe() {

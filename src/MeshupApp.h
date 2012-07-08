@@ -6,6 +6,7 @@
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
+#include "AnimationEditModel.h"
 
 class MeshupApp : public QMainWindow, public Ui::MainWindow
 {
@@ -24,6 +25,8 @@ protected:
 		RenderImageDialog* renderImageDialog;
 		RenderImageSeriesDialog* renderImageSeriesDialog;
 
+		AnimationEditModel *animation_edit_model;
+
 public slots:
 		virtual void closeEvent(QCloseEvent *event);
 		virtual void focusChanged (QFocusEvent *event);
@@ -39,6 +42,8 @@ public slots:
 		void action_load_animation();
 		void action_reload_files ();
 		void action_quit();
+
+		void animation_loaded();
 
 		void action_next_keyframe();
 		void action_prev_keyframe();

@@ -78,6 +78,7 @@ GLWidget::~GLWidget() {
 void GLWidget::loadModel(const char* filename) {
 	if (opengl_initialized) {
 		model_data->loadModelFromFile (filename);
+		emit model_loaded();
 	} else {
 		// mark file for later loading
 		model_filename = filename;
@@ -87,6 +88,7 @@ void GLWidget::loadModel(const char* filename) {
 void GLWidget::loadAnimation(const char* filename) {
 	if (opengl_initialized) {
 		animation_data->loadFromFile(filename);
+		emit animation_loaded();
 	} else {
 		// mark file for later loading
 		animation_filename = filename;
