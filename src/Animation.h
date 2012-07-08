@@ -14,8 +14,69 @@
 #include "FrameConfig.h"
 #include "Curve.h"
 
-/** \brief Searches in various locations for the model. */
-std::string find_model_file_by_name (const std::string &model_name);
+/** \brief Description of the description of a column section entry of the
+ * animation file.
+ *
+ * This data structure is also used to convert between raw Degree Of
+ * Freedom (DOF) vectors to the actual frame transformation information.
+ */
+struct ColumnInfo {
+	ColumnInfo() :
+		frame_name (""),
+		type (TransformTypeUnknown),
+		axis (AxisTypeUnknown),
+		is_time_column (false),
+		is_empty (false),
+		is_radian (false)
+	{}
+	enum TransformType {
+		TransformTypeUnknown = 0,
+		TransformTypeRotation,
+		TransformTypeTranslation,
+		TransformTypeScale,
+		TransformTypeLast
+	};
+	enum AxisType {
+		AxisTypeUnknown = 0,
+		AxisTypeX,
+		AxisTypeY,
+		AxisTypeZ,
+		AxisTypeNegativeX,
+		AxisTypeNegativeY,
+		AxisTypeNegativeZ 
+	};
+	std::string frame_name;
+	TransformType type;
+	AxisType axis;
+
+	bool is_time_column;
+	bool is_empty;
+	bool is_radian;
+};
+
+/** \brief Value that can be either interpolated or not.
+ */
+struct AnimationValue {
+	AnimationValue() :
+		value (0.f),
+		keyed (false) 
+	{}
+
+	float value;
+	bool keyed;
+};
+
+/** \brief Raw keyframe data in form of a value vector.
+ *
+ * This format is used to store the animation keyframes as Degree of
+ * Freedom (DOF) values that allow editing of keyframe data on a per joint
+ * level.
+ */
+struct AnimationRawKeyframe {
+	float timestamp;
+	std::vector<AnimationValue> values;
+};
+typedef std::list<AnimationRawKeyframe> AnimationRawKeyframeList;
 
 /** \brief A single pose of a frame at a given time */
 struct FramePoseInfo {
@@ -63,11 +124,12 @@ struct Animation {
 	 */
 	void addFramePose (
 			const std::string &frame_name,
-			float time,
+			const float time,
 			const Vector3f &frame_translation,
-			const Vector3f &frame_rotation_angles,
+			const smQuaternion &frame_rotation_quaternion,
 			const Vector3f &frame_scaling
 			);
+	void updateAnimationFromRawData (const AnimationRawKeyframeList &keyframe_list);
 
 	bool loadFromFile (const char* filename, bool strict = true);
 
@@ -79,7 +141,9 @@ struct Animation {
 	bool loop;
 	FrameConfig configuration;
 
+	std::vector<ColumnInfo> column_infos;
 	AnimationTrackMap frame_animation_tracks;
+	AnimationRawKeyframeList animation_raw_keyframes;
 };
 
 typedef boost::shared_ptr<Animation> AnimationPtr;
