@@ -179,6 +179,14 @@ struct AnimationKeyPoses {
 	}
 };
 
+float Animation::getPrevKeyFrameTime () const {
+	return 0.;	
+}
+
+float Animation::getNextKeyFrameTime () const {
+	return duration;	
+}
+
 void Animation::addFramePose (
 			const std::string &frame_name,
 			float time,

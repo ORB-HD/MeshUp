@@ -52,6 +52,9 @@ struct Animation {
 		loop (false)
 	{}
 
+	float getPrevKeyFrameTime () const;
+	float getNextKeyFrameTime () const;
+
 	/** \brief Adds a keyframe for a single frame
 	 *
 	 * \note Keyframes must be specified in order, i.e. when two frames f1, f2

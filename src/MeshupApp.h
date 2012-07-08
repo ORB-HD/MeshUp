@@ -32,7 +32,6 @@ public slots:
 		void saveSettings ();
 		void loadSettings ();
 
-
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);
 
@@ -40,6 +39,9 @@ public slots:
 		void action_load_animation();
 		void action_reload_files ();
 		void action_quit();
+
+		void action_next_keyframe();
+		void action_prev_keyframe();
 
 		void timeline_frame_changed (int frame_index);
 		void timeline_set_frame (int frame_index);

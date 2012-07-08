@@ -7,6 +7,7 @@
 #include "glwidget.h" 
 #include "MeshupApp.h"
 #include "Animation.h"
+#include "AnimationEditModel.h"
 
 #include <assert.h>
 #include <iostream>
@@ -58,20 +59,23 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawGrid->setChecked (glWidget->draw_grid);
 	checkBoxDrawMeshes->setChecked (glWidget->draw_meshes);
 	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
-	checkBoxDrawShadows->setChecked (glWidget->draw_curves);
+	checkBoxDrawCurves->setChecked (glWidget->draw_curves);
+
+	// animation editor
+	animationValuesTableView->setModel (new AnimationEditModel(NULL));
 
 	// player is paused on startup
 	playerPaused = true;
 
 	dockPlayerControls->setVisible(true);
 	dockViewSettings->setVisible(false);
+	dockAnimationEditor->setVisible(false);
 
 	// the timer is used to continously redraw the OpenGL widget
 	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
 
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
-
 	connect (actionRenderSeriesImage, SIGNAL (triggered()), this, SLOT (actionRenderSeriesAndSaveToFile()));
 
 	// view stettings
@@ -95,6 +99,10 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	// action_quit() makes sure to set the settings before we quit
 	connect (actionQuit, SIGNAL( triggered() ), this, SLOT( action_quit() ));
+
+	// animation editor
+	connect (toolButtonKeyFrameNext, SIGNAL( pressed() ), this, SLOT( action_next_keyframe() ));
+	connect (toolButtonKeyFramePrev, SIGNAL( pressed() ), this, SLOT( action_prev_keyframe() ));
 
 	// keyboard shortcuts
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
@@ -161,6 +169,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["repeat"] = checkBoxLoopAnimation->isChecked();
+	settings_json["configuration"]["docks"]["animationeditor_settings"]["visible"] = dockAnimationEditor->isVisible();
 
 	settings_json["configuration"]["window"]["width"] = width();
 	settings_json["configuration"]["window"]["height"] = height();
@@ -225,6 +234,7 @@ void MeshupApp::loadSettings () {
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
 	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
+	dockAnimationEditor->setVisible(settings_json["configuration"]["docks"]["animationeditor_settings"].get("visible", false).asBool());
 
 	int x, y, w, h;
 
@@ -322,6 +332,14 @@ void MeshupApp::action_reload_files() {
 void MeshupApp::action_quit () {
 	saveSettings();
 	qApp->quit();
+}
+
+void MeshupApp::action_next_keyframe() {
+	glWidget->animation_data->current_time = glWidget->animation_data->getNextKeyFrameTime();
+}
+
+void MeshupApp::action_prev_keyframe() {
+	glWidget->animation_data->current_time = glWidget->animation_data->getPrevKeyFrameTime();
 }
 
 void MeshupApp::timeline_frame_changed (int frame_index) {
