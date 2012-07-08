@@ -47,6 +47,8 @@ public slots:
 		void timeline_set_frame (int frame_index);
 		void timeslider_value_changed (int frame_index);
 
+		void update_time_widgets ();
+
 		void actionRenderAndSaveToFile ();
 		void actionRenderSeriesAndSaveToFile ();
 };

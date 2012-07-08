@@ -22,6 +22,8 @@ using namespace std;
 
 Json::Value settings_json;
 
+const double TimeLineDuration = 1000.;
+
 MeshupApp::MeshupApp(QWidget *parent)
 {
 	timer = new QTimer (this);
@@ -33,7 +35,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	timer->setSingleShot(false);
 	timer->start(20);
 
-	timeLine = new QTimeLine (1000., this);
+	timeLine = new QTimeLine (TimeLineDuration, this);
 	timeLine->setCurveShape(QTimeLine::LinearCurve);
 
 	if (checkBoxLoopAnimation->isChecked())
@@ -50,7 +52,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	spinBoxSpeed->setSingleStep(5);
 
 	horizontalSliderTime->setMinimum(0);
-	horizontalSliderTime->setMaximum(1000.);
+	horizontalSliderTime->setMaximum(TimeLineDuration);
 	horizontalSliderTime->setSingleStep(1);
 
 	checkBoxDrawBaseAxes->setChecked (glWidget->draw_base_axes);
@@ -336,36 +338,67 @@ void MeshupApp::action_quit () {
 
 void MeshupApp::action_next_keyframe() {
 	glWidget->animation_data->current_time = glWidget->animation_data->getNextKeyFrameTime();
+	update_time_widgets();
 }
 
 void MeshupApp::action_prev_keyframe() {
 	glWidget->animation_data->current_time = glWidget->animation_data->getPrevKeyFrameTime();
+	update_time_widgets();
 }
 
+/** \brief Modifies the widgets to show the current time
+ */
 void MeshupApp::timeline_frame_changed (int frame_index) {
-//	qDebug () << __func__ << " frame_index = " << frame_index;
-
-	horizontalSliderTime->setValue (frame_index);
-
-	timeLine->setDuration (glWidget->getAnimationDuration() * 1000.f /(spinBoxSpeed->value()/100.0));
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
-}
-
-void MeshupApp::timeline_set_frame (int frame_index) {
 //	qDebug () << __func__ << " frame_index = " << frame_index;
 
 	static bool repeat_gate = false;
 
 	if (!repeat_gate) {
 		repeat_gate = true;
-		timeLine->setCurrentTime (frame_index * glWidget->getAnimationDuration());
+
+		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+		
+		update_time_widgets();
+
 		repeat_gate = false;
 	}
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
+}
+
+/** \brief Modifies timeLine so that it reflects the value from the
+ * horizontalSliderTime
+ */
+void MeshupApp::timeline_set_frame (int frame_index) {
+//	qDebug () << __func__ << " frame_index = " << frame_index;
+	static bool repeat_gate = false;
+
+	if (!repeat_gate) {
+		repeat_gate = true;
+
+		// this automatically calls timeline_frame_changed and thus updates
+		// the horizontal slider
+		timeLine->setCurrentTime (frame_index * glWidget->getAnimationDuration());
+
+		repeat_gate = false;
+	}
+	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
 }
 
 void MeshupApp::timeslider_value_changed (int frame_index) {
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
+	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+}
+
+void MeshupApp::update_time_widgets () {
+//	qDebug() << __func__;
+	if (glWidget->animation_data && glWidget->animation_data->duration > 0.) {
+		double time_fraction = glWidget->animation_data->current_time / glWidget->animation_data->duration;
+		int frame_index = static_cast<int>(round(time_fraction * TimeLineDuration));
+
+		horizontalSliderTime->setValue (frame_index);
+		timeLine->setDuration (glWidget->getAnimationDuration() * TimeLineDuration / (spinBoxSpeed->value() / 100.0));
+		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+	}
+
+	keyFrameTimeSpinBox->setValue (glWidget->animation_data->current_time);
 }
 
 void MeshupApp::actionRenderAndSaveToFile () {

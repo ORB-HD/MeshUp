@@ -283,7 +283,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QDoubleSpinBox" name="doubleSpinBoxKeyframeTime">
+        <widget class="QDoubleSpinBox" name="keyFrameTimeSpinBox">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
