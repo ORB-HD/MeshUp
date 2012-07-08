@@ -2,6 +2,7 @@
 #include <glwidget.h>
 #include "Animation.h"
 
+#include <QDebug>
 #include <string>
 
 using namespace std;
@@ -22,10 +23,25 @@ int AnimationEditModel::columnCount (const QModelIndex &parent) const {
 	if (!glWidget)
 		return 0;
 
-	return 3;
+	return 2;
+}
+
+QVariant AnimationEditModel::headerData (int section, Qt::Orientation orientation, int role) const {
+	if (role == Qt::DisplayRole) {
+		if (orientation == Qt::Horizontal) {
+			switch (section) {
+				case 0: return QString ("Column"); break;
+				case 1: return QString ("Value"); break;
+				case 2: return QString ("Key"); break;
+			}
+		}
+	}
+
+	return QVariant();
 }
 
 QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
+	float animation_time = glWidget->animation_data->current_time;
 	if (role == Qt::DisplayRole) {
 		if (index.column() == 0) {
 			QString frame_name;
@@ -56,11 +72,48 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 				.arg(axis);
 		}
 
+		if (index.column() == 1) {
+			return QString ("%1")
+				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row() + 1, animation_time), 0, 'g', 4);
+		}
+
 		return QString ("Row%1, Column%2")
 			.arg(index.row() + 1)
 			.arg(index.column() + 1);
+	} else if (role == Qt::FontRole) {
+		if (index.column() == 1 && 
+				glWidget->animation_data->haveRawKeyValue (index.row() + 1, animation_time)) {
+			QFont boldFont;
+			boldFont.setBold(true);
+			return boldFont;
+		}
+	} else if (role == Qt::TextAlignmentRole) {
+		if (index.column() == 1)
+			return Qt::AlignRight + Qt::AlignVCenter;
 	}
+
 	return QVariant();
+}
+
+bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &value, int role) {
+	float animation_time = glWidget->animation_data->current_time;
+
+	if (role == Qt::EditRole) {
+		glWidget->animation_data->setRawDataKeyValue (animation_time, index.row() + 1, value.toFloat());
+		return true;
+	}
+	return false;
+}
+
+Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const { 
+	float animation_time = glWidget->animation_data->current_time;
+
+	if (index.column() == 1 && 
+			glWidget->animation_data->haveRawKeyValue (index.row() + 1, animation_time)) {
+		return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+	}
+
+	return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
 void AnimationEditModel::call_reset() {

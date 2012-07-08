@@ -131,6 +131,16 @@ struct Animation {
 			);
 	void updateAnimationFromRawData (const AnimationRawKeyframeList &keyframe_list);
 
+	void getRawDataInterpolants (
+			const float time,
+			AnimationRawKeyframeList::const_iterator &prev_iter, 
+			AnimationRawKeyframeList::const_iterator &next_iter,
+			float &fraction
+			) const;
+	void setRawDataKeyValue (const float time, const unsigned int index, const float value);
+	float getRawDataInterpolatedValue (const unsigned int index, const float time) const;
+	bool haveRawKeyValue (const unsigned int index, const float time) const;
+
 	bool loadFromFile (const char* filename, bool strict = true);
 
 	std::string name;

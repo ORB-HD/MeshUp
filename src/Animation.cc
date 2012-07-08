@@ -298,6 +298,98 @@ void Animation::updateAnimationFromRawData (const AnimationRawKeyframeList &keyf
 	}
 }
 
+void Animation::getRawDataInterpolants (
+		const float time,
+		AnimationRawKeyframeList::const_iterator &prev_iter, 
+		AnimationRawKeyframeList::const_iterator &next_iter,
+		float &fraction
+		) const {
+	AnimationRawKeyframeList::const_iterator raw_iter = animation_raw_keyframes.begin();
+	next_iter = animation_raw_keyframes.begin();
+	prev_iter = animation_raw_keyframes.begin();
+
+	while (raw_iter != animation_raw_keyframes.end() && raw_iter->timestamp <= time) {
+		prev_iter = raw_iter;
+		raw_iter++;
+		next_iter = raw_iter;
+	}
+
+	if (raw_iter == animation_raw_keyframes.end()) {
+		next_iter = prev_iter;
+	}
+
+	float duration = next_iter->timestamp - prev_iter->timestamp;
+	fraction = (time - prev_iter->timestamp) / (duration);
+
+	if (duration == 0.f) {
+		fraction = 1.f;
+	}
+
+	if (fraction > 1.f)
+		fraction = 1.f;
+	if (fraction < 0.f)
+		fraction = 0.f;
+}
+
+void Animation::setRawDataKeyValue (const float time, const unsigned int index, const float value) {
+	AnimationRawKeyframeList::iterator raw_iter = animation_raw_keyframes.begin();
+	AnimationRawKeyframeList::iterator next_iter = animation_raw_keyframes.begin();
+	AnimationRawKeyframeList::iterator prev_iter = animation_raw_keyframes.begin();
+
+	while (raw_iter != animation_raw_keyframes.end() && raw_iter->timestamp <= time) {
+		prev_iter = raw_iter;
+		raw_iter++;
+		next_iter = raw_iter;
+	}
+
+	if (raw_iter == animation_raw_keyframes.end()) {
+		next_iter = prev_iter;
+	}
+
+	float duration = next_iter->timestamp - prev_iter->timestamp;
+	float fraction = (time - prev_iter->timestamp) / (duration);
+
+	if (duration == 0.f) {
+		fraction = 1.f;
+	}
+
+	if (fraction > 1.f)
+		fraction = 1.f;
+	if (fraction < 0.f)
+		fraction = 0.f;
+
+	if (fraction == 1. && next_iter->values[index].keyed)
+		next_iter->values[index].value = value;
+	if (fraction == 0. && prev_iter->values[index].keyed)
+		prev_iter->values[index].value = value;
+
+	updateAnimationFromRawData (animation_raw_keyframes);
+}
+
+float Animation::getRawDataInterpolatedValue (const unsigned int index, float time) const {
+	AnimationRawKeyframeList::const_iterator next_iter = animation_raw_keyframes.begin();
+	AnimationRawKeyframeList::const_iterator prev_iter = animation_raw_keyframes.begin();
+	float fraction;
+
+	getRawDataInterpolants (time, prev_iter, next_iter, fraction);
+
+	return prev_iter->values[index].value + fraction * (next_iter->values[index].value - prev_iter->values[index].value);
+}
+
+bool Animation::haveRawKeyValue (const unsigned int index, float time) const {
+	AnimationRawKeyframeList::const_iterator next_iter = animation_raw_keyframes.begin();
+	AnimationRawKeyframeList::const_iterator prev_iter = animation_raw_keyframes.begin();
+	float fraction;
+
+	getRawDataInterpolants (time, prev_iter, next_iter, fraction);
+
+	if (fraction == 1. && next_iter->values[index].keyed)
+		return true;
+	if (fraction == 0. && prev_iter->values[index].keyed)
+		return true;
+	return false;
+}
+
 bool Animation::loadFromFile (const char* filename, bool strict) {
 	ifstream file_in (filename);
 
