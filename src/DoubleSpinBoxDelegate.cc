@@ -31,6 +31,7 @@ QWidget *DoubleSpinBoxDelegate::createEditor(QWidget *parent,
 
 	editor->setMinimum(-1000);
 	editor->setMaximum(1000);
+	editor->setAlignment(Qt::AlignRight);
 
 	connect (editor, SIGNAL(valueChanged(double)), this, SLOT(setValue(double)));
 
