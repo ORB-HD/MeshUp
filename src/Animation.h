@@ -140,6 +140,7 @@ struct Animation {
 	void setRawDataKeyValue (const float time, const unsigned int index, const float value);
 	float getRawDataInterpolatedValue (const unsigned int index, const float time) const;
 	bool haveRawKeyValue (const unsigned int index, const float time) const;
+	bool haveRawKeyValues (const float time);
 
 	bool loadFromFile (const char* filename, bool strict = true);
 

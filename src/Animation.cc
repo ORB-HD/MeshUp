@@ -390,6 +390,28 @@ bool Animation::haveRawKeyValue (const unsigned int index, float time) const {
 	return false;
 }
 
+/** \brief Checks whether we have a keyframe at the given time
+ */
+bool Animation::haveRawKeyValues (float time) {
+	bool result = false;
+	float current_time_backup = current_time;
+
+	current_time = time;
+	
+	if (fabs(getPrevKeyFrameTime() - time) < 1.0e-4)
+		result = true;
+	else {
+		current_time = getPrevKeyFrameTime();
+
+		if (fabs(getNextKeyFrameTime() - time) < 1.0e-4)
+			result = true;
+	}
+
+	current_time = current_time_backup;
+
+	return result;
+}
+
 bool Animation::loadFromFile (const char* filename, bool strict) {
 	ifstream file_in (filename);
 

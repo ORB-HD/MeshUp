@@ -17,14 +17,14 @@ int AnimationEditModel::rowCount (const QModelIndex &/* parent */) const {
 	if (!glWidget)
 		return 0;
 
-	return glWidget->animation_data->column_infos.size() - 1;
+	return glWidget->animation_data->column_infos.size();
 }
 
 int AnimationEditModel::columnCount (const QModelIndex &/* parent */) const {
 	if (!glWidget)
 		return 0;
 
-	return 2;
+	return 3;
 }
 
 QVariant AnimationEditModel::headerData (int section, Qt::Orientation orientation, int role) const {
@@ -49,8 +49,11 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 			QString axis;
 			QString type;
 
-			ColumnInfo info = glWidget->animation_data->column_infos[index.row() + 1];
+			ColumnInfo info = glWidget->animation_data->column_infos[index.row()];
 			frame_name = info.frame_name.c_str();
+
+			if (info.is_time_column)
+				return QString("Time");
 
 			switch (info.type) {
 				case ColumnInfo::TransformTypeRotation: type = "R"; break;
@@ -67,6 +70,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 				case ColumnInfo::AxisTypeNegativeY: axis = "-Y"; break;
 				case ColumnInfo::AxisTypeNegativeZ: axis = "-Z"; break;
 			}
+
 			return QString ("%1:%2:%3")
 				.arg(frame_name)
 				.arg(type)
@@ -74,25 +78,32 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 		}
 
 		if (index.column() == 1) {
-				return QString ("%1")
-				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row() + 1, animation_time), 0, 'g', 4);
+			if (index.row() == 0)
+				return animation_time;
+			return QString ("%1")
+				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row(), animation_time), 0, 'g', 4);
 		}
 
 		return QString ("Row%1, Column%2")
 			.arg(index.row() + 1)
 			.arg(index.column() + 1);
 	} else if (role == Qt::FontRole) {
-		if (index.column() == 1 && 
-				glWidget->animation_data->haveRawKeyValue (index.row() + 1, animation_time)) {
-			QFont boldFont;
-			boldFont.setBold(true);
-			return boldFont;
+		if (index.column() == 1) {
+			if ((index.row() == 0 && glWidget->animation_data->haveRawKeyValues (animation_time))	
+					|| (index.row() > 0 && glWidget->animation_data->haveRawKeyValue (index.row(), animation_time))) {
+				QFont boldFont;
+				boldFont.setBold(true);
+				return boldFont;
+			}
 		}
 	} else if (role == Qt::TextAlignmentRole) {
 		if (index.column() == 1)
 			return Qt::AlignRight + Qt::AlignVCenter;
 	} else if (role == Qt::EditRole) {
 		if (index.column() == 1) {
+			if (index.row() == 0) {
+				return animation_time;
+			}
 			return QString ("%1")
 				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row() + 1, animation_time), 0, 'g', 4);
 		}
@@ -103,7 +114,12 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 
 bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &value, int role) {
 	if (role == Qt::EditRole) {
-		setValue (index.row() + 1, value.toDouble());
+		if (index.row() == 0) {
+			qDebug() << "Setting of time not yet supported!";
+			return false;
+		}
+
+		setValue (index.row(), value.toDouble());
 
 		emit animationModified();
 
