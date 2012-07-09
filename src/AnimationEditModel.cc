@@ -10,7 +10,8 @@ using namespace std;
 AnimationEditModel::AnimationEditModel(QObject *parent) : 
 	QAbstractTableModel(parent),
 	glWidget (NULL)
-{}
+{
+}
 
 int AnimationEditModel::rowCount (const QModelIndex &/* parent */) const {
 	if (!glWidget)
@@ -101,12 +102,14 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 }
 
 bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &value, int role) {
-	float animation_time = glWidget->animation_data->current_time;
-
 	if (role == Qt::EditRole) {
-		glWidget->animation_data->setRawDataKeyValue (animation_time, index.row() + 1, value.toFloat());
+		setValue (index.row() + 1, value.toDouble());
+
+		emit animationModified();
+
 		return true;
 	}
+
 	return false;
 }
 
@@ -119,6 +122,12 @@ Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const {
 	}
 
 	return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+}
+
+void AnimationEditModel::setValue (unsigned int index, double value) {
+	float animation_time = glWidget->animation_data->current_time;
+
+	glWidget->animation_data->setRawDataKeyValue (animation_time, index, value);
 }
 
 void AnimationEditModel::call_reset() {

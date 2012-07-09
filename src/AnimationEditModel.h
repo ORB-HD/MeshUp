@@ -22,7 +22,12 @@ class AnimationEditModel : public QAbstractTableModel
 			glWidget = gl_widget;
 		}
 
+		void setValue (unsigned int index, double value);
+	
 		void call_reset();
+
+	signals:
+		void animationModified();	
 
 	private:
 		GLWidget *glWidget;

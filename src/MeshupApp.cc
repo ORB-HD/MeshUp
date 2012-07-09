@@ -70,7 +70,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	animationValuesTableView->setModel (animation_edit_model);
 	DoubleSpinBoxDelegate *delegate = new DoubleSpinBoxDelegate;
 	animationValuesTableView->setItemDelegate (delegate);
-
+	
 	// player is paused on startup
 	playerPaused = true;
 
@@ -344,6 +344,7 @@ void MeshupApp::action_quit () {
 }
 
 void MeshupApp::animation_loaded() {
+	qDebug() << __func__;
 	animation_edit_model->call_reset();
 }
 
