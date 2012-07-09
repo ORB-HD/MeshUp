@@ -62,6 +62,6 @@ void DoubleSpinBoxDelegate::updateEditorGeometry(QWidget *editor,
 
 void DoubleSpinBoxDelegate::setValue(double val) {
 	if (animationEditModel) {
-		const_cast<AnimationEditModel*>(animationEditModel)->setValue (edit_index.row() + 1, val);
+		const_cast<AnimationEditModel*>(animationEditModel)->setValue (edit_index.row(), val);
 	}
 }

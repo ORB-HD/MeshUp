@@ -410,7 +410,8 @@ void MeshupApp::update_time_widgets () {
 		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
 	}
 
-	animation_edit_model->call_reset();
+	if (dockAnimationEditor->isVisible())
+		animation_edit_model->call_reset();
 
 	keyFrameTimeSpinBox->setValue (glWidget->animation_data->current_time);
 }

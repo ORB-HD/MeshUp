@@ -105,7 +105,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 				return animation_time;
 			}
 			return QString ("%1")
-				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row() + 1, animation_time), 0, 'g', 4);
+				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row(), animation_time), 0, 'g', 4);
 		}
 	}
 
@@ -114,16 +114,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 
 bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &value, int role) {
 	if (role == Qt::EditRole) {
-		if (index.row() == 0) {
-			qDebug() << "Setting of time not yet supported!";
-			return false;
-		}
-
-		setValue (index.row(), value.toDouble());
-
-		emit animationModified();
-
-		return true;
+		return setValue (index.row(), value.toDouble());
 	}
 
 	return false;
@@ -133,17 +124,23 @@ Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const {
 	float animation_time = glWidget->animation_data->current_time;
 
 	if (index.column() == 1 && 
-			glWidget->animation_data->haveRawKeyValue (index.row() + 1, animation_time)) {
+			glWidget->animation_data->haveRawKeyValue (index.row(), animation_time)) {
 		return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
 	}
 
 	return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 }
 
-void AnimationEditModel::setValue (unsigned int index, double value) {
+bool AnimationEditModel::setValue (unsigned int index, double value) {
 	float animation_time = glWidget->animation_data->current_time;
 
+	if (index == 0) {
+		qDebug() << "Setting of time not yet supported!";
+		return false;
+	}
+
 	glWidget->animation_data->setRawDataKeyValue (animation_time, index, value);
+	return true;
 }
 
 void AnimationEditModel::call_reset() {
