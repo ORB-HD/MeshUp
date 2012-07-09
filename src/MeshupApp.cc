@@ -8,6 +8,7 @@
 #include "MeshupApp.h"
 #include "Animation.h"
 #include "AnimationEditModel.h"
+#include "DoubleSpinBoxDelegate.h"
 
 #include <assert.h>
 #include <iostream>
@@ -67,6 +68,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	animation_edit_model = new AnimationEditModel (this);	
 	animation_edit_model->setGlWidget (glWidget);
 	animationValuesTableView->setModel (animation_edit_model);
+	DoubleSpinBoxDelegate *delegate = new DoubleSpinBoxDelegate;
+	animationValuesTableView->setItemDelegate (delegate);
 
 	// player is paused on startup
 	playerPaused = true;

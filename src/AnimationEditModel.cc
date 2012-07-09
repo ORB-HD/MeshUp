@@ -12,14 +12,14 @@ AnimationEditModel::AnimationEditModel(QObject *parent) :
 	glWidget (NULL)
 {}
 
-int AnimationEditModel::rowCount (const QModelIndex &parent) const {
+int AnimationEditModel::rowCount (const QModelIndex &/* parent */) const {
 	if (!glWidget)
 		return 0;
 
 	return glWidget->animation_data->column_infos.size() - 1;
 }
 
-int AnimationEditModel::columnCount (const QModelIndex &parent) const {
+int AnimationEditModel::columnCount (const QModelIndex &/* parent */) const {
 	if (!glWidget)
 		return 0;
 
@@ -73,7 +73,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 		}
 
 		if (index.column() == 1) {
-			return QString ("%1")
+				return QString ("%1")
 				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row() + 1, animation_time), 0, 'g', 4);
 		}
 
@@ -90,6 +90,11 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 	} else if (role == Qt::TextAlignmentRole) {
 		if (index.column() == 1)
 			return Qt::AlignRight + Qt::AlignVCenter;
+	} else if (role == Qt::EditRole) {
+		if (index.column() == 1) {
+			return QString ("%1")
+				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row() + 1, animation_time), 0, 'g', 4);
+		}
 	}
 
 	return QVariant();

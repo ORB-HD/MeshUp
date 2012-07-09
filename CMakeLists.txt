@@ -62,6 +62,7 @@ SET ( MeshupApp_SRCS
 	src/glwidget.cc
 	src/MeshupApp.cc
 	src/AnimationEditModel.cc
+	src/DoubleSpinBoxDelegate.cc
 	)
 
 QT4_WRAP_CPP ( MeshupApp_MOC_SRCS
@@ -70,6 +71,7 @@ QT4_WRAP_CPP ( MeshupApp_MOC_SRCS
 	src/RenderImageSeriesDialog.h
 	src/glwidget.h
 	src/AnimationEditModel.h
+	src/DoubleSpinBoxDelegate.h
 	)
 
 ADD_EXECUTABLE ( meshup
