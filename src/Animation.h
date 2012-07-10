@@ -54,18 +54,6 @@ struct ColumnInfo {
 	bool is_radian;
 };
 
-/** \brief Value that can be either interpolated or not.
- */
-struct AnimationValue {
-	AnimationValue() :
-		value (0.f),
-		keyed (false) 
-	{}
-
-	float value;
-	bool keyed;
-};
-
 struct KeyValue {
 	KeyValue () :
 		value (0.f),
@@ -106,21 +94,9 @@ struct RawValues {
 	float getInterpolatedValue (const float time, unsigned int index) const;
 };
 
-/** \brief Raw keyframe data in form of a value vector.
- *
- * This format is used to store the animation keyframes as Degree of
- * Freedom (DOF) values that allow editing of keyframe data on a per joint
- * level.
- */
-struct AnimationRawKeyframe {
-	float timestamp;
-	std::vector<AnimationValue> values;
-};
-typedef std::list<AnimationRawKeyframe> AnimationRawKeyframeList;
-
 /** \brief A single pose of a frame at a given time */
-struct FramePoseInfo {
-	FramePoseInfo() :
+struct PoseInfo {
+	PoseInfo() :
 		timestamp (0.),
 		translation (0.f, 0.f, 0.f),
 		rotation_angles (0.f, 0.f, 0.f),
@@ -134,13 +110,13 @@ struct FramePoseInfo {
 	smQuaternion rotation_quaternion;
 	Vector3f scaling;
 };
-typedef std::list<FramePoseInfo> KeyFrameList;
+typedef std::list<PoseInfo> KeyFrameList;
 
 /** \brief Map key is the model frame name, value is the animation track */
 struct AnimationTrack {
 	KeyFrameList keyframes;
 
-	void findInterpolationPoses (float time, FramePoseInfo &pose_start, FramePoseInfo &pose_end, float &fraction);
+	void findInterpolationPoses (float time, PoseInfo &pose_start, PoseInfo &pose_end, float &fraction);
 };
 typedef std::map<std::string, AnimationTrack> AnimationTrackMap;
 
@@ -171,13 +147,6 @@ struct Animation {
 			);
 	void updateAnimationFromRawValues ();
 
-	void getRawDataInterpolants (
-			const float time,
-			AnimationRawKeyframeList::const_iterator &prev_iter, 
-			AnimationRawKeyframeList::const_iterator &next_iter,
-			float &fraction
-			) const;
-
 	bool loadFromFile (const char* filename, bool strict = true);
 
 	std::string name;
@@ -192,7 +161,6 @@ struct Animation {
 
 	std::vector<ColumnInfo> column_infos;
 	AnimationTrackMap frame_animation_tracks;
-	AnimationRawKeyframeList animation_raw_keyframes;
 };
 
 typedef boost::shared_ptr<Animation> AnimationPtr;
@@ -206,8 +174,8 @@ typedef boost::shared_ptr<Frame> FramePtr;
 /** \brief Performs the interpolation by filling frame->pose_<> values */
 void InterpolateModelFramePose (
 		FramePtr frame,
-		const FramePoseInfo &start_pose,
-		const FramePoseInfo &end_pose, const float fraction
+		const PoseInfo &start_pose,
+		const PoseInfo &end_pose, const float fraction
 		);
 
 /** \brief Searches for the proper animation interpolants and updates the

@@ -333,7 +333,7 @@ void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr ani
  */
 struct AnimationKeyPoses {
 	float timestamp;
-	typedef std::map<std::string, FramePoseInfo> FramePoseMap;
+	typedef std::map<std::string, PoseInfo> FramePoseMap;
 	FramePoseMap frame_poses;
 	
 	void clearFramePoses() {
@@ -355,7 +355,7 @@ struct AnimationKeyPoses {
 
 		if (frame_poses.find(frame_name) == frame_poses.end()) {
 			// create new frame and insert it
-			frame_poses[frame_name] = FramePoseInfo();
+			frame_poses[frame_name] = PoseInfo();
 		}
 
 		if (col_info.type == ColumnInfo::TransformTypeRotation) {
@@ -503,7 +503,7 @@ void Animation::addFramePose (
 //			<< ", " << frame_rotation_quaternion.transpose() << ", "
 //			<< frame_scaling.transpose() << ")" << endl;
 
-	FramePoseInfo pose;
+	PoseInfo pose;
 	pose.timestamp = time;
 	pose.translation = configuration.axes_rotation.transpose() * frame_translation;
 	pose.rotation_quaternion = frame_rotation_quaternion;
@@ -591,39 +591,6 @@ void Animation::updateAnimationFromRawValues () {
 	}
 }
 
-void Animation::getRawDataInterpolants (
-		const float time,
-		AnimationRawKeyframeList::const_iterator &prev_iter, 
-		AnimationRawKeyframeList::const_iterator &next_iter,
-		float &fraction
-		) const {
-	AnimationRawKeyframeList::const_iterator raw_iter = animation_raw_keyframes.begin();
-	next_iter = animation_raw_keyframes.begin();
-	prev_iter = animation_raw_keyframes.begin();
-
-	while (raw_iter != animation_raw_keyframes.end() && raw_iter->timestamp <= time) {
-		prev_iter = raw_iter;
-		raw_iter++;
-		next_iter = raw_iter;
-	}
-
-	if (raw_iter == animation_raw_keyframes.end()) {
-		next_iter = prev_iter;
-	}
-
-	float duration = next_iter->timestamp - prev_iter->timestamp;
-	fraction = (time - prev_iter->timestamp) / (duration);
-
-	if (duration == 0.f) {
-		fraction = 1.f;
-	}
-
-	if (fraction > 1.f)
-		fraction = 1.f;
-	if (fraction < 0.f)
-		fraction = 0.f;
-}
-
 bool Animation::loadFromFile (const char* filename, bool strict) {
 	ifstream file_in (filename);
 
@@ -647,7 +614,6 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 	column_infos.clear();
 
 	AnimationKeyPoses animation_keyposes;
-	AnimationRawKeyframeList raw_keyframes;
 
 	while (!file_in.eof()) {
 		getline (file_in, line);
@@ -827,10 +793,10 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 	return true;
 }
 
-void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_start, FramePoseInfo &pose_end, float &fraction) {
+void AnimationTrack::findInterpolationPoses (float time, PoseInfo &pose_start, PoseInfo &pose_end, float &fraction) {
 	if (keyframes.size() == 0) {
-		pose_start = FramePoseInfo();
-		pose_end = FramePoseInfo();
+		pose_start = PoseInfo();
+		pose_end = PoseInfo();
 		fraction = 0.;
 	} else if (keyframes.size() == 1) {
 		pose_start = *(keyframes.begin());
@@ -870,7 +836,7 @@ void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_sta
 		fraction = 0.f;
 }
 
-void InterpolateModelFramePose (FramePtr frame, const FramePoseInfo &start_pose, const FramePoseInfo &end_pose, const float fraction) {
+void InterpolateModelFramePose (FramePtr frame, const PoseInfo &start_pose, const PoseInfo &end_pose, const float fraction) {
 	frame->pose_translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
 	frame->pose_rotation_quaternion = start_pose.rotation_quaternion.slerp (fraction, end_pose.rotation_quaternion);
 	frame->pose_scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
@@ -894,7 +860,7 @@ void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr ani
 	AnimationTrackMap::iterator track_iter = animation->frame_animation_tracks.begin();
 	while (track_iter != animation->frame_animation_tracks.end()) {
 		FramePtr model_frame = model->findFrame ((track_iter->first).c_str());
-		FramePoseInfo start_pose, end_pose;
+		PoseInfo start_pose, end_pose;
 		float fraction;
 	
 		track_iter->second.findInterpolationPoses (time, start_pose, end_pose, fraction);
