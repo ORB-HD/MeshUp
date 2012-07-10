@@ -9,6 +9,7 @@ SET ( TESTS_SRCS
 	main.cc
 	AnimationTests.cc
 	FrameAnimationTrackTests.cc
+	AnimationRawValuesTests.cc
 	FrameTests.cc
 	QuaternionTests.cc
 	StringUtilsTests.cc

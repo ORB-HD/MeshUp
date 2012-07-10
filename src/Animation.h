@@ -66,6 +66,42 @@ struct AnimationValue {
 	bool keyed;
 };
 
+struct KeyValue {
+	KeyValue () :
+		value (0.f),
+		index (std::numeric_limits<unsigned int>::max()) 
+	{}
+	KeyValue (float v, unsigned int i) :
+		value (v),
+		index (i)
+	{}
+	float value;
+	unsigned int index;
+};
+typedef std::list<KeyValue> KeyValueList;
+
+struct KeyFrame {
+	float timestamp;
+	KeyValueList value_list;
+};
+typedef std::list<KeyFrame> RawKeyFrameList;
+
+struct RawValues {
+	RawKeyFrameList frames;
+
+	RawKeyFrameList::iterator getKeyFrameIter (const float time);
+
+	void addKeyValue (const float time, unsigned int index, float value);
+	void deleteKeyValue (const float time, unsigned int index);
+	float getKeyValue (const float time, unsigned int index);
+	bool haveKeyValue (const float time, unsigned int index) const;
+
+	bool haveKeyFrame (const float time) const;
+	void moveKeyFrame (const float old_time, const float new_time);
+	std::vector<float> getInterpolatedValues (const float time) const;
+	float getInterpolatedValueAt (const float time, unsigned int index) const;
+};
+
 /** \brief Raw keyframe data in form of a value vector.
  *
  * This format is used to store the animation keyframes as Degree of

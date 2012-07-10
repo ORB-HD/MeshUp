@@ -34,6 +34,188 @@ using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t#";
 
+bool compare_keyframe_timestamp (KeyFrame first, KeyFrame second) {
+	if (first.timestamp == second.timestamp) {
+		cerr << "Error: found two keyframes with the same timestamp at time " << first.timestamp << endl;
+		abort();
+	}
+
+	if (first.timestamp < second.timestamp)
+		return true;
+	return false;
+}
+
+bool compare_keyvalues_index (KeyValue first, KeyValue second) {
+	if (first.index == second.index) {
+		cerr << "Error: found two keyvalues with the same index of " << first.index << endl;
+		abort();
+	}
+
+	if (first.index < second.index)
+		return true;
+
+	return false;
+}
+
+void RawValues::addKeyValue (const float time, unsigned int index, float value) {
+	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
+
+	if (frame_iter == frames.end()) {
+		KeyFrame frame;
+		frame.timestamp = time;
+
+		frames.push_back (frame);
+		frames.sort(compare_keyframe_timestamp);
+
+		frame_iter = getKeyFrameIter(time);
+	}
+
+	assert (frame_iter != frames.end());
+
+	if (haveKeyValue (time, index)) {
+		deleteKeyValue (time, index);
+	}
+
+	frame_iter->value_list.push_back (KeyValue (value, index));
+	frame_iter->value_list.sort(compare_keyvalues_index);
+}
+
+float RawValues::getKeyValue (const float time, unsigned int index) {
+	assert (haveKeyValue (time, index));
+
+	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
+
+	if (frame_iter == frames.end()) {
+		KeyFrame frame;
+		frame.timestamp = time;
+
+		frames.push_back (frame);
+		frames.sort(compare_keyframe_timestamp);
+
+		frame_iter = getKeyFrameIter(time);
+	}
+
+	assert (frame_iter != frames.end());
+
+	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
+
+	while (value_iter != frame_iter->value_list.end()) {
+		if (value_iter->index == index)
+			return value_iter->value;
+		value_iter++;
+	}
+
+	cerr << "Error: could not find value at time " << time << " and index " << index<< endl;
+	abort();
+
+	return std::numeric_limits<float>::quiet_NaN();
+}
+
+void RawValues::deleteKeyValue (const float time, unsigned int index) {
+	if (!haveKeyValue (time, index)) {
+		return;
+	}
+
+	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
+	if (frame_iter == frames.end()) {
+		KeyFrame frame;
+		frame.timestamp = time;
+
+		frames.push_back (frame);
+		frames.sort(compare_keyframe_timestamp);
+
+		frame_iter = getKeyFrameIter(time);
+	}
+
+	assert (frame_iter != frames.end());
+
+	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
+	unsigned int old_size = frame_iter->value_list.size();
+
+	while (value_iter != frame_iter->value_list.end()) {
+		if (value_iter->index == index) {
+			frame_iter->value_list.erase (value_iter);
+			return;
+		}
+		value_iter++;
+	}
+	assert (old_size - 1 == frame_iter->value_list.size());
+
+	cerr << "Error: could not find value at time " << time << " and index " << index<< endl;
+	abort();
+}
+
+bool RawValues::haveKeyValue (const float time, unsigned int index) const {
+	RawKeyFrameList::iterator frame_iter = const_cast<RawValues*>(this)->getKeyFrameIter (time);
+	if (frame_iter == frames.end())
+		return false;
+
+	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
+
+	while (value_iter != frame_iter->value_list.end()) {
+		if (value_iter->index == index)
+			return true;
+		value_iter++;
+	}
+	
+	return false;
+}
+
+RawKeyFrameList::iterator RawValues::getKeyFrameIter (const float time) {
+	RawKeyFrameList::iterator frame_iter = frames.begin();
+
+	while (frame_iter != frames.end()) {
+		if (fabs (frame_iter->timestamp - time) < 1.0e-4) {
+			break;
+		}
+		frame_iter++;
+	}
+
+	return frame_iter;
+}
+
+bool RawValues::haveKeyFrame (const float time) const {
+	RawKeyFrameList::iterator frame_iter = const_cast<RawValues*>(this)->getKeyFrameIter (time);
+
+	if (frame_iter != frames.end()) {
+		return true;
+	}
+
+	return false;
+}
+
+void RawValues::moveKeyFrame (const float old_time, const float new_time) {
+	RawKeyFrameList::iterator frame_old = getKeyFrameIter (old_time);
+
+	if (frame_old == frames.end()) {
+		cerr << "Error: cannot move key frames. No key frame found at time " << old_time << endl;
+		abort();
+	}
+
+	RawKeyFrameList::iterator frame_new = getKeyFrameIter (new_time);
+
+	if (frame_new != frames.end()) {
+		// we merge the existing into the current and overwrite possible
+		// existing values.
+		KeyValueList::iterator value_iter = frame_new->value_list.begin();
+
+		while (value_iter != frame_new->value_list.end()) {
+			if (!haveKeyValue (old_time, value_iter->index)) {
+				addKeyValue (old_time, value_iter->index, value_iter->value);
+			}
+
+			value_iter++;
+		}
+
+		frames.erase (frame_new);
+	}
+
+	frame_old->timestamp = new_time;
+	frames.push_back (*frame_old);
+	frames.erase (frame_old);
+	frames.sort(compare_keyframe_timestamp);
+}
+
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 
 /** \brief Keeps transformation information for all model frames at a single keyframe 
