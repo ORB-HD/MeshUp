@@ -498,10 +498,10 @@ void Animation::addFramePose (
 			const smQuaternion &frame_rotation_quaternion,
 			const Vector3f &frame_scaling
 		) {
-	// cerr << __func__ << " (" << frame_name 
-	// 	<< ", " << time << ", "	<< frame_translation.transpose()
-	// 	<< ", " << frame_rotation_angles.transpose() << ", "
-	// 	<< frame_scaling.transpose() << ")" << endl;
+//		cerr << __func__ << " (" << frame_name 
+//			<< ", " << time << ", "	<< frame_translation.transpose()
+//			<< ", " << frame_rotation_quaternion.transpose() << ", "
+//			<< frame_scaling.transpose() << ")" << endl;
 
 	FramePoseInfo pose;
 	pose.timestamp = time;
@@ -520,23 +520,26 @@ void Animation::addFramePose (
 }
 
 void Animation::updateAnimationFromRawData (const AnimationRawKeyframeList &keyframe_list) {
-	AnimationRawKeyframeList::const_iterator frame_iter = keyframe_list.begin();
-	frame_animation_tracks.clear();
-	animation_raw_keyframes = keyframe_list;
+	RawKeyFrameList::const_iterator frame_iter = values.frames.begin();
 
-	while (frame_iter != keyframe_list.end()) {
+	frame_animation_tracks.clear();
+
+	while (frame_iter != values.frames.end()) {
 		float time = frame_iter->timestamp;
 
 		Vector3f pose_translation (0.f, 0.f, 0.f);
 		smQuaternion pose_rotation;
 		Vector3f pose_scale (1.f, 1.f, 1.f);
+		Vector3f pose_rotation_angles;
 
 		string current_frame_name;
 		string last_frame_name;
 		unsigned int ci;
-		for (ci = 0.; ci < frame_iter->values.size(); ci++) {
+		for (ci = 0.; ci < column_infos.size(); ci++) {
 			if (column_infos[ci].is_time_column || column_infos[ci].is_empty)
 				continue;
+
+			float raw_value = values.getInterpolatedValue (time, ci);
 
 			current_frame_name = column_infos[ci].frame_name;
 			if (last_frame_name.size() != 0 && current_frame_name != last_frame_name) {
@@ -553,31 +556,32 @@ void Animation::updateAnimationFromRawData (const AnimationRawKeyframeList &keyf
 				pose_translation.set(0.f, 0.f, 0.f);
 				pose_scale.set(1.f, 1.f, 1.f);
 				pose_rotation = smQuaternion();
+				pose_rotation_angles.setZero();
 			}
 
 			if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
 				switch (column_infos[ci].axis) {
-					case ColumnInfo::AxisTypeX: pose_translation[0] = frame_iter->values[ci].value; break;
-					case ColumnInfo::AxisTypeY: pose_translation[1] = frame_iter->values[ci].value; break;
-					case ColumnInfo::AxisTypeZ: pose_translation[2] = frame_iter->values[ci].value; break;
+					case ColumnInfo::AxisTypeX: pose_translation[0] = raw_value; break;
+					case ColumnInfo::AxisTypeY: pose_translation[1] = raw_value; break;
+					case ColumnInfo::AxisTypeZ: pose_translation[2] = raw_value; break;
 					default: cerr << "Invalid axis!" << endl; abort();
 				}
 			} else if (column_infos[ci].type == ColumnInfo::TransformTypeScale) {
 				switch (column_infos[ci].axis) {
-					case ColumnInfo::AxisTypeX: pose_scale[0] = frame_iter->values[ci].value; break;
-					case ColumnInfo::AxisTypeY: pose_scale[1] = frame_iter->values[ci].value; break;
-					case ColumnInfo::AxisTypeZ: pose_scale[2] = frame_iter->values[ci].value; break;
+					case ColumnInfo::AxisTypeX: pose_scale[0] = raw_value; break;
+					case ColumnInfo::AxisTypeY: pose_scale[1] = raw_value; break;
+					case ColumnInfo::AxisTypeZ: pose_scale[2] = raw_value; break;
 					default: cerr << "Invalid axis!" << endl; abort();
 				}
 			} else if (column_infos[ci].type == ColumnInfo::TransformTypeRotation) {
 				Vector3f axis_rotation;
-				float value = frame_iter->values[ci].value;
 				switch (column_infos[ci].axis) {
-					case ColumnInfo::AxisTypeX: axis_rotation.set(value, 0.f, 0.f); break;
-					case ColumnInfo::AxisTypeY: axis_rotation.set(0.f, value, 0.f); break;
-					case ColumnInfo::AxisTypeZ: axis_rotation.set(0.f, 0.f, value); break;
+					case ColumnInfo::AxisTypeX: axis_rotation.set(raw_value, 0.f, 0.f); break;
+					case ColumnInfo::AxisTypeY: axis_rotation.set(0.f, raw_value, 0.f); break;
+					case ColumnInfo::AxisTypeZ: axis_rotation.set(0.f, 0.f, raw_value); break;
 					default: cerr << "Invalid axis!" << endl; abort();
 				}
+				pose_rotation_angles += axis_rotation;
 				pose_rotation *= configuration.convertAnglesToQuaternion (axis_rotation);
 			}
 
@@ -618,87 +622,6 @@ void Animation::getRawDataInterpolants (
 		fraction = 1.f;
 	if (fraction < 0.f)
 		fraction = 0.f;
-}
-
-void Animation::setRawDataKeyValue (const float time, const unsigned int index, const float value) {
-	AnimationRawKeyframeList::iterator raw_iter = animation_raw_keyframes.begin();
-	AnimationRawKeyframeList::iterator next_iter = animation_raw_keyframes.begin();
-	AnimationRawKeyframeList::iterator prev_iter = animation_raw_keyframes.begin();
-
-	while (raw_iter != animation_raw_keyframes.end() && raw_iter->timestamp <= time) {
-		prev_iter = raw_iter;
-		raw_iter++;
-		next_iter = raw_iter;
-	}
-
-	if (raw_iter == animation_raw_keyframes.end()) {
-		next_iter = prev_iter;
-	}
-
-	float duration = next_iter->timestamp - prev_iter->timestamp;
-	float fraction = (time - prev_iter->timestamp) / (duration);
-
-	if (duration == 0.f) {
-		fraction = 1.f;
-	}
-
-	if (fraction > 1.f)
-		fraction = 1.f;
-	if (fraction < 0.f)
-		fraction = 0.f;
-
-	if (fraction == 1. && next_iter->values[index].keyed)
-		next_iter->values[index].value = value;
-	if (fraction == 0. && prev_iter->values[index].keyed)
-		prev_iter->values[index].value = value;
-
-	updateAnimationFromRawData (animation_raw_keyframes);
-}
-
-float Animation::getRawDataInterpolatedValue (const unsigned int index, float time) const {
-	AnimationRawKeyframeList::const_iterator next_iter = animation_raw_keyframes.begin();
-	AnimationRawKeyframeList::const_iterator prev_iter = animation_raw_keyframes.begin();
-	float fraction;
-
-	getRawDataInterpolants (time, prev_iter, next_iter, fraction);
-
-	return prev_iter->values[index].value + fraction * (next_iter->values[index].value - prev_iter->values[index].value);
-}
-
-bool Animation::haveRawKeyValue (const unsigned int index, float time) const {
-	AnimationRawKeyframeList::const_iterator next_iter = animation_raw_keyframes.begin();
-	AnimationRawKeyframeList::const_iterator prev_iter = animation_raw_keyframes.begin();
-	float fraction;
-
-	getRawDataInterpolants (time, prev_iter, next_iter, fraction);
-
-	if (fraction == 1. && next_iter->values[index].keyed)
-		return true;
-	if (fraction == 0. && prev_iter->values[index].keyed)
-		return true;
-	return false;
-}
-
-/** \brief Checks whether we have a keyframe at the given time
- */
-bool Animation::haveRawKeyValues (float time) {
-	bool result = false;
-	float current_time_backup = current_time;
-
-	current_time = time;
-	
-	if (fabs(getPrevKeyFrameTime() - time) < 1.0e-4)
-		result = true;
-	else {
-		current_time = getPrevKeyFrameTime();
-
-		if (fabs(getNextKeyFrameTime() - time) < 1.0e-4)
-			result = true;
-	}
-
-	current_time = current_time_backup;
-
-	return result;
 }
 
 bool Animation::loadFromFile (const char* filename, bool strict) {
@@ -860,40 +783,38 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 		}
 
 		if (data_section) {
+			// Data part:
+			// columns have been read
+		
 			// cout << "DATA  :" << line << endl;
 			// parse the DOF description and set the column info in
 			// animation_keyposes
-
-			// Data part:
-			// columns have been read
 			std::vector<string> columns = tokenize (line);
 			assert (columns.size() >= column_infos.size());
+			std::vector<float> column_values;
+			float column_time;
 
-			AnimationRawKeyframe raw_keyframe;
-			raw_keyframe.values = std::vector<AnimationValue> (column_infos.size(), AnimationValue());
-
+			// convert all values to floats and search for the time
 			for (int ci = 0; ci < column_infos.size(); ci++) {
-				// parse each column value and submit it to animation_keyposes
-				AnimationValue animation_value;
-
-				// every value is keyed
-				animation_value.keyed = true;
-
 				istringstream value_stream (columns[ci]);
-				value_stream >> animation_value.value;
+				float value;
+				value_stream >> value;
+				if (column_infos[ci].is_time_column) {
+					column_time = value;
+				}
 			
 				// handle radian
 				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
-					animation_value.value *= 180. / M_PI;
+					value *= 180. / M_PI;
 				}
 
-				if (column_infos[ci].is_time_column)
-					raw_keyframe.timestamp = animation_value.value;
-
-				raw_keyframe.values[ci] = animation_value;
+				column_values.push_back(value);
 			}
 
-			raw_keyframes.push_back (raw_keyframe);
+			// submit all values to the raw values
+			for (int ci = 0; ci < column_infos.size(); ci++) {
+				values.addKeyValue(column_time, ci, column_values[ci]);
+			}
 
 			continue;
 		}

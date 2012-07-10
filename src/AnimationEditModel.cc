@@ -81,7 +81,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 			if (index.row() == 0)
 				return animation_time;
 			return QString ("%1")
-				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row(), animation_time), 0, 'g', 4);
+				.arg (glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row()), 0, 'g', 4);
 		}
 
 		return QString ("Row%1, Column%2")
@@ -89,8 +89,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 			.arg(index.column() + 1);
 	} else if (role == Qt::FontRole) {
 		if (index.column() == 1) {
-			if ((index.row() == 0 && glWidget->animation_data->haveRawKeyValues (animation_time))	
-					|| (index.row() > 0 && glWidget->animation_data->haveRawKeyValue (index.row(), animation_time))) {
+			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
 				QFont boldFont;
 				boldFont.setBold(true);
 				return boldFont;
@@ -105,7 +104,7 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 				return animation_time;
 			}
 			return QString ("%1")
-				.arg (glWidget->animation_data->getRawDataInterpolatedValue (index.row(), animation_time), 0, 'g', 4);
+				.arg (glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row()), 0, 'g', 4);
 		}
 	}
 
@@ -124,7 +123,7 @@ Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const {
 	float animation_time = glWidget->animation_data->current_time;
 
 	if (index.column() == 1 && 
-			glWidget->animation_data->haveRawKeyValue (index.row(), animation_time)) {
+			glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
 		return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
 	}
 
@@ -139,7 +138,7 @@ bool AnimationEditModel::setValue (unsigned int index, double value) {
 		return false;
 	}
 
-	glWidget->animation_data->setRawDataKeyValue (animation_time, index, value);
+	glWidget->animation_data->values.addKeyValue (animation_time, index, value);
 	return true;
 }
 

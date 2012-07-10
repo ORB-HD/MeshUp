@@ -177,10 +177,6 @@ struct Animation {
 			AnimationRawKeyframeList::const_iterator &next_iter,
 			float &fraction
 			) const;
-	void setRawDataKeyValue (const float time, const unsigned int index, const float value);
-	float getRawDataInterpolatedValue (const unsigned int index, const float time) const;
-	bool haveRawKeyValue (const unsigned int index, const float time) const;
-	bool haveRawKeyValues (const float time);
 
 	bool loadFromFile (const char* filename, bool strict = true);
 
@@ -191,6 +187,8 @@ struct Animation {
 	float duration;
 	bool loop;
 	FrameConfig configuration;
+
+	RawValues values;
 
 	std::vector<ColumnInfo> column_infos;
 	AnimationTrackMap frame_animation_tracks;
