@@ -519,7 +519,7 @@ void Animation::addFramePose (
 		duration = time;
 }
 
-void Animation::updateAnimationFromRawData (const AnimationRawKeyframeList &keyframe_list) {
+void Animation::updateAnimationFromRawValues () {
 	RawKeyFrameList::const_iterator frame_iter = values.frames.begin();
 
 	frame_animation_tracks.clear();
@@ -820,7 +820,7 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 		}
 	}
 
-	updateAnimationFromRawData (raw_keyframes);
+	updateAnimationFromRawValues ();
 
 	animation_filename = filename;
 

@@ -139,6 +139,8 @@ bool AnimationEditModel::setValue (unsigned int index, double value) {
 	}
 
 	glWidget->animation_data->values.addKeyValue (animation_time, index, value);
+	glWidget->animation_data->updateAnimationFromRawValues();
+
 	return true;
 }
 

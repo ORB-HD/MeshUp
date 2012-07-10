@@ -169,7 +169,7 @@ struct Animation {
 			const smQuaternion &frame_rotation_quaternion,
 			const Vector3f &frame_scaling
 			);
-	void updateAnimationFromRawData (const AnimationRawKeyframeList &keyframe_list);
+	void updateAnimationFromRawValues ();
 
 	void getRawDataInterpolants (
 			const float time,
