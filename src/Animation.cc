@@ -57,6 +57,42 @@ bool compare_keyvalues_index (KeyValue first, KeyValue second) {
 	return false;
 }
 
+float RawValues::getPrevKeyFrameTime (const float time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.begin();
+
+	// check if the value is before the first keyframe
+	if (frame_iter != frames.end() && frame_iter->timestamp > time) {
+		return frame_iter->timestamp;
+	}
+
+	while (frame_iter != frames.end() && frame_iter->timestamp < time) {
+		frame_iter++;
+	}
+
+	frame_iter--;
+	
+	return frame_iter->timestamp;
+}
+
+float RawValues::getNextKeyFrameTime (const float time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.begin();
+
+	// check if the value is before the first keyframe
+	if (frame_iter != frames.end() && frame_iter->timestamp > time) {
+		return frame_iter->timestamp;
+	}
+
+	while (frame_iter != frames.end() && frame_iter->timestamp < time) {
+		frame_iter++;
+	}
+
+	if (frame_iter == frames.end()) {
+		frame_iter--;
+	}
+
+	return frame_iter->timestamp;
+}
+
 void RawValues::addKeyValue (const float time, unsigned int index, float value) {
 	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
 
@@ -109,6 +145,60 @@ float RawValues::getKeyValue (const float time, unsigned int index) {
 	abort();
 
 	return std::numeric_limits<float>::quiet_NaN();
+}
+
+float RawValues::getPrevKeyValue (const float time, unsigned int index, float *frame_time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.begin();
+
+	bool found_any_value = false;
+	float result_value = 0.; 
+	float result_time = 0.f;
+
+	while (frame_iter != frames.end()) { 
+		if (frame_iter->timestamp > time && found_any_value) {
+			break;
+		}
+		
+		if (haveKeyValue (frame_iter->timestamp, index)) {
+			result_value = const_cast<RawValues*>(this)->getKeyValue  (frame_iter->timestamp, index);
+			result_time = frame_iter->timestamp;
+			found_any_value = true;
+		}
+ 
+		frame_iter++;
+	}
+
+	if (frame_time)
+		*frame_time = result_time;
+
+	return result_value;
+}
+
+float RawValues::getNextKeyValue (const float time, unsigned int index, float *frame_time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.end();
+
+	bool found_any_value = false;
+	float result_value = 0.; 
+	float result_time = 0.f;
+
+	while (frame_iter != frames.begin()) { 
+		frame_iter--;
+
+		if (frame_iter->timestamp < time && found_any_value) {
+			break;
+		}
+		
+		if (haveKeyValue (frame_iter->timestamp, index)) {
+			result_value = const_cast<RawValues*>(this)->getKeyValue  (frame_iter->timestamp, index);
+			result_time = frame_iter->timestamp;
+			found_any_value = true;
+		}
+	}
+
+	if (frame_time)
+		*frame_time = result_time;
+
+	return result_value;
 }
 
 void RawValues::deleteKeyValue (const float time, unsigned int index) {
@@ -214,6 +304,23 @@ void RawValues::moveKeyFrame (const float old_time, const float new_time) {
 	frames.push_back (*frame_old);
 	frames.erase (frame_old);
 	frames.sort(compare_keyframe_timestamp);
+}
+
+float RawValues::getInterpolatedValue (const float time, unsigned int index) const {
+	float prev_key_time;
+	float prev_key_value = getPrevKeyValue (time, index, &prev_key_time);
+
+	float next_key_time;
+	float next_key_value = getNextKeyValue (time, index, &next_key_time);
+
+	float duration = next_key_time - prev_key_time;
+	if (fabs (duration) < 1.0e-6) {
+		return next_key_value;
+	}
+
+	float fraction = (time - prev_key_time) / duration;
+
+	return prev_key_value + fraction * (next_key_value - prev_key_value);
 }
 
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);

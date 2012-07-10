@@ -85,3 +85,124 @@ TEST (RawValuesMoveKeyFrameOverwriteExisting) {
 	CHECK_EQUAL (1.11f, raw.getKeyValue (4., 10));
 	CHECK_EQUAL (99.f, raw.getKeyValue (4., 11));
 }
+
+TEST (RawValuesGetPrevKeyFrameTime) {
+	RawValues raw;
+
+	raw.addKeyValue (1., 10, 1.11f);
+
+	CHECK_EQUAL (1., raw.getPrevKeyFrameTime (1.1));
+}
+
+TEST (RawValuesGetPrevKeyFrameTimeBeforeFirstKeyFrame) {
+	RawValues raw;
+
+	raw.addKeyValue (1., 10, 1.11f);
+	raw.addKeyValue (4., 10, 99.f);
+
+	CHECK_EQUAL (1., raw.getPrevKeyFrameTime (0.1));
+}
+
+TEST (RawValuesGetNextKeyFrameTime) {
+	RawValues raw;
+
+	raw.addKeyValue (1., 10, 1.11f);
+	raw.addKeyValue (4., 10, 99.f);
+
+	CHECK_EQUAL (4., raw.getNextKeyFrameTime (1.1f));
+	CHECK_EQUAL (1., raw.getNextKeyFrameTime (0.1f));
+}
+
+TEST (RawValuesGetNextKeyFrameTimeAfterLastKeyFrame) {
+	RawValues raw;
+
+	raw.addKeyValue (1., 10, 1.11f);
+	raw.addKeyValue (4., 10, 99.f);
+
+	CHECK_EQUAL (4., raw.getNextKeyFrameTime (4.1f));
+}
+
+TEST (RawValuesGetNextKeyValue) {
+	RawValues raw;
+
+	raw.addKeyValue (1., 10, 1.11f);
+	raw.addKeyValue (4., 10, 99.f);
+
+	float time; float value;
+	
+	value = raw.getNextKeyValue (0.1f, 10, &time);
+	CHECK_EQUAL (1.11f, value);
+	CHECK_EQUAL (1.f, time);
+
+	value = raw.getNextKeyValue (1.1f, 10, &time);
+	CHECK_EQUAL (99.f, value);
+	CHECK_EQUAL (4.f, time);
+
+	value = raw.getNextKeyValue (5.1f, 10, &time);
+	CHECK_EQUAL (99.f, value);
+	CHECK_EQUAL (4.f, time);
+
+	value = raw.getNextKeyValue (5.1f, 11, &time);
+	CHECK_EQUAL (0.f, value);
+	CHECK_EQUAL (0.f, time);
+}
+
+TEST (RawValuesGetPrevKeyValue) {
+	RawValues raw;
+
+	raw.addKeyValue (1., 10, 1.11f);
+	raw.addKeyValue (4., 10, 99.f);
+
+	float time; float value;
+	
+	value = raw.getPrevKeyValue (0.1f, 10, &time);
+	CHECK_EQUAL (1.11f, value);
+	CHECK_EQUAL (1.f, time);
+
+ 	value = raw.getPrevKeyValue (1.1f, 10, &time);
+ 	CHECK_EQUAL (1.11f, value);
+ 	CHECK_EQUAL (1.f, time);
+ 
+ 	value = raw.getPrevKeyValue (5.1f, 10, &time);
+ 	CHECK_EQUAL (99.f, value);
+ 	CHECK_EQUAL (4.f, time);
+
+	value = raw.getPrevKeyValue (5.1f, 11 , &time);
+ 	CHECK_EQUAL (0.f, value);
+ 	CHECK_EQUAL (0.f, time);
+}
+
+TEST (RawValuesGetPrevNextKeyValueSingleFrame) {
+	RawValues raw;
+
+	raw.addKeyValue (4., 10, 99.f);
+
+	float time; float value;
+
+	value = raw.getPrevKeyValue (1.1f, 10, &time);
+ 	CHECK_EQUAL (99.f, value);
+ 	CHECK_EQUAL (4.f, time);
+	
+ 	value = raw.getPrevKeyValue (5.1f, 10, &time);
+ 	CHECK_EQUAL (99.f, value);
+ 	CHECK_EQUAL (4.f, time);
+	
+	value = raw.getNextKeyValue (1.1f, 10, &time);
+ 	CHECK_EQUAL (99.f, value);
+ 	CHECK_EQUAL (4.f, time);
+	
+ 	value = raw.getNextKeyValue (5.1f, 10, &time);
+ 	CHECK_EQUAL (99.f, value);
+ 	CHECK_EQUAL (4.f, time);
+}
+
+TEST (RawValuesGetInterpolatedValue) {
+	RawValues raw;
+
+	raw.addKeyValue (0., 10, 1.f);
+	raw.addKeyValue (2., 10, 3.f);
+
+	CHECK_EQUAL (1.f, raw.getInterpolatedValue (0., 10));
+	CHECK_EQUAL (2.f, raw.getInterpolatedValue (1., 10));
+	CHECK_EQUAL (3.f, raw.getInterpolatedValue (2., 10));
+}

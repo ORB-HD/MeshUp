@@ -89,17 +89,21 @@ typedef std::list<KeyFrame> RawKeyFrameList;
 struct RawValues {
 	RawKeyFrameList frames;
 
+	float getPrevKeyFrameTime (const float time) const;
+	float getNextKeyFrameTime (const float time) const;
 	RawKeyFrameList::iterator getKeyFrameIter (const float time);
 
 	void addKeyValue (const float time, unsigned int index, float value);
 	void deleteKeyValue (const float time, unsigned int index);
 	float getKeyValue (const float time, unsigned int index);
+	float getNextKeyValue (const float time, unsigned int index, float *frame_time = NULL) const;
+	float getPrevKeyValue (const float time, unsigned int index, float *frame_time = NULL) const;
 	bool haveKeyValue (const float time, unsigned int index) const;
 
 	bool haveKeyFrame (const float time) const;
 	void moveKeyFrame (const float old_time, const float new_time);
 	std::vector<float> getInterpolatedValues (const float time) const;
-	float getInterpolatedValueAt (const float time, unsigned int index) const;
+	float getInterpolatedValue (const float time, unsigned int index) const;
 };
 
 /** \brief Raw keyframe data in form of a value vector.
