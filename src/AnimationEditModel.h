@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QAbstractTableModel>
+#include <QDoubleSpinBox>
 
 class GLWidget;
 
@@ -21,6 +22,9 @@ class AnimationEditModel : public QAbstractTableModel
 		void setGlWidget (GLWidget *gl_widget) {
 			glWidget = gl_widget;
 		}
+		void setTimeSpinBox (QDoubleSpinBox *spinbox) {
+			timeDoubleSpinBox = spinbox;
+		}
 
 		bool setValue (unsigned int index, double value);
 	
@@ -28,6 +32,7 @@ class AnimationEditModel : public QAbstractTableModel
 
 	private:
 		GLWidget *glWidget;
+		QDoubleSpinBox *timeDoubleSpinBox;
 };
 
 /* _ANIMATIONEDITMODEL_H */

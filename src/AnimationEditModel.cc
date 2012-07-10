@@ -9,7 +9,8 @@ using namespace std;
 
 AnimationEditModel::AnimationEditModel(QObject *parent) : 
 	QAbstractTableModel(parent),
-	glWidget (NULL)
+	glWidget (NULL),
+	timeDoubleSpinBox(NULL)
 {
 }
 
@@ -42,7 +43,7 @@ QVariant AnimationEditModel::headerData (int section, Qt::Orientation orientatio
 }
 
 QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
-	float animation_time = glWidget->animation_data->current_time;
+	float animation_time = timeDoubleSpinBox->value();
 	if (role == Qt::DisplayRole) {
 		if (index.column() == 0) {
 			QString frame_name;
@@ -120,25 +121,40 @@ bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &valu
 }
 
 Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const { 
-	float animation_time = glWidget->animation_data->current_time;
+	float animation_time = timeDoubleSpinBox->value();
+
+	Qt::ItemFlags editable_flags = Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+	Qt::ItemFlags readonly_flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+
+	if (index.column() == 1 && index.row() == 0 && fabs(animation_time) < 1.0e-5)
+		return readonly_flags;
 
 	if (index.column() == 1 && 
 			glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
-		return Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
+
+		return editable_flags;
 	}
 
-	return Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+	return readonly_flags;
 }
 
 bool AnimationEditModel::setValue (unsigned int index, double value) {
-	float animation_time = glWidget->animation_data->current_time;
+	float animation_time = timeDoubleSpinBox->value();
 
 	if (index == 0) {
-		qDebug() << "Setting of time not yet supported!";
-		return false;
+		// we do not want to move the first keyframe
+		if (fabs(animation_time) < 1.0e-5)
+			return false;
+
+		// we only want to move existing keyframes
+		if (!glWidget->animation_data->values.haveKeyFrame(animation_time))
+			return false;
+
+		glWidget->animation_data->values.moveKeyFrame (animation_time, value);
+	} else {
+		glWidget->animation_data->values.addKeyValue (animation_time, index, value);
 	}
 
-	glWidget->animation_data->values.addKeyValue (animation_time, index, value);
 	glWidget->animation_data->updateAnimationFromRawValues();
 
 	return true;

@@ -340,6 +340,16 @@
        </attribute>
       </widget>
      </item>
+     <item>
+      <widget class="QCheckBox" name="autoUpdateVariablesCheckBox">
+       <property name="text">
+        <string>Auto Update Variables</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
   </widget>

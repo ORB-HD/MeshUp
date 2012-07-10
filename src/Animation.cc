@@ -277,6 +277,9 @@ bool RawValues::haveKeyFrame (const float time) const {
 void RawValues::moveKeyFrame (const float old_time, const float new_time) {
 	RawKeyFrameList::iterator frame_old = getKeyFrameIter (old_time);
 
+	if (fabsf(old_time - new_time) < 1.0e-5)
+		return;
+
 	if (frame_old == frames.end()) {
 		cerr << "Error: cannot move key frames. No key frame found at time " << old_time << endl;
 		abort();
@@ -432,64 +435,6 @@ struct AnimationKeyPoses {
 		}
 	}
 };
-
-float Animation::getPrevKeyFrameTime () const {
-	AnimationTrackMap::const_iterator track_iter = frame_animation_tracks.begin();
-
-	float closest = 0.f;
-
-	while (track_iter != frame_animation_tracks.end()) {
-		KeyFrameList::const_iterator keyframe_iter = track_iter->second.keyframes.begin();
-
-		bool time_before_current_time = true;
-		float closest_for_track = 0.f;
-
-		while (keyframe_iter != track_iter->second.keyframes.end()) {
-			if (keyframe_iter->timestamp >= current_time) {
-				break;
-			}
-
-			closest_for_track = keyframe_iter->timestamp;
-			keyframe_iter++;
-		}
-
-		if (closest_for_track > closest)
-			closest = closest_for_track;
-
-		track_iter++;
-	}
-
-	return closest;	
-}
-
-float Animation::getNextKeyFrameTime () const {
-	AnimationTrackMap::const_iterator track_iter = frame_animation_tracks.begin();
-
-	float closest = duration;
-
-	while (track_iter != frame_animation_tracks.end()) {
-		KeyFrameList::const_iterator keyframe_iter = track_iter->second.keyframes.begin();
-
-		bool time_before_current_time = true;
-		float closest_for_track = duration;
-
-		while (keyframe_iter != track_iter->second.keyframes.end()) {
-			if (keyframe_iter->timestamp <= current_time) {
-				keyframe_iter++;
-				continue;
-			}
-			closest_for_track = keyframe_iter->timestamp;
-			break;
-		}
-
-		if (closest_for_track < closest)
-			closest = closest_for_track;
-
-		track_iter++;
-	}
-
-	return closest;	
-}
 
 void Animation::addFramePose (
 			const std::string &frame_name,

@@ -67,6 +67,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// animation editor
 	animation_edit_model = new AnimationEditModel (this);	
 	animation_edit_model->setGlWidget (glWidget);
+	animation_edit_model->setTimeSpinBox (keyFrameTimeSpinBox);
 	animationValuesTableView->setModel (animation_edit_model);
 	DoubleSpinBoxDelegate *delegate = new DoubleSpinBoxDelegate;
 	animationValuesTableView->setItemDelegate (delegate);
@@ -179,6 +180,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["repeat"] = checkBoxLoopAnimation->isChecked();
 	settings_json["configuration"]["docks"]["animationeditor_settings"]["visible"] = dockAnimationEditor->isVisible();
+	settings_json["configuration"]["docks"]["animationeditor_settings"]["auto_update"] = autoUpdateVariablesCheckBox->isChecked();
 
 	settings_json["configuration"]["window"]["width"] = width();
 	settings_json["configuration"]["window"]["height"] = height();
@@ -244,6 +246,7 @@ void MeshupApp::loadSettings () {
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
 	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
 	dockAnimationEditor->setVisible(settings_json["configuration"]["docks"]["animationeditor_settings"].get("visible", false).asBool());
+	autoUpdateVariablesCheckBox->setChecked(settings_json["configuration"]["docks"]["animationeditor_settings"].get("auto_update", true).asBool());
 
 	int x, y, w, h;
 
@@ -349,12 +352,30 @@ void MeshupApp::animation_loaded() {
 }
 
 void MeshupApp::action_next_keyframe() {
-	glWidget->animation_data->current_time = glWidget->animation_data->getNextKeyFrameTime();
+	float animation_time = glWidget->animation_data->current_time;
+	float next_frame = glWidget->animation_data->values.getNextKeyFrameTime(keyFrameTimeSpinBox->value() + 0.01);
+
+	keyFrameTimeSpinBox->setValue (next_frame);
+	animation_edit_model->call_reset();
+
+	if (autoUpdateVariablesCheckBox->isChecked()) {
+		glWidget->animation_data->current_time = next_frame;
+	}
+
 	update_time_widgets();
 }
 
 void MeshupApp::action_prev_keyframe() {
-	glWidget->animation_data->current_time = glWidget->animation_data->getPrevKeyFrameTime();
+	float animation_time = glWidget->animation_data->current_time;
+	float prev_frame = glWidget->animation_data->values.getPrevKeyFrameTime(keyFrameTimeSpinBox->value() - 0.01);
+
+	keyFrameTimeSpinBox->setValue (prev_frame);
+	animation_edit_model->call_reset();
+
+	if (autoUpdateVariablesCheckBox->isChecked()) {
+		glWidget->animation_data->current_time = prev_frame;
+	}
+
 	update_time_widgets();
 }
 
@@ -410,10 +431,10 @@ void MeshupApp::update_time_widgets () {
 		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
 	}
 
-	if (dockAnimationEditor->isVisible())
+	if (dockAnimationEditor->isVisible() && autoUpdateVariablesCheckBox->isChecked()) {
 		animation_edit_model->call_reset();
-
-	keyFrameTimeSpinBox->setValue (glWidget->animation_data->current_time);
+		keyFrameTimeSpinBox->setValue (glWidget->animation_data->current_time);
+	}
 }
 
 void MeshupApp::actionRenderAndSaveToFile () {
