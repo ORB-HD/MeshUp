@@ -9,6 +9,7 @@
 #include "Animation.h"
 #include "ui/AnimationEditModel.h"
 #include "ui/DoubleSpinBoxDelegate.h"
+#include "ui/CheckBoxDelegate.h"
 
 #include <assert.h>
 #include <iostream>
@@ -69,9 +70,17 @@ MeshupApp::MeshupApp(QWidget *parent)
 	animation_edit_model->setGlWidget (glWidget);
 	animation_edit_model->setTimeSpinBox (keyFrameTimeSpinBox);
 	animationValuesTableView->setModel (animation_edit_model);
-	// DoubleSpinBoxDelegate *delegate = new DoubleSpinBoxDelegate;
-	// animationValuesTableView->setItemDelegateForColumn (1, delegate);
-	
+	DoubleSpinBoxDelegate *spinBoxDelegate = new DoubleSpinBoxDelegate (this);
+	animationValuesTableView->setItemDelegateForColumn (1, spinBoxDelegate);
+	CheckBoxDelegate *checkBoxDelegate = new CheckBoxDelegate (this);
+	animationValuesTableView->setItemDelegateForColumn (2, checkBoxDelegate);
+
+	animationValuesTableView->setColumnWidth (1, 80);
+	animationValuesTableView->setColumnWidth (2, 40);
+
+
+
+
 	// player is paused on startup
 	playerPaused = true;
 

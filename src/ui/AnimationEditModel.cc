@@ -41,7 +41,6 @@ QVariant AnimationEditModel::headerData (int section, Qt::Orientation orientatio
 			}
 		}
 	}
-
 	return QVariant();
 }
 
@@ -88,13 +87,14 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 				.arg (glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row()), 0, 'g', 4);
 		}
 
-		if (columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
-			return QString ("");
+		if (index.row() > 0 && columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
+			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
+				return Qt::Checked;
+			} else {
+				return Qt::Unchecked;
+			}
 		}
 
-		return QString ("Row%1, Column%2")
-			.arg(index.row() + 1)
-			.arg(index.column() + 1);
 	} else if (role == Qt::FontRole) {
 		if (columnFields[index.column()] == ColumnFieldValue) {
 			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
@@ -136,22 +136,21 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &value, int role) {
 	if (role == Qt::EditRole) {
 		float animation_time = timeDoubleSpinBox->value();
-		if (columnFields[index.column()] == ColumnFieldKeyFrameFlag && index.row()) {
+		if (columnFields[index.column()] == ColumnFieldKeyFrameFlag && index.row() > 0) {
 			if (value.toBool()) {
-				qDebug() << "setting value";
-				// set the current value
+//				qDebug() << "setting value";
 				float current_value = glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row());
 				glWidget->animation_data->values.addKeyValue (animation_time, index.row(), current_value);
 				glWidget->animation_data->updateAnimationFromRawValues();
 				return true;
 			} else {
-				qDebug() << "deleting value";
+//				qDebug() << "deleting value";
 				glWidget->animation_data->values.deleteKeyValue (animation_time, index.row());
 				glWidget->animation_data->updateAnimationFromRawValues();
 				return false;
 			}
 		} else {
-		return setValue (index.row(), value.toDouble());
+			return setValue (index.row(), value.toDouble());
 		}
 	}
 
@@ -174,7 +173,7 @@ Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const {
 	}
 
 	if (index.row() > 0 && columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
-		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable;
+		return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable;
 	}
 
 	return readonly_flags;
