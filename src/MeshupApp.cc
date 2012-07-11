@@ -78,9 +78,6 @@ MeshupApp::MeshupApp(QWidget *parent)
 	animationValuesTableView->setColumnWidth (1, 80);
 	animationValuesTableView->setColumnWidth (2, 40);
 
-
-
-
 	// player is paused on startup
 	playerPaused = true;
 

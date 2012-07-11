@@ -45,6 +45,9 @@ struct ColumnInfo {
 		AxisTypeNegativeY,
 		AxisTypeNegativeZ 
 	};
+
+	std::string toString();
+
 	std::string frame_name;
 	TransformType type;
 	AxisType axis;
@@ -145,6 +148,7 @@ struct Animation {
 	void updateAnimationFromRawValues ();
 
 	bool loadFromFile (const char* filename, bool strict = true);
+	bool saveToFile (const char* filename);
 
 	std::string name;
 	std::string animation_filename;

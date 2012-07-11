@@ -34,6 +34,37 @@ using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t#";
 
+std::string ColumnInfo::toString() {
+	stringstream result("");
+
+	result << frame_name << ":";
+
+	switch (type) {
+		case (TransformTypeRotation): result << "rotation"; break;
+		case (TransformTypeTranslation): result << "translation"; break;
+		case (TransformTypeScale): result << "scale"; break;
+		default: cerr << "Unknown transform type " << type << "."; abort();
+	}
+
+	result << ":";
+
+	switch (axis) {
+		case (AxisTypeX): result << "X"; break;
+		case (AxisTypeY): result << "Y"; break;
+		case (AxisTypeZ): result << "Z"; break;
+		case (AxisTypeNegativeX): result << "X"; break;
+		case (AxisTypeNegativeY): result << "Y"; break;
+		case (AxisTypeNegativeZ): result << "Z"; break;
+		default: cerr << "Unknown axis type " << axis << "."; abort();
+	}
+
+	if (is_radian) {
+		result << ":rad";
+	}
+
+	return result.str();
+}
+
 bool compare_keyframe_timestamp (KeyFrame first, KeyFrame second) {
 	if (first.timestamp == second.timestamp) {
 		cerr << "Error: found two keyframes with the same timestamp at time " << first.timestamp << endl;
@@ -734,6 +765,29 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 	updateAnimationFromRawValues ();
 
 	animation_filename = filename;
+
+	return true;
+}
+
+bool Animation::saveToFile (const char* filename) {
+	ofstream file_out (filename);
+
+	if (!file_out) {
+		cerr << "Error opening animation file " << filename << "!";
+		abort();
+
+		return false;
+	}
+
+	cout << "Saving animation " << filename << endl;
+
+	file_out << "# MeshUp animation file" << endl;
+	file_out << "COLUMNS:" << endl;
+
+	for (unsigned int ci = 0; ci < 0; ci++) {
+		file_out << column_infos[ci].toString() << ", ";
+	}
+	file_out << endl;
 
 	return true;
 }
