@@ -1,8 +1,8 @@
 #include <QDoubleSpinBox>
 #include <QDebug>
 
-#include "DoubleSpinBoxDelegate.h"
-#include "AnimationEditModel.h"
+#include "ui/DoubleSpinBoxDelegate.h"
+#include "ui/AnimationEditModel.h"
 
 DoubleSpinBoxDelegate::DoubleSpinBoxDelegate(QObject *parent)
 : QItemDelegate(parent),

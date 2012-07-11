@@ -6,7 +6,7 @@
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
-#include "AnimationEditModel.h"
+#include "ui/AnimationEditModel.h"
 
 class MeshupApp : public QMainWindow, public Ui::MainWindow
 {

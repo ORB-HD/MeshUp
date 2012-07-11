@@ -10,6 +10,14 @@ class GLWidget;
 class AnimationEditModel : public QAbstractTableModel
 {
 	Q_OBJECT
+
+	enum ColumnField {
+		ColumnFieldKeyName = 0,
+		ColumnFieldValue,
+		ColumnFieldKeyFrameFlag,
+		ColumnFieldLast
+	};
+
 	public:
 		AnimationEditModel (QObject *parent);
 		int rowCount (const QModelIndex &parent = QModelIndex()) const;
@@ -33,6 +41,7 @@ class AnimationEditModel : public QAbstractTableModel
 	private:
 		GLWidget *glWidget;
 		QDoubleSpinBox *timeDoubleSpinBox;
+		ColumnField columnFields[ColumnFieldLast];
 };
 
 /* _ANIMATIONEDITMODEL_H */

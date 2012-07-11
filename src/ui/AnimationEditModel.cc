@@ -1,4 +1,4 @@
-#include "AnimationEditModel.h"
+#include "ui/AnimationEditModel.h"
 #include <glwidget.h>
 #include "Animation.h"
 
@@ -12,6 +12,9 @@ AnimationEditModel::AnimationEditModel(QObject *parent) :
 	glWidget (NULL),
 	timeDoubleSpinBox(NULL)
 {
+	columnFields[0] = ColumnFieldKeyName;
+	columnFields[1] = ColumnFieldValue;
+	columnFields[2] = ColumnFieldKeyFrameFlag;
 }
 
 int AnimationEditModel::rowCount (const QModelIndex &/* parent */) const {
@@ -31,10 +34,10 @@ int AnimationEditModel::columnCount (const QModelIndex &/* parent */) const {
 QVariant AnimationEditModel::headerData (int section, Qt::Orientation orientation, int role) const {
 	if (role == Qt::DisplayRole) {
 		if (orientation == Qt::Horizontal) {
-			switch (section) {
-				case 0: return QString ("Column"); break;
-				case 1: return QString ("Value"); break;
-				case 2: return QString ("Key"); break;
+			switch (columnFields[section]) {
+				case ColumnFieldKeyName: return QString ("Column"); break;
+				case ColumnFieldValue: return QString ("Value"); break;
+				case ColumnFieldKeyFrameFlag: return QString ("Key"); break;
 			}
 		}
 	}
@@ -45,7 +48,7 @@ QVariant AnimationEditModel::headerData (int section, Qt::Orientation orientatio
 QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 	float animation_time = timeDoubleSpinBox->value();
 	if (role == Qt::DisplayRole) {
-		if (index.column() == 0) {
+		if (columnFields[index.column()] == ColumnFieldKeyName) {
 			QString frame_name;
 			QString axis;
 			QString type;
@@ -78,18 +81,22 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 				.arg(axis);
 		}
 
-		if (index.column() == 1) {
+		if (columnFields[index.column()] == ColumnFieldValue) {
 			if (index.row() == 0)
 				return animation_time;
 			return QString ("%1")
 				.arg (glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row()), 0, 'g', 4);
 		}
 
+		if (columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
+			return QString ("");
+		}
+
 		return QString ("Row%1, Column%2")
 			.arg(index.row() + 1)
 			.arg(index.column() + 1);
 	} else if (role == Qt::FontRole) {
-		if (index.column() == 1) {
+		if (columnFields[index.column()] == ColumnFieldValue) {
 			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
 				QFont boldFont;
 				boldFont.setBold(true);
@@ -97,15 +104,29 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 			}
 		}
 	} else if (role == Qt::TextAlignmentRole) {
-		if (index.column() == 1)
+		if (columnFields[index.column()] == ColumnFieldValue)
 			return Qt::AlignRight + Qt::AlignVCenter;
 	} else if (role == Qt::EditRole) {
-		if (index.column() == 1) {
+		if (columnFields[index.column()] == ColumnFieldValue) {
 			if (index.row() == 0) {
 				return animation_time;
 			}
 			return QString ("%1")
 				.arg (glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row()), 0, 'g', 4);
+		} else if (columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
+			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
+				return Qt::Checked;
+			} else {
+				return Qt::Unchecked;
+			}
+		}
+	} else if (role == Qt::CheckStateRole) {
+		if (index.row() > 0 && columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
+			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
+				return Qt::Checked;
+			} else {
+				return Qt::Unchecked;
+			}
 		}
 	}
 
@@ -114,7 +135,24 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 
 bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &value, int role) {
 	if (role == Qt::EditRole) {
+		float animation_time = timeDoubleSpinBox->value();
+		if (columnFields[index.column()] == ColumnFieldKeyFrameFlag && index.row()) {
+			if (value.toBool()) {
+				qDebug() << "setting value";
+				// set the current value
+				float current_value = glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row());
+				glWidget->animation_data->values.addKeyValue (animation_time, index.row(), current_value);
+				glWidget->animation_data->updateAnimationFromRawValues();
+				return true;
+			} else {
+				qDebug() << "deleting value";
+				glWidget->animation_data->values.deleteKeyValue (animation_time, index.row());
+				glWidget->animation_data->updateAnimationFromRawValues();
+				return false;
+			}
+		} else {
 		return setValue (index.row(), value.toDouble());
+		}
 	}
 
 	return false;
@@ -126,13 +164,17 @@ Qt::ItemFlags AnimationEditModel::flags (const QModelIndex &index) const {
 	Qt::ItemFlags editable_flags = Qt::ItemIsSelectable | Qt::ItemIsEditable | Qt::ItemIsEnabled;
 	Qt::ItemFlags readonly_flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
-	if (index.column() == 1 && index.row() == 0 && fabs(animation_time) < 1.0e-5)
+	if (columnFields[index.column()] == ColumnFieldValue && index.row() == 0 && fabs(animation_time) < 1.0e-5)
 		return readonly_flags;
 
-	if (index.column() == 1 && 
+	if (columnFields[index.column()] == ColumnFieldValue && 
 			glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
 
 		return editable_flags;
+	}
+
+	if (index.row() > 0 && columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
+		return Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable;
 	}
 
 	return readonly_flags;
@@ -163,4 +205,3 @@ bool AnimationEditModel::setValue (unsigned int index, double value) {
 void AnimationEditModel::call_reset() {
 	reset();
 }
-
