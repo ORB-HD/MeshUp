@@ -49,12 +49,16 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionReloadFiles"/>
+    <addaction name="separator"/>
     <addaction name="actionLoadModel"/>
     <addaction name="actionLoadAnimation"/>
     <addaction name="separator"/>
-    <addaction name="actionReloadFiles"/>
+    <addaction name="actionSaveAnimation"/>
+    <addaction name="actionSaveAnimationTo"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuControl_Panels">
     <property name="title">
@@ -428,6 +432,19 @@
    </property>
    <property name="shortcut">
     <string>A</string>
+   </property>
+  </action>
+  <action name="actionSaveAnimation">
+   <property name="text">
+    <string>Save Animation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSaveAnimationTo">
+   <property name="text">
+    <string>Save Animation...</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>

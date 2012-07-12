@@ -37,6 +37,9 @@ const string invalid_id_characters = "{}[],;: \r\n\t#";
 std::string ColumnInfo::toString() {
 	stringstream result("");
 
+	if (is_time_column)
+		return ("Time");	
+
 	result << frame_name << ":";
 
 	switch (type) {
@@ -255,15 +258,20 @@ void RawValues::deleteKeyValue (const float time, unsigned int index) {
 
 	while (value_iter != frame_iter->value_list.end()) {
 		if (value_iter->index == index) {
-			frame_iter->value_list.erase (value_iter);
-			return;
+			break;
 		}
 		value_iter++;
 	}
-	assert (old_size - 1 == frame_iter->value_list.size());
 
-	cerr << "Error: could not find value at time " << time << " and index " << index<< endl;
-	abort();
+	frame_iter->value_list.erase (value_iter);
+
+	// check whether we acually still have any values or whether we delete
+	// the key frame entirely
+	if (frame_iter->value_list.size() == 0) {
+		frames.erase (frame_iter);
+	}
+
+	assert (old_size - 1 == frame_iter->value_list.size());
 }
 
 bool RawValues::haveKeyValue (const float time, unsigned int index) const {
@@ -633,6 +641,10 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 				// cout << "  E: " << column_def << endl;
 
 				if (tolower(column_def) == "time") {
+					if (ei != 0) {
+						cerr << "Error: first column must be time column (it was column " << ei <<")!" << endl;
+						abort();
+					}
 					ColumnInfo column_info;
 					column_info.is_time_column = true;
 					column_infos.push_back(column_info);
@@ -734,30 +746,37 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 			std::vector<string> columns = tokenize (line);
 			assert (columns.size() >= column_infos.size());
 			std::vector<float> column_values;
-			float column_time;
 
-			// convert all values to floats and search for the time
-			for (int ci = 0; ci < column_infos.size(); ci++) {
-				istringstream value_stream (columns[ci]);
-				float value;
-				value_stream >> value;
-				if (column_infos[ci].is_time_column) {
-					column_time = value;
-				}
+			float column_time;
+			float value;
+			istringstream value_stream (columns[0]);
+			if (!(value_stream >> value)) {
+				cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << "." << endl;
+				abort();
+			}
 			
+			column_time = value;
+
+			// check whether we have actual values and add them as KeyValues
+			for (int ci = 1; ci < column_infos.size(); ci++) {
+				if (columns[ci] == "," || columns[ci].size() == 0)
+					continue;
+
+				value_stream.clear();
+				value_stream.str(columns[ci]);
+
+				if (!(value_stream >> value)) {
+					cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << " column " << ci << "." << endl;
+					cout << value << endl;
+					abort();
+				}
+
 				// handle radian
 				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
 					value *= 180. / M_PI;
 				}
-
-				column_values.push_back(value);
+				values.addKeyValue(column_time, ci, value);
 			}
-
-			// submit all values to the raw values
-			for (int ci = 0; ci < column_infos.size(); ci++) {
-				values.addKeyValue(column_time, ci, column_values[ci]);
-			}
-
 			continue;
 		}
 	}
@@ -782,13 +801,32 @@ bool Animation::saveToFile (const char* filename) {
 	cout << "Saving animation " << filename << endl;
 
 	file_out << "# MeshUp animation file" << endl;
+	file_out << "NAME: " << name << endl;
 	file_out << "COLUMNS:" << endl;
 
-	for (unsigned int ci = 0; ci < 0; ci++) {
-		file_out << column_infos[ci].toString() << ", ";
+	for (unsigned int ci = 0; ci < column_infos.size(); ci++) {
+		file_out << column_infos[ci].toString();
+		if (ci != column_infos.size() - 1)
+			file_out << ", ";
 	}
 	file_out << endl;
 
+	file_out << "DATA:" << endl;
+
+	RawKeyFrameList::const_iterator frame_iter = values.frames.begin();
+	
+	while (frame_iter != values.frames.end()) {
+		for (unsigned int ci = 0; ci < column_infos.size(); ci++) {
+			if (values.haveKeyValue (frame_iter->timestamp, ci))
+				file_out << values.getKeyValue (frame_iter->timestamp, ci);
+
+			if (ci != column_infos.size() - 1)
+				file_out << ", ";
+		}
+		file_out << endl;
+
+		frame_iter++;
+	}
 	return true;
 }
 

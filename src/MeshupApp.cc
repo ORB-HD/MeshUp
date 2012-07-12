@@ -121,6 +121,10 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// keyboard shortcuts
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
+
+	connect (actionSaveAnimation, SIGNAL ( triggered() ), this, SLOT(action_save_animation()));
+	connect (actionSaveAnimationTo, SIGNAL ( triggered() ), this, SLOT(action_save_animation_to()));
+
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
 	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
@@ -310,6 +314,23 @@ void MeshupApp::action_load_animation() {
 	}	
 }
 
+void MeshupApp::action_save_animation() {
+	glWidget->animation_data->saveToFile (glWidget->animation_data->animation_filename.c_str());
+}
+
+void MeshupApp::action_save_animation_to() {
+	QFileDialog file_dialog (this, "Save Animation File...");
+	file_dialog.setAcceptMode (QFileDialog::AcceptSave);
+	file_dialog.setFileMode (QFileDialog::AnyFile);
+
+	file_dialog.setNameFilter(tr("MeshupAnimation (*.txt *.csv)"));
+
+	if (file_dialog.exec()) {
+		glWidget->animation_data->animation_filename = file_dialog.selectedFiles().at(0).toStdString().c_str();
+		action_save_animation();
+	}	
+}
+
 void MeshupApp::action_reload_files() {
 	MeshupModelPtr test_model (new MeshupModel());
 	AnimationPtr test_animation (new Animation());
@@ -355,6 +376,7 @@ void MeshupApp::action_quit () {
 void MeshupApp::animation_loaded() {
 	qDebug() << __func__;
 	animation_edit_model->call_reset();
+	glWidget->animation_data->saveToFile ("animation_save.txt");
 }
 
 void MeshupApp::action_next_keyframe() {
