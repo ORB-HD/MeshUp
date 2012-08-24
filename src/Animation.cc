@@ -816,12 +816,15 @@ bool Animation::saveToFile (const char* filename) {
 	RawKeyFrameList::const_iterator frame_iter = values.frames.begin();
 	
 	while (frame_iter != values.frames.end()) {
-		for (unsigned int ci = 0; ci < column_infos.size(); ci++) {
-			if (values.haveKeyValue (frame_iter->timestamp, ci))
-				file_out << values.getKeyValue (frame_iter->timestamp, ci);
+		file_out << frame_iter->timestamp << ", ";
 
-			if (ci != column_infos.size() - 1)
-				file_out << ", ";
+		for (unsigned int ci = 0; ci < column_infos.size(); ci++) {
+			if (values.haveKeyValue (frame_iter->timestamp, ci)) {
+				file_out << values.getKeyValue (frame_iter->timestamp, ci); 
+
+				if (ci != column_infos.size() - 1)
+					file_out << ", ";
+			}
 		}
 		file_out << endl;
 
