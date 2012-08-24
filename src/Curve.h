@@ -33,7 +33,7 @@
  * \endcode
  */
 struct Curve {
-	Curve() : width (1.f)
+	Curve() : width (3.f)
 		{ }
 	void addPointWithColor(float x, float y, float z, float r, float g, float b) {
 		points.push_back (Vector3f (x, y, z));

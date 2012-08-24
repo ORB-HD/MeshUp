@@ -19,6 +19,7 @@
 #include <fstream>
 
 #include "json/json.h"
+#include "colorscale.h"
 
 using namespace std;
 
@@ -378,7 +379,49 @@ void MeshupApp::animation_loaded() {
 	animation_edit_model->call_reset();
 	glWidget->animation_data->saveToFile ("animation_save.txt");
 
-	qDebug() << "initializing curves";
+	// qDebug() << "initializing curves";
+
+	float curve_frame_rate = 60.f;
+	float duration = glWidget->animation_data->duration;
+	
+	float time_step = duration / curve_frame_rate;
+	unsigned int step_count = duration * curve_frame_rate;
+	float current_time = 0.f;
+
+	// cout << "duration = " << scientific << duration << endl;
+	// cout << "time_step = " << scientific << time_step << endl;
+	// cout << "step_count = " << scientific << step_count << endl;
+
+	while (current_time < duration) {
+		current_time += time_step;
+		if (current_time > duration)
+			current_time = duration;
+
+		float fraction = current_time / duration * 2.f - 1.f;
+
+		UpdateModelFromAnimation (glWidget->model_data, glWidget->animation_data, current_time);
+
+		MeshupModel::FrameMap::iterator frame_iter = glWidget->model_data->framemap.begin();
+
+		for (frame_iter; frame_iter != glWidget->model_data->framemap.end(); frame_iter++) {
+			Matrix44f pose_matrix = frame_iter->second->pose_transform;
+			Vector3f pose_translation (
+					pose_matrix (3,0),
+					pose_matrix (3,1),
+					pose_matrix (3,2)
+					);
+
+			glWidget->model_data->addCurvePoint (frame_iter->first,
+					pose_translation,
+					Vector3f (
+						colorscale::red(fraction),
+						colorscale::green(fraction),
+						colorscale::blue(fraction))
+					);
+		}
+	}
+
+//	qDebug() << "initializing curves done";
 }
 
 void MeshupApp::action_next_keyframe() {
@@ -501,6 +544,7 @@ void MeshupApp::actionRenderAndSaveToFile () {
 
 void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	static int fps=25;
+	static bool fps_mode = true;
 	static bool doMencoder=true;
 	static bool doComposite=true;
 	static bool render_transparent=false;
@@ -508,6 +552,8 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
 	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->height());
 	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
+	renderImageSeriesDialog->fpsModeRadioButton->setChecked (fps_mode);
+	renderImageSeriesDialog->frameCountModeRadioButton->setChecked (!fps_mode);
 	renderImageSeriesDialog->mencoderBox->setChecked(doMencoder);
 
 	int result = renderImageSeriesDialog->exec();
@@ -530,7 +576,6 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 			break;
 		series_nr++;
 	}
-
 
 	//~ cout << "starting offscreen rendering (this may take a while)..." << endl;
 	int w = renderImageSeriesDialog->WidthSpinBox->value();
