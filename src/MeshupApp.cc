@@ -377,6 +377,8 @@ void MeshupApp::animation_loaded() {
 	qDebug() << __func__;
 	animation_edit_model->call_reset();
 	glWidget->animation_data->saveToFile ("animation_save.txt");
+
+	qDebug() << "initializing curves";
 }
 
 void MeshupApp::action_next_keyframe() {

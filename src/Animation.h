@@ -148,6 +148,7 @@ struct Animation {
 	void updateAnimationFromRawValues ();
 
 	bool loadFromFile (const char* filename, bool strict = true);
+	bool loadFromFileAtFrameRate (const char* filename, float frames_per_second, bool strict = true);
 	bool saveToFile (const char* filename);
 
 	std::string name;

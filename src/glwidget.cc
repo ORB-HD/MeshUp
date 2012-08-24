@@ -87,7 +87,7 @@ void GLWidget::loadModel(const char* filename) {
 
 void GLWidget::loadAnimation(const char* filename) {
 	if (opengl_initialized) {
-		animation_data->loadFromFile(filename);
+		animation_data->loadFromFileAtFrameRate(filename, 60.f);
 		emit animation_loaded();
 	} else {
 		// mark file for later loading

@@ -148,6 +148,8 @@ void RawValues::addKeyValue (const float time, unsigned int index, float value) 
 
 	frame_iter->value_list.push_back (KeyValue (value, index));
 	frame_iter->value_list.sort(compare_keyvalues_index);
+
+//	std::cerr << "Now " << frame_iter->value_list.size() << " values at keyframe at t = " << frame_iter->timestamp << std::endl;
 }
 
 float RawValues::getKeyValue (const float time, unsigned int index) {
@@ -548,6 +550,9 @@ void Animation::updateAnimationFromRawValues () {
 					case ColumnInfo::AxisTypeX: pose_translation[0] = raw_value; break;
 					case ColumnInfo::AxisTypeY: pose_translation[1] = raw_value; break;
 					case ColumnInfo::AxisTypeZ: pose_translation[2] = raw_value; break;
+					case ColumnInfo::AxisTypeNegativeX: pose_translation[0] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeY: pose_translation[1] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeZ: pose_translation[2] = -raw_value; break;
 					default: cerr << "Invalid axis!" << endl; abort();
 				}
 			} else if (column_infos[ci].type == ColumnInfo::TransformTypeScale) {
@@ -555,6 +560,9 @@ void Animation::updateAnimationFromRawValues () {
 					case ColumnInfo::AxisTypeX: pose_scale[0] = raw_value; break;
 					case ColumnInfo::AxisTypeY: pose_scale[1] = raw_value; break;
 					case ColumnInfo::AxisTypeZ: pose_scale[2] = raw_value; break;
+					case ColumnInfo::AxisTypeNegativeX: pose_scale[0] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeY: pose_scale[1] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeZ: pose_scale[2] = -raw_value; break;
 					default: cerr << "Invalid axis!" << endl; abort();
 				}
 			} else if (column_infos[ci].type == ColumnInfo::TransformTypeRotation) {
@@ -563,7 +571,10 @@ void Animation::updateAnimationFromRawValues () {
 					case ColumnInfo::AxisTypeX: axis_rotation.set(raw_value, 0.f, 0.f); break;
 					case ColumnInfo::AxisTypeY: axis_rotation.set(0.f, raw_value, 0.f); break;
 					case ColumnInfo::AxisTypeZ: axis_rotation.set(0.f, 0.f, raw_value); break;
-					default: cerr << "Invalid axis!" << endl; abort();
+					case ColumnInfo::AxisTypeNegativeX: axis_rotation.set(-raw_value, 0.f, 0.f); break;
+					case ColumnInfo::AxisTypeNegativeY: axis_rotation.set(0.f, -raw_value, 0.f); break;
+					case ColumnInfo::AxisTypeNegativeZ: axis_rotation.set(0.f, 0.f, -raw_value); break;
+					default: cerr << "Invalid rotation axis: " << column_infos[ci].axis << endl; abort();
 				}
 				pose_rotation_angles += axis_rotation;
 				pose_rotation *= configuration.convertAnglesToQuaternion (axis_rotation);
@@ -576,6 +587,10 @@ void Animation::updateAnimationFromRawValues () {
 }
 
 bool Animation::loadFromFile (const char* filename, bool strict) {
+	return loadFromFileAtFrameRate (filename, -1.f, strict);
+}
+
+bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_second, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
@@ -587,8 +602,17 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 		return false;
 	}
 
+	double force_fps_previous_frame = 0.;
+	int force_fps_frame_count = 0;
+	int force_fps_skipped_frame_count = 0;
+	bool last_line = false;
+
 	cout << "Loading animation " << filename << endl;
 
+	if (frames_per_second != -1.f)
+		cout << "Reading input using: " << frames_per_second << " frames per second." << endl;
+
+	string previous_line;
 	string line;
 
 	bool column_section = false;
@@ -600,8 +624,16 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 	AnimationKeyPoses animation_keyposes;
 
 	while (!file_in.eof()) {
+		previous_line = line;
 		getline (file_in, line);
-		line_number++;
+
+		// make sure the last line is read no matter what
+		if (file_in.eof()) {
+			last_line = true;
+			line = previous_line;
+		} else {
+			line_number++;
+		}
 	
 		line = strip_comments (strip_whitespaces( (line)));
 		
@@ -757,6 +789,17 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 			
 			column_time = value;
 
+			if (column_time != 0. && !last_line && frames_per_second != -1.f) {
+				if (force_fps_previous_frame + 1. / frames_per_second >= column_time) {
+					force_fps_skipped_frame_count++;
+					continue;
+				}
+			}
+
+			force_fps_previous_frame = column_time;
+			force_fps_frame_count++;
+			// cout << "Reading frame at t = " << scientific << force_fps_previous_frame << endl;
+
 			// check whether we have actual values and add them as KeyValues
 			for (int ci = 1; ci < column_infos.size(); ci++) {
 				if (columns[ci] == "," || columns[ci].size() == 0)
@@ -779,6 +822,10 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 			}
 			continue;
 		}
+	}
+
+	if (frames_per_second != -1.f) {
+		cout << "Read " << force_fps_frame_count << " frames (skipped " << force_fps_skipped_frame_count << " frames)" << endl;
 	}
 
 	updateAnimationFromRawValues ();
