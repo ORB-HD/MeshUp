@@ -198,6 +198,16 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["window"]["xpos"] = x();
 	settings_json["configuration"]["window"]["ypos"] = y();
 
+	settings_json["configuration"]["render"]["width"]  = renderImageSeriesDialog->WidthSpinBox->value();
+	settings_json["configuration"]["render"]["height"] = renderImageSeriesDialog->HeightSpinBox->value();
+	settings_json["configuration"]["render"]["fps"]    = renderImageSeriesDialog->FpsSpinBox->value();
+
+	settings_json["configuration"]["render"]["fps_mode"]         = renderImageSeriesDialog->fpsModeRadioButton->isChecked();
+	settings_json["configuration"]["render"]["frame_count_mode"] = renderImageSeriesDialog->frameCountModeRadioButton->isChecked();
+	settings_json["configuration"]["render"]["mencoder"]         = renderImageSeriesDialog->mencoderBox->isChecked();
+	settings_json["configuration"]["render"]["composite"]        = renderImageSeriesDialog->compositeBox->isChecked();
+	settings_json["configuration"]["render"]["transparent"]      = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
+
 	string home_dir = getenv("HOME");
 
 	// create the path if it does not yet exist
@@ -258,6 +268,16 @@ void MeshupApp::loadSettings () {
 	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
 	dockAnimationEditor->setVisible(settings_json["configuration"]["docks"]["animationeditor_settings"].get("visible", false).asBool());
 	autoUpdateVariablesCheckBox->setChecked(settings_json["configuration"]["docks"]["animationeditor_settings"].get("auto_update", true).asBool());
+
+	renderImageSeriesDialog->WidthSpinBox->setValue(settings_json["configuration"]["render"].get("width", glWidget->width()).asInt());
+	renderImageSeriesDialog->HeightSpinBox->setValue(settings_json["configuration"]["render"].get("height", glWidget->height()).asInt());
+	renderImageSeriesDialog->FpsSpinBox->setValue(settings_json["configuration"]["render"].get("fps", 25).asInt());
+
+	renderImageSeriesDialog->fpsModeRadioButton->setChecked(settings_json["configuration"]["render"].get("fps_mode", true).asBool());
+	renderImageSeriesDialog->frameCountModeRadioButton->setChecked(settings_json["configuration"]["render"].get("frame_count_mode", false).asBool());
+	renderImageSeriesDialog->mencoderBox->setChecked(settings_json["configuration"]["render"].get("mencoder", false).asBool());
+	renderImageSeriesDialog->compositeBox->setChecked(settings_json["configuration"]["render"].get("composite", false).asBool());
+	renderImageSeriesDialog->transparentBackgroundCheckBox->setChecked(settings_json["configuration"]["render"].get("transparent", true).asBool());
 
 	int x, y, w, h;
 
@@ -543,23 +563,27 @@ void MeshupApp::actionRenderAndSaveToFile () {
 }
 
 void MeshupApp::actionRenderSeriesAndSaveToFile () {
-	static int fps=25;
-	static bool fps_mode = true;
-	static bool doMencoder=true;
-	static bool doComposite=true;
-	static bool render_transparent=false;
-
-	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
-	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->height());
-	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
-	renderImageSeriesDialog->fpsModeRadioButton->setChecked (fps_mode);
-	renderImageSeriesDialog->frameCountModeRadioButton->setChecked (!fps_mode);
-	renderImageSeriesDialog->mencoderBox->setChecked(doMencoder);
+	int fps;
+	bool fps_mode;
+	bool doMencoder;
+	bool doComposite;
+	bool render_transparent;
+	int width;
+	int height;
 
 	int result = renderImageSeriesDialog->exec();
 
 	if (result == QDialog::Rejected)
 		return;
+
+	width = renderImageSeriesDialog->WidthSpinBox->value();
+	height = renderImageSeriesDialog->HeightSpinBox->value();
+	fps = renderImageSeriesDialog->FpsSpinBox->value();
+	
+	if (renderImageSeriesDialog->fpsModeRadioButton->isChecked())
+		fps_mode = true;
+	else
+		fps_mode = false;
 
 	doMencoder = renderImageSeriesDialog->mencoderBox->isChecked();
 	doComposite = renderImageSeriesDialog->compositeBox->isChecked();
@@ -577,28 +601,37 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		series_nr++;
 	}
 
-	//~ cout << "starting offscreen rendering (this may take a while)..." << endl;
-	int w = renderImageSeriesDialog->WidthSpinBox->value();
-	int h = renderImageSeriesDialog->HeightSpinBox->value();
-	fps = renderImageSeriesDialog->FpsSpinBox->value();
-	
-	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->animation_data->duration* 100.0 / spinBoxSpeed->value(), this);
+	float duration = glWidget->animation_data->duration;
+	float speedup = 100.f / static_cast<float>(spinBoxSpeed->value());
+	float timestep;
+	int image_count;
+
+	if (fps_mode) {
+		timestep = 1.f / fps / speedup;
+		image_count = static_cast<int>(floor(duration / timestep));
+	} else {
+		timestep = duration / (fps - 1.f);
+		image_count = static_cast<int>(roundf(fps));
+	}
+
+	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, image_count, this);
 	pbar.setMinimumDuration(0);
 	pbar.show();
 	stringstream overlayFilename;
 	overlayFilename << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-overlay.png";
-	
-	for(int i = 0; i < (float) fps*glWidget->animation_data->duration* 100.0 / spinBoxSpeed->value(); i++) {
+
+	for(int i = 0; i < image_count; i++) {
 		pbar.setValue(i);
 		pbar.show();
+
+		float current_time = (float) i * timestep;
+
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
-		glWidget->animation_data->current_time = (float) i / fps*  spinBoxSpeed->value() / 100.0;
-		QImage image = glWidget->renderContentOffscreen (w,h,render_transparent);
+		glWidget->animation_data->current_time = current_time;
+		QImage image = glWidget->renderContentOffscreen (width, height, render_transparent);
 		image.save (filename_stream.str().c_str(), 0, -1);
-		//not used:
-		//if (pbar.wasCanceled())
-		//	return;
+
 		if (doComposite) {
 			string cmd("composite -compose plus ");
 			if (i==0) {
@@ -617,7 +650,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		cout << "running mencoder to produce a movie" << endl;
 		stringstream mencoder;
 		mencoder << "mencoder mf://"  << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-"<< "*.png ";
-		mencoder << "-mf w=" << w << ":h="<< h << ":fps=" << fps << ":type=png -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
+		mencoder << "-mf w=" << width << ":h="<< height << ":fps=" << fps << ":type=png -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
 		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".avi";
 		
 		cout << mencoder.str() << endl;
