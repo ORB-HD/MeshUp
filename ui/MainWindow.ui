@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>MeshUp</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="meshup_resources.qrc">
+    <normaloff>:/logo/meshup_logo_square.svg</normaloff>:/logo/meshup_logo_square.svg</iconset>
+  </property>
   <property name="statusTip">
    <string/>
   </property>
@@ -459,7 +463,9 @@
    <container>1</container>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="meshup_resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>actionTogglePlayerControls</sender>

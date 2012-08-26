@@ -38,6 +38,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	timer->setSingleShot(false);
 	timer->start(20);
 
+//	setWindowIcon(QIcon("meshup_logo_square.svg"));
+
 	timeLine = new QTimeLine (TimeLineDuration, this);
 	timeLine->setCurveShape(QTimeLine::LinearCurve);
 
