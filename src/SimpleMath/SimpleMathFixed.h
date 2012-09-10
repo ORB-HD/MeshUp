@@ -16,6 +16,7 @@
 
 #include <sstream>
 #include <cstdlib>
+#include <cmath>
 #include <assert.h>
 
 #include "compileassert.h"
