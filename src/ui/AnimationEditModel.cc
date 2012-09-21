@@ -88,13 +88,8 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 		}
 
 		if (index.row() > 0 && columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
-			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
-				return Qt::Checked;
-			} else {
-				return Qt::Unchecked;
-			}
+			return QVariant();
 		}
-
 	} else if (role == Qt::FontRole) {
 		if (columnFields[index.column()] == ColumnFieldValue) {
 			if (glWidget->animation_data->values.haveKeyValue (animation_time, index.row())) {
@@ -106,6 +101,9 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 	} else if (role == Qt::TextAlignmentRole) {
 		if (columnFields[index.column()] == ColumnFieldValue)
 			return Qt::AlignRight + Qt::AlignVCenter;
+		else if (columnFields[index.column()] == ColumnFieldKeyFrameFlag) {
+			return Qt::AlignHCenter;
+		}
 	} else if (role == Qt::EditRole) {
 		if (columnFields[index.column()] == ColumnFieldValue) {
 			if (index.row() == 0) {
@@ -130,6 +128,9 @@ QVariant AnimationEditModel::data (const QModelIndex &index, int role) const {
 		}
 	}
 
+	if (index.row() > 0 && columnFields[index.column()] == ColumnFieldKeyFrameFlag)
+		return QVariant(0);
+
 	return QVariant();
 }
 
@@ -137,19 +138,20 @@ bool AnimationEditModel::setData (const QModelIndex &index, const QVariant &valu
 	if (role == Qt::EditRole) {
 		float animation_time = timeDoubleSpinBox->value();
 		if (columnFields[index.column()] == ColumnFieldKeyFrameFlag && index.row() > 0) {
-			if (value.toBool()) {
-//				qDebug() << "setting value";
+			if (!value.toBool()) {
 				float current_value = glWidget->animation_data->values.getInterpolatedValue (animation_time, index.row());
 				glWidget->animation_data->values.addKeyValue (animation_time, index.row(), current_value);
 				glWidget->animation_data->updateAnimationFromRawValues();
-				return true;
 			} else {
 //				qDebug() << "deleting value";
 				glWidget->animation_data->values.deleteKeyValue (animation_time, index.row());
 				glWidget->animation_data->updateAnimationFromRawValues();
-				return false;
 			}
+
+			emit dataChanged(index, index);
+			return true;
 		} else {
+			emit dataChanged(index, index);
 			return setValue (index.row(), value.toDouble());
 		}
 	}

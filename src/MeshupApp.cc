@@ -75,8 +75,9 @@ MeshupApp::MeshupApp(QWidget *parent)
 	animationValuesTableView->setModel (animation_edit_model);
 	DoubleSpinBoxDelegate *spinBoxDelegate = new DoubleSpinBoxDelegate (this);
 	animationValuesTableView->setItemDelegateForColumn (1, spinBoxDelegate);
-	CheckBoxDelegate *checkBoxDelegate = new CheckBoxDelegate (this);
-	animationValuesTableView->setItemDelegateForColumn (2, checkBoxDelegate);
+
+//	CheckBoxDelegate *checkBoxDelegate = new CheckBoxDelegate (this);
+//	animationValuesTableView->setItemDelegateForColumn (2, checkBoxDelegate);
 
 	animationValuesTableView->setColumnWidth (1, 80);
 	animationValuesTableView->setColumnWidth (2, 40);
