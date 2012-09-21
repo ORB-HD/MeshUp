@@ -519,7 +519,6 @@ void Animation::updateAnimationFromRawValues () {
 		Vector3f pose_rotation_angles;
 
 		string current_frame_name;
-		string last_frame_name;
 		unsigned int ci;
 		for (ci = 0.; ci < column_infos.size(); ci++) {
 			if (column_infos[ci].is_time_column || column_infos[ci].is_empty)
@@ -527,23 +526,6 @@ void Animation::updateAnimationFromRawValues () {
 
 			float raw_value = values.getInterpolatedValue (time, ci);
 
-			current_frame_name = column_infos[ci].frame_name;
-			if (last_frame_name.size() != 0 && current_frame_name != last_frame_name) {
-				// we already get the data for the next model frame so we have
-				// everything for the current model frame
-				addFramePose (last_frame_name, 
-						time,
-						pose_translation,
-						pose_rotation,
-						pose_scale
-						);
-
-				// reset transformations
-				pose_translation.set(0.f, 0.f, 0.f);
-				pose_scale.set(1.f, 1.f, 1.f);
-				pose_rotation = smQuaternion();
-				pose_rotation_angles.setZero();
-			}
 
 			if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
 				switch (column_infos[ci].axis) {
@@ -580,7 +562,23 @@ void Animation::updateAnimationFromRawValues () {
 				pose_rotation *= configuration.convertAnglesToQuaternion (axis_rotation);
 			}
 
-			last_frame_name = current_frame_name;
+			current_frame_name = column_infos[ci].frame_name;
+			if ((ci == column_infos.size() - 1) || (column_infos[ci + 1].frame_name != current_frame_name)) {
+				// we already get the data for the next model frame so we have
+				// everything for the current model frame
+				addFramePose (current_frame_name, 
+						time,
+						pose_translation,
+						pose_rotation,
+						pose_scale
+						);
+
+				// reset transformations
+				pose_translation.set(0.f, 0.f, 0.f);
+				pose_scale.set(1.f, 1.f, 1.f);
+				pose_rotation = smQuaternion();
+				pose_rotation_angles.setZero();
+			}
 		}
 		frame_iter++;
 	}
@@ -949,7 +947,7 @@ void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr ani
 		FramePtr model_frame = model->findFrame ((track_iter->first).c_str());
 		PoseInfo start_pose, end_pose;
 		float fraction;
-	
+
 		track_iter->second.findInterpolationPoses (time, start_pose, end_pose, fraction);
 		InterpolateModelFramePose (model_frame, start_pose, end_pose, fraction);
 
