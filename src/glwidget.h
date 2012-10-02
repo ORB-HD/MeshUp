@@ -100,6 +100,10 @@ class GLWidget : public QGLWidget
 		void actionRenderSeriesImage();
 
 		void setAnimationTime (float fraction);
+	
+	signals:
+		void animation_loaded();
+		void model_loaded();
 };
 
 #endif

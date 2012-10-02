@@ -43,9 +43,9 @@ inline std::vector<std::string> tokenize (const std::string &line_in, std::strin
 
 	while (line.find_first_of (delimiter) != std::string::npos) {
 		std::string token = line.substr (0, line.find_first_of (delimiter));
+
 		line = line.substr (token.size() + 1, line.size());
-		if (token.size() > 0)
-			result.push_back (token);
+		result.push_back (token);
 	}
 
 	if (line.size() > 0)

@@ -9,8 +9,8 @@
 using namespace std;
 
 TEST ( FrameAnimationTrackInterpolationSimple ) {
-	FramePoseInfo pose_start;
-	FramePoseInfo pose_end;
+	PoseInfo pose_start;
+	PoseInfo pose_end;
 	
 	pose_start.timestamp = 0.f;
 

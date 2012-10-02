@@ -34,41 +34,340 @@ using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t#";
 
+std::string ColumnInfo::toString() {
+	stringstream result("");
+
+	if (is_time_column)
+		return ("Time");	
+
+	result << frame_name << ":";
+
+	switch (type) {
+		case (TransformTypeRotation): result << "rotation"; break;
+		case (TransformTypeTranslation): result << "translation"; break;
+		case (TransformTypeScale): result << "scale"; break;
+		default: cerr << "Unknown transform type " << type << "."; abort();
+	}
+
+	result << ":";
+
+	switch (axis) {
+		case (AxisTypeX): result << "X"; break;
+		case (AxisTypeY): result << "Y"; break;
+		case (AxisTypeZ): result << "Z"; break;
+		case (AxisTypeNegativeX): result << "X"; break;
+		case (AxisTypeNegativeY): result << "Y"; break;
+		case (AxisTypeNegativeZ): result << "Z"; break;
+		default: cerr << "Unknown axis type " << axis << "."; abort();
+	}
+
+	if (is_radian) {
+		result << ":rad";
+	}
+
+	return result.str();
+}
+
+bool compare_keyframe_timestamp (KeyFrame first, KeyFrame second) {
+	if (first.timestamp == second.timestamp) {
+		cerr << "Error: found two keyframes with the same timestamp at time " << first.timestamp << endl;
+		abort();
+	}
+
+	if (first.timestamp < second.timestamp)
+		return true;
+	return false;
+}
+
+bool compare_keyvalues_index (KeyValue first, KeyValue second) {
+	if (first.index == second.index) {
+		cerr << "Error: found two keyvalues with the same index of " << first.index << endl;
+		abort();
+	}
+
+	if (first.index < second.index)
+		return true;
+
+	return false;
+}
+
+float RawValues::getPrevKeyFrameTime (const float time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.begin();
+
+	// check if the value is before the first keyframe
+	if (frame_iter != frames.end() && frame_iter->timestamp > time) {
+		return frame_iter->timestamp;
+	}
+
+	while (frame_iter != frames.end() && frame_iter->timestamp < time) {
+		frame_iter++;
+	}
+
+	frame_iter--;
+	
+	return frame_iter->timestamp;
+}
+
+float RawValues::getNextKeyFrameTime (const float time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.begin();
+
+	// check if the value is before the first keyframe
+	if (frame_iter != frames.end() && frame_iter->timestamp > time) {
+		return frame_iter->timestamp;
+	}
+
+	while (frame_iter != frames.end() && frame_iter->timestamp < time) {
+		frame_iter++;
+	}
+
+	if (frame_iter == frames.end()) {
+		frame_iter--;
+	}
+
+	return frame_iter->timestamp;
+}
+
+void RawValues::addKeyValue (const float time, unsigned int index, float value) {
+	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
+
+	if (frame_iter == frames.end()) {
+		KeyFrame frame;
+		frame.timestamp = time;
+
+		frames.push_back (frame);
+		frames.sort(compare_keyframe_timestamp);
+
+		frame_iter = getKeyFrameIter(time);
+	}
+
+	assert (frame_iter != frames.end());
+
+	if (haveKeyValue (time, index)) {
+		deleteKeyValue (time, index);
+	}
+
+	frame_iter->value_list.push_back (KeyValue (value, index));
+	frame_iter->value_list.sort(compare_keyvalues_index);
+
+//	std::cerr << "Now " << frame_iter->value_list.size() << " values at keyframe at t = " << frame_iter->timestamp << std::endl;
+}
+
+float RawValues::getKeyValue (const float time, unsigned int index) {
+	assert (haveKeyValue (time, index));
+
+	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
+
+	if (frame_iter == frames.end()) {
+		KeyFrame frame;
+		frame.timestamp = time;
+
+		frames.push_back (frame);
+		frames.sort(compare_keyframe_timestamp);
+
+		frame_iter = getKeyFrameIter(time);
+	}
+
+	assert (frame_iter != frames.end());
+
+	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
+
+	while (value_iter != frame_iter->value_list.end()) {
+		if (value_iter->index == index)
+			return value_iter->value;
+		value_iter++;
+	}
+
+	cerr << "Error: could not find value at time " << time << " and index " << index<< endl;
+	abort();
+
+	return std::numeric_limits<float>::quiet_NaN();
+}
+
+float RawValues::getPrevKeyValue (const float time, unsigned int index, float *frame_time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.begin();
+
+	bool found_any_value = false;
+	float result_value = 0.; 
+	float result_time = 0.f;
+
+	while (frame_iter != frames.end()) { 
+		if (frame_iter->timestamp > time && found_any_value) {
+			break;
+		}
+		
+		if (haveKeyValue (frame_iter->timestamp, index)) {
+			result_value = const_cast<RawValues*>(this)->getKeyValue  (frame_iter->timestamp, index);
+			result_time = frame_iter->timestamp;
+			found_any_value = true;
+		}
+ 
+		frame_iter++;
+	}
+
+	if (frame_time)
+		*frame_time = result_time;
+
+	return result_value;
+}
+
+float RawValues::getNextKeyValue (const float time, unsigned int index, float *frame_time) const {
+	RawKeyFrameList::const_iterator frame_iter = frames.end();
+
+	bool found_any_value = false;
+	float result_value = 0.; 
+	float result_time = 0.f;
+
+	while (frame_iter != frames.begin()) { 
+		frame_iter--;
+
+		if (frame_iter->timestamp < time && found_any_value) {
+			break;
+		}
+		
+		if (haveKeyValue (frame_iter->timestamp, index)) {
+			result_value = const_cast<RawValues*>(this)->getKeyValue  (frame_iter->timestamp, index);
+			result_time = frame_iter->timestamp;
+			found_any_value = true;
+		}
+	}
+
+	if (frame_time)
+		*frame_time = result_time;
+
+	return result_value;
+}
+
+void RawValues::deleteKeyValue (const float time, unsigned int index) {
+	if (!haveKeyValue (time, index)) {
+		return;
+	}
+
+	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
+	if (frame_iter == frames.end()) {
+		KeyFrame frame;
+		frame.timestamp = time;
+
+		frames.push_back (frame);
+		frames.sort(compare_keyframe_timestamp);
+
+		frame_iter = getKeyFrameIter(time);
+	}
+
+	assert (frame_iter != frames.end());
+
+	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
+	unsigned int old_size = frame_iter->value_list.size();
+
+	while (value_iter != frame_iter->value_list.end()) {
+		if (value_iter->index == index) {
+			break;
+		}
+		value_iter++;
+	}
+
+	frame_iter->value_list.erase (value_iter);
+
+	// check whether we acually still have any values or whether we delete
+	// the key frame entirely
+	if (frame_iter->value_list.size() == 0) {
+		frames.erase (frame_iter);
+	}
+
+	assert (old_size - 1 == frame_iter->value_list.size());
+}
+
+bool RawValues::haveKeyValue (const float time, unsigned int index) const {
+	RawKeyFrameList::iterator frame_iter = const_cast<RawValues*>(this)->getKeyFrameIter (time);
+	if (frame_iter == frames.end())
+		return false;
+
+	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
+
+	while (value_iter != frame_iter->value_list.end()) {
+		if (value_iter->index == index)
+			return true;
+		value_iter++;
+	}
+	
+	return false;
+}
+
+RawKeyFrameList::iterator RawValues::getKeyFrameIter (const float time) {
+	RawKeyFrameList::iterator frame_iter = frames.begin();
+
+	while (frame_iter != frames.end()) {
+		if (fabs (frame_iter->timestamp - time) < 1.0e-4) {
+			break;
+		}
+		frame_iter++;
+	}
+
+	return frame_iter;
+}
+
+bool RawValues::haveKeyFrame (const float time) const {
+	RawKeyFrameList::iterator frame_iter = const_cast<RawValues*>(this)->getKeyFrameIter (time);
+
+	if (frame_iter != frames.end()) {
+		return true;
+	}
+
+	return false;
+}
+
+void RawValues::moveKeyFrame (const float old_time, const float new_time) {
+	RawKeyFrameList::iterator frame_old = getKeyFrameIter (old_time);
+
+	if (fabsf(old_time - new_time) < 1.0e-5)
+		return;
+
+	if (frame_old == frames.end()) {
+		cerr << "Error: cannot move key frames. No key frame found at time " << old_time << endl;
+		abort();
+	}
+
+	RawKeyFrameList::iterator frame_new = getKeyFrameIter (new_time);
+
+	if (frame_new != frames.end()) {
+		// we merge the existing into the current and overwrite possible
+		// existing values.
+		KeyValueList::iterator value_iter = frame_new->value_list.begin();
+
+		while (value_iter != frame_new->value_list.end()) {
+			if (!haveKeyValue (old_time, value_iter->index)) {
+				addKeyValue (old_time, value_iter->index, value_iter->value);
+			}
+
+			value_iter++;
+		}
+
+		frames.erase (frame_new);
+	}
+
+	frame_old->timestamp = new_time;
+	frames.push_back (*frame_old);
+	frames.erase (frame_old);
+	frames.sort(compare_keyframe_timestamp);
+}
+
+float RawValues::getInterpolatedValue (const float time, unsigned int index) const {
+	float prev_key_time;
+	float prev_key_value = getPrevKeyValue (time, index, &prev_key_time);
+
+	float next_key_time;
+	float next_key_value = getNextKeyValue (time, index, &next_key_time);
+
+	float duration = next_key_time - prev_key_time;
+	if (fabs (duration) < 1.0e-6) {
+		return next_key_value;
+	}
+
+	float fraction = (time - prev_key_time) / duration;
+
+	return prev_key_value + fraction * (next_key_value - prev_key_value);
+}
+
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
-
-/** \brief Description of the description of a column section entry. */
-struct ColumnInfo {
-	ColumnInfo() :
-		frame_name (""),
-		type (TypeUnknown),
-		axis (AxisUnknown),
-		is_time_column (false),
-		is_empty (false),
-		is_radian (false)
-	{}
-	enum TransformType {
-		TypeUnknown = 0,
-		TypeRotation,
-		TypeTranslation,
-		TypeScale,
-	};
-	enum AxisName {
-		AxisUnknown = 0,
-		AxisX,
-		AxisY,
-		AxisZ,
-		AxisMX, // -X
-		AxisMY, // -Y
-		AxisMZ  // -Z
-	};
-	std::string frame_name;
-	TransformType type;
-	AxisName axis;
-
-	bool is_time_column;
-	bool is_empty;
-	bool is_radian;
-};
 
 /** \brief Keeps transformation information for all model frames at a single keyframe 
  *
@@ -78,14 +377,13 @@ struct ColumnInfo {
  */
 struct AnimationKeyPoses {
 	float timestamp;
-	std::vector<ColumnInfo> columns;
-	typedef std::map<std::string, FramePoseInfo> FramePoseMap;
+	typedef std::map<std::string, PoseInfo> FramePoseMap;
 	FramePoseMap frame_poses;
 	
 	void clearFramePoses() {
 		frame_poses.clear();	
 	}
-	bool setValue (int column_index, float value, bool strict = true) {
+	bool setValue (int column_index, const std::vector<ColumnInfo> columns, float value, bool strict = true) {
 		assert (column_index <= columns.size());
 		ColumnInfo col_info = columns[column_index];
 
@@ -101,64 +399,64 @@ struct AnimationKeyPoses {
 
 		if (frame_poses.find(frame_name) == frame_poses.end()) {
 			// create new frame and insert it
-			frame_poses[frame_name] = FramePoseInfo();
+			frame_poses[frame_name] = PoseInfo();
 		}
 
-		if (col_info.type == ColumnInfo::TypeRotation) {
-			if (col_info.axis == ColumnInfo::AxisX) {
+		if (col_info.type == ColumnInfo::TransformTypeRotation) {
+			if (col_info.axis == ColumnInfo::AxisTypeX) {
 				frame_poses[frame_name].rotation_angles[0] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisY) {
+			if (col_info.axis == ColumnInfo::AxisTypeY) {
 				frame_poses[frame_name].rotation_angles[1] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisZ) {
+			if (col_info.axis == ColumnInfo::AxisTypeZ) {
 				frame_poses[frame_name].rotation_angles[2] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMX) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeX) {
 				frame_poses[frame_name].rotation_angles[0] = -value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMY) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeY) {
 				frame_poses[frame_name].rotation_angles[1] = -value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMZ) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeZ) {
 				frame_poses[frame_name].rotation_angles[2] = -value;
 			}
-		} else if (col_info.type == ColumnInfo::TypeTranslation) {
-			if (col_info.axis == ColumnInfo::AxisX) {
+		} else if (col_info.type == ColumnInfo::TransformTypeTranslation) {
+			if (col_info.axis == ColumnInfo::AxisTypeX) {
 				frame_poses[frame_name].translation[0] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisY) {
+			if (col_info.axis == ColumnInfo::AxisTypeY) {
 				frame_poses[frame_name].translation[1] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisZ) {
+			if (col_info.axis == ColumnInfo::AxisTypeZ) {
 				frame_poses[frame_name].translation[2] = value;
 			}	
-			if (col_info.axis == ColumnInfo::AxisMX) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeX) {
 				frame_poses[frame_name].translation[0] = -value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMY) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeY) {
 				frame_poses[frame_name].translation[1] = -value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMZ) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeZ) {
 				frame_poses[frame_name].translation[2] = -value;
 			}	
-		} else if (col_info.type == ColumnInfo::TypeScale) {
-			if (col_info.axis == ColumnInfo::AxisX) {
+		} else if (col_info.type == ColumnInfo::TransformTypeScale) {
+			if (col_info.axis == ColumnInfo::AxisTypeX) {
 				frame_poses[frame_name].scaling[0] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisY) {
+			if (col_info.axis == ColumnInfo::AxisTypeY) {
 				frame_poses[frame_name].scaling[1] = value;
 			}
-			if (col_info.axis == ColumnInfo::AxisZ) {
+			if (col_info.axis == ColumnInfo::AxisTypeZ) {
 				frame_poses[frame_name].scaling[2] = value;
 			}	
-			if (col_info.axis == ColumnInfo::AxisMX) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeX) {
 				frame_poses[frame_name].scaling[0] = -value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMY) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeY) {
 				frame_poses[frame_name].scaling[1] = -value;
 			}
-			if (col_info.axis == ColumnInfo::AxisMZ) {
+			if (col_info.axis == ColumnInfo::AxisTypeNegativeZ) {
 				frame_poses[frame_name].scaling[2] = -value;
 			}	
 		} else {
@@ -181,18 +479,25 @@ struct AnimationKeyPoses {
 
 void Animation::addFramePose (
 			const std::string &frame_name,
-			float time,
+			const float time,
 			const Vector3f &frame_translation,
-			const Vector3f &frame_rotation_angles,
+			const smQuaternion &frame_rotation_quaternion,
 			const Vector3f &frame_scaling
 		) {
-	FramePoseInfo pose;
+//		cerr << __func__ << " (" << frame_name 
+//			<< ", " << time << ", "	<< frame_translation.transpose()
+//			<< ", " << frame_rotation_quaternion.transpose() << ", "
+//			<< frame_scaling.transpose() << ")" << endl;
+
+	PoseInfo pose;
 	pose.timestamp = time;
 	pose.translation = configuration.axes_rotation.transpose() * frame_translation;
-	pose.rotation_angles = frame_rotation_angles;
-	pose.rotation_quaternion = configuration.convertAnglesToQuaternion (frame_rotation_angles);
+	pose.rotation_quaternion = frame_rotation_quaternion;
 	pose.scaling = frame_scaling;
 
+	// cerr << "frame tracks.size() = " << frame_animation_tracks.size() << endl;
+	// cerr << "firstr name = " << frame_animation_tracks.begin()->first << endl;
+	// cerr << "frame_tracks.keyframes.size() = " << frame_animation_tracks[frame_name].keyframes.size() << endl;
 	frame_animation_tracks[frame_name].keyframes.push_back(pose);
 
 	// update the duration of the animation
@@ -200,7 +505,90 @@ void Animation::addFramePose (
 		duration = time;
 }
 
+void Animation::updateAnimationFromRawValues () {
+	RawKeyFrameList::const_iterator frame_iter = values.frames.begin();
+
+	frame_animation_tracks.clear();
+
+	while (frame_iter != values.frames.end()) {
+		float time = frame_iter->timestamp;
+
+		Vector3f pose_translation (0.f, 0.f, 0.f);
+		smQuaternion pose_rotation;
+		Vector3f pose_scale (1.f, 1.f, 1.f);
+		Vector3f pose_rotation_angles;
+
+		string current_frame_name;
+		unsigned int ci;
+		for (ci = 0.; ci < column_infos.size(); ci++) {
+			if (column_infos[ci].is_time_column || column_infos[ci].is_empty)
+				continue;
+
+			float raw_value = values.getInterpolatedValue (time, ci);
+
+
+			if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
+				switch (column_infos[ci].axis) {
+					case ColumnInfo::AxisTypeX: pose_translation[0] = raw_value; break;
+					case ColumnInfo::AxisTypeY: pose_translation[1] = raw_value; break;
+					case ColumnInfo::AxisTypeZ: pose_translation[2] = raw_value; break;
+					case ColumnInfo::AxisTypeNegativeX: pose_translation[0] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeY: pose_translation[1] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeZ: pose_translation[2] = -raw_value; break;
+					default: cerr << "Invalid axis!" << endl; abort();
+				}
+			} else if (column_infos[ci].type == ColumnInfo::TransformTypeScale) {
+				switch (column_infos[ci].axis) {
+					case ColumnInfo::AxisTypeX: pose_scale[0] = raw_value; break;
+					case ColumnInfo::AxisTypeY: pose_scale[1] = raw_value; break;
+					case ColumnInfo::AxisTypeZ: pose_scale[2] = raw_value; break;
+					case ColumnInfo::AxisTypeNegativeX: pose_scale[0] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeY: pose_scale[1] = -raw_value; break;
+					case ColumnInfo::AxisTypeNegativeZ: pose_scale[2] = -raw_value; break;
+					default: cerr << "Invalid axis!" << endl; abort();
+				}
+			} else if (column_infos[ci].type == ColumnInfo::TransformTypeRotation) {
+				Vector3f axis_rotation;
+				switch (column_infos[ci].axis) {
+					case ColumnInfo::AxisTypeX: axis_rotation.set(raw_value, 0.f, 0.f); break;
+					case ColumnInfo::AxisTypeY: axis_rotation.set(0.f, raw_value, 0.f); break;
+					case ColumnInfo::AxisTypeZ: axis_rotation.set(0.f, 0.f, raw_value); break;
+					case ColumnInfo::AxisTypeNegativeX: axis_rotation.set(-raw_value, 0.f, 0.f); break;
+					case ColumnInfo::AxisTypeNegativeY: axis_rotation.set(0.f, -raw_value, 0.f); break;
+					case ColumnInfo::AxisTypeNegativeZ: axis_rotation.set(0.f, 0.f, -raw_value); break;
+					default: cerr << "Invalid rotation axis: " << column_infos[ci].axis << endl; abort();
+				}
+				pose_rotation_angles += axis_rotation;
+				pose_rotation *= configuration.convertAnglesToQuaternion (axis_rotation);
+			}
+
+			current_frame_name = column_infos[ci].frame_name;
+			if ((ci == column_infos.size() - 1) || (column_infos[ci + 1].frame_name != current_frame_name)) {
+				// we already get the data for the next model frame so we have
+				// everything for the current model frame
+				addFramePose (current_frame_name, 
+						time,
+						pose_translation,
+						pose_rotation,
+						pose_scale
+						);
+
+				// reset transformations
+				pose_translation.set(0.f, 0.f, 0.f);
+				pose_scale.set(1.f, 1.f, 1.f);
+				pose_rotation = smQuaternion();
+				pose_rotation_angles.setZero();
+			}
+		}
+		frame_iter++;
+	}
+}
+
 bool Animation::loadFromFile (const char* filename, bool strict) {
+	return loadFromFileAtFrameRate (filename, -1.f, strict);
+}
+
+bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_second, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
@@ -212,19 +600,38 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 		return false;
 	}
 
+	double force_fps_previous_frame = 0.;
+	int force_fps_frame_count = 0;
+	int force_fps_skipped_frame_count = 0;
+	bool last_line = false;
+
 	cout << "Loading animation " << filename << endl;
 
+	if (frames_per_second != -1.f)
+		cout << "Reading input using: " << frames_per_second << " frames per second." << endl;
+
+	string previous_line;
 	string line;
 
 	bool column_section = false;
 	bool data_section = false;
 	int column_index = 0;
 	int line_number = 0;
+	column_infos.clear();
+
 	AnimationKeyPoses animation_keyposes;
 
 	while (!file_in.eof()) {
+		previous_line = line;
 		getline (file_in, line);
-		line_number++;
+
+		// make sure the last line is read no matter what
+		if (file_in.eof()) {
+			last_line = true;
+			line = previous_line;
+		} else {
+			line_number++;
+		}
 	
 		line = strip_comments (strip_whitespaces( (line)));
 		
@@ -264,16 +671,20 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 				// cout << "  E: " << column_def << endl;
 
 				if (tolower(column_def) == "time") {
+					if (ei != 0) {
+						cerr << "Error: first column must be time column (it was column " << ei <<")!" << endl;
+						abort();
+					}
 					ColumnInfo column_info;
 					column_info.is_time_column = true;
-					animation_keyposes.columns.push_back(column_info);
+					column_infos.push_back(column_info);
 					// cout << "Setting time column to " << column_index << endl;
 					continue;
 				}
 				if (tolower(column_def) == "empty") {
 					ColumnInfo column_info;
 					column_info.is_empty = true;
-					animation_keyposes.columns.push_back(column_info);
+					column_infos.push_back(column_info);
 					continue;
 				}
 				
@@ -292,16 +703,16 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 
 				// the transform type
 				string type_str = tolower(strip_whitespaces(spec[1]));
-				ColumnInfo::TransformType type = ColumnInfo::TypeUnknown;
+				ColumnInfo::TransformType type = ColumnInfo::TransformTypeUnknown;
 				if (type_str == "rotation"
 						|| type_str == "r")
-					type = ColumnInfo::TypeRotation;
+					type = ColumnInfo::TransformTypeRotation;
 				else if (type_str == "translation"
 						|| type_str == "t")
-					type = ColumnInfo::TypeTranslation;
+					type = ColumnInfo::TransformTypeTranslation;
 				else if (type_str == "scale"
 						|| type_str == "s")
-					type = ColumnInfo::TypeScale;
+					type = ColumnInfo::TransformTypeScale;
 				else {
 					cerr << "Error: Unknown transform type '" << spec[1] << "' in " << filename << " line " << line_number << endl;
 					
@@ -313,19 +724,19 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 
 				// and the axis
 				string axis_str = tolower(strip_whitespaces(spec[2]));
-				ColumnInfo::AxisName axis_name;
+				ColumnInfo::AxisType axis_name;
 				if (axis_str == "x")
-					axis_name = ColumnInfo::AxisX;
+					axis_name = ColumnInfo::AxisTypeX;
 				else if (axis_str == "y")
-					axis_name = ColumnInfo::AxisY;
+					axis_name = ColumnInfo::AxisTypeY;
 				else if (axis_str == "z")
-					axis_name = ColumnInfo::AxisZ;
+					axis_name = ColumnInfo::AxisTypeZ;
 				else if (axis_str == "-x")
-					axis_name = ColumnInfo::AxisMX;
+					axis_name = ColumnInfo::AxisTypeNegativeX;
 				else if (axis_str == "-y")
-					axis_name = ColumnInfo::AxisMY;
+					axis_name = ColumnInfo::AxisTypeNegativeY;
 				else if (axis_str == "-z")
-					axis_name = ColumnInfo::AxisMZ;
+					axis_name = ColumnInfo::AxisTypeNegativeZ;
 				else {
 					cerr << "Error: Unknown axis name '" << spec[2] << "' in " << filename << " line " << line_number << endl;
 
@@ -349,78 +760,128 @@ bool Animation::loadFromFile (const char* filename, bool strict) {
 				col_info.is_radian = unit_is_radian;
 
 				// cout << "Adding column " << column_index << " " << frame->name << ", " << type << ", " << axis_name << " radians = " << col_info.is_radian << endl;
-				animation_keyposes.columns.push_back(col_info);
+				column_infos.push_back(col_info);
 			}
 
 			continue;
 		}
 
 		if (data_section) {
+			// Data part:
+			// columns have been read
+		
 			// cout << "DATA  :" << line << endl;
 			// parse the DOF description and set the column info in
 			// animation_keyposes
-
-			// Data part:
-			// columns have been read
 			std::vector<string> columns = tokenize (line);
-			assert (columns.size() >= animation_keyposes.columns.size());
+			assert (columns.size() >= column_infos.size());
+			std::vector<float> column_values;
 
-			// we update all the frame_poses. Once we're done, we add all poses
-			// to the given time and clear all frame poses again.
-			animation_keyposes.clearFramePoses();
+			float column_time;
+			float value;
+			istringstream value_stream (columns[0]);
+			if (!(value_stream >> value)) {
+				cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << "." << endl;
+				abort();
+			}
+			
+			column_time = value;
 
-			for (int ci = 0; ci < animation_keyposes.columns.size(); ci++) {
-				// parse each column value and submit it to animation_keyposes
-				float value;
-				istringstream value_stream (columns[ci]);
-				value_stream >> value;
-				
-				// handle radian
-				if (animation_keyposes.columns[ci].type==ColumnInfo::TypeRotation && animation_keyposes.columns[ci].is_radian) {
-					value *= 180. / M_PI;
+			if (column_time != 0. && !last_line && frames_per_second != -1.f) {
+				if (force_fps_previous_frame + 1. / frames_per_second >= column_time) {
+					force_fps_skipped_frame_count++;
+					continue;
 				}
-				
-				// cout << "  col value " << ci << " = " << value << endl;
-				animation_keyposes.setValue (ci, value, strict);
 			}
 
-			// dispatch the time information to all frame poses
-			animation_keyposes.updateTimeValues();
+			force_fps_previous_frame = column_time;
+			force_fps_frame_count++;
+			// cout << "Reading frame at t = " << scientific << force_fps_previous_frame << endl;
 
-			AnimationKeyPoses::FramePoseMap::iterator frame_pose_iter = animation_keyposes.frame_poses.begin();
-			while (frame_pose_iter != animation_keyposes.frame_poses.end()) {
-				// call addFramePose()
-				FramePoseInfo pose = frame_pose_iter->second;
+			// check whether we have actual values and add them as KeyValues
+			for (int ci = 1; ci < column_infos.size(); ci++) {
+				if (columns[ci] == "," || columns[ci].size() == 0)
+					continue;
 
-				// cout << "addFramePose("
-				// 	<< "  " << frame->name << endl
-				// 	<< "  " << pose.timestamp << endl
-				// 	<< "  " << pose.translation.transpose() << endl
-				// 	<< "  " << pose.rotation.transpose() << endl
-				// 	<< "  " << pose.scaling.transpose() << endl;
+				value_stream.clear();
+				value_stream.str(columns[ci]);
 
-				addFramePose (frame_pose_iter->first,
-						pose.timestamp,
-						pose.translation,
-						pose.rotation_angles,
-						pose.scaling
-						);
+				if (!(value_stream >> value)) {
+					cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << " column " << ci << "." << endl;
+					cout << value << endl;
+					abort();
+				}
 
-				frame_pose_iter++;
+				// handle radian
+				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
+					value *= 180. / M_PI;
+				}
+				values.addKeyValue(column_time, ci, value);
 			}
 			continue;
 		}
 	}
+
+	if (frames_per_second != -1.f) {
+		cout << "Read " << force_fps_frame_count << " frames (skipped " << force_fps_skipped_frame_count << " frames)" << endl;
+	}
+
+	updateAnimationFromRawValues ();
 
 	animation_filename = filename;
 
 	return true;
 }
 
-void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_start, FramePoseInfo &pose_end, float &fraction) {
+bool Animation::saveToFile (const char* filename) {
+	ofstream file_out (filename);
+
+	if (!file_out) {
+		cerr << "Error opening animation file " << filename << "!";
+		abort();
+
+		return false;
+	}
+
+	cout << "Saving animation " << filename << endl;
+
+	file_out << "# MeshUp animation file" << endl;
+	file_out << "NAME: " << name << endl;
+	file_out << "COLUMNS:" << endl;
+
+	for (unsigned int ci = 0; ci < column_infos.size(); ci++) {
+		file_out << column_infos[ci].toString();
+		if (ci != column_infos.size() - 1)
+			file_out << ", ";
+	}
+	file_out << endl;
+
+	file_out << "DATA:" << endl;
+
+	RawKeyFrameList::const_iterator frame_iter = values.frames.begin();
+	
+	while (frame_iter != values.frames.end()) {
+		file_out << frame_iter->timestamp << ", ";
+
+		for (unsigned int ci = 0; ci < column_infos.size(); ci++) {
+			if (values.haveKeyValue (frame_iter->timestamp, ci)) {
+				file_out << values.getKeyValue (frame_iter->timestamp, ci); 
+
+				if (ci != column_infos.size() - 1)
+					file_out << ", ";
+			}
+		}
+		file_out << endl;
+
+		frame_iter++;
+	}
+	return true;
+}
+
+void AnimationTrack::findInterpolationPoses (float time, PoseInfo &pose_start, PoseInfo &pose_end, float &fraction) {
 	if (keyframes.size() == 0) {
-		pose_start = FramePoseInfo();
-		pose_end = FramePoseInfo();
+		pose_start = PoseInfo();
+		pose_end = PoseInfo();
 		fraction = 0.;
 	} else if (keyframes.size() == 1) {
 		pose_start = *(keyframes.begin());
@@ -460,7 +921,7 @@ void AnimationTrack::findInterpolationPoses (float time, FramePoseInfo &pose_sta
 		fraction = 0.f;
 }
 
-void InterpolateModelFramePose (FramePtr frame, const FramePoseInfo &start_pose, const FramePoseInfo &end_pose, const float fraction) {
+void InterpolateModelFramePose (FramePtr frame, const PoseInfo &start_pose, const PoseInfo &end_pose, const float fraction) {
 	frame->pose_translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
 	frame->pose_rotation_quaternion = start_pose.rotation_quaternion.slerp (fraction, end_pose.rotation_quaternion);
 	frame->pose_scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
@@ -484,9 +945,9 @@ void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr ani
 	AnimationTrackMap::iterator track_iter = animation->frame_animation_tracks.begin();
 	while (track_iter != animation->frame_animation_tracks.end()) {
 		FramePtr model_frame = model->findFrame ((track_iter->first).c_str());
-		FramePoseInfo start_pose, end_pose;
+		PoseInfo start_pose, end_pose;
 		float fraction;
-	
+
 		track_iter->second.findInterpolationPoses (time, start_pose, end_pose, fraction);
 		InterpolateModelFramePose (model_frame, start_pose, end_pose, fraction);
 

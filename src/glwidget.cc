@@ -78,6 +78,7 @@ GLWidget::~GLWidget() {
 void GLWidget::loadModel(const char* filename) {
 	if (opengl_initialized) {
 		model_data->loadModelFromFile (filename);
+		emit model_loaded();
 	} else {
 		// mark file for later loading
 		model_filename = filename;
@@ -86,7 +87,8 @@ void GLWidget::loadModel(const char* filename) {
 
 void GLWidget::loadAnimation(const char* filename) {
 	if (opengl_initialized) {
-		animation_data->loadFromFile(filename);
+		animation_data->loadFromFileAtFrameRate(filename, 60.f);
+		emit animation_loaded();
 	} else {
 		// mark file for later loading
 		animation_filename = filename;
@@ -461,8 +463,21 @@ void GLWidget::drawScene() {
 		model_data->drawBaseFrameAxes();
 	if (draw_frame_axes)
 		model_data->drawFrameAxes();
+
+	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
+	if (depth_test_enabled)
+		glDisable (GL_DEPTH_TEST);
+
+	glDisable (GL_LIGHTING);
+
 	if (draw_curves)
 		model_data->drawCurves();
+
+	glEnable (GL_LIGHTING);
+
+	if (depth_test_enabled)
+		glEnable (GL_DEPTH_TEST);
+
 
 	/*
 	if (draw_count % 100 == 0) {

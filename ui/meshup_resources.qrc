@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="logo">
+    <file>meshup_logo.svg</file>
+    <file>meshup_logo_square.png</file>
+    <file>meshup_logo_square.svg</file>
+  </qresource>
+</RCC>

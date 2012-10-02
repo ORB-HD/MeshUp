@@ -7,6 +7,9 @@
 #include "glwidget.h" 
 #include "MeshupApp.h"
 #include "Animation.h"
+#include "ui/AnimationEditModel.h"
+#include "ui/DoubleSpinBoxDelegate.h"
+#include "ui/CheckBoxDelegate.h"
 
 #include <assert.h>
 #include <iostream>
@@ -16,10 +19,13 @@
 #include <fstream>
 
 #include "json/json.h"
+#include "colorscale.h"
 
 using namespace std;
 
 Json::Value settings_json;
+
+const double TimeLineDuration = 1000.;
 
 MeshupApp::MeshupApp(QWidget *parent)
 {
@@ -32,7 +38,9 @@ MeshupApp::MeshupApp(QWidget *parent)
 	timer->setSingleShot(false);
 	timer->start(20);
 
-	timeLine = new QTimeLine (1000., this);
+//	setWindowIcon(QIcon("meshup_logo_square.svg"));
+
+	timeLine = new QTimeLine (TimeLineDuration, this);
 	timeLine->setCurveShape(QTimeLine::LinearCurve);
 
 	if (checkBoxLoopAnimation->isChecked())
@@ -49,7 +57,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	spinBoxSpeed->setSingleStep(5);
 
 	horizontalSliderTime->setMinimum(0);
-	horizontalSliderTime->setMaximum(1000.);
+	horizontalSliderTime->setMaximum(TimeLineDuration);
 	horizontalSliderTime->setSingleStep(1);
 
 	checkBoxDrawBaseAxes->setChecked (glWidget->draw_base_axes);
@@ -58,20 +66,34 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawGrid->setChecked (glWidget->draw_grid);
 	checkBoxDrawMeshes->setChecked (glWidget->draw_meshes);
 	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
-	checkBoxDrawShadows->setChecked (glWidget->draw_curves);
+	checkBoxDrawCurves->setChecked (glWidget->draw_curves);
+
+	// animation editor
+	animation_edit_model = new AnimationEditModel (this);	
+	animation_edit_model->setGlWidget (glWidget);
+	animation_edit_model->setTimeSpinBox (keyFrameTimeSpinBox);
+	animationValuesTableView->setModel (animation_edit_model);
+	DoubleSpinBoxDelegate *spinBoxDelegate = new DoubleSpinBoxDelegate (this);
+	animationValuesTableView->setItemDelegateForColumn (1, spinBoxDelegate);
+
+//	CheckBoxDelegate *checkBoxDelegate = new CheckBoxDelegate (this);
+//	animationValuesTableView->setItemDelegateForColumn (2, checkBoxDelegate);
+
+	animationValuesTableView->setColumnWidth (1, 80);
+	animationValuesTableView->setColumnWidth (2, 40);
 
 	// player is paused on startup
 	playerPaused = true;
 
 	dockPlayerControls->setVisible(true);
 	dockViewSettings->setVisible(false);
+	dockAnimationEditor->setVisible(false);
 
 	// the timer is used to continously redraw the OpenGL widget
 	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
 
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
-
 	connect (actionRenderSeriesImage, SIGNAL (triggered()), this, SLOT (actionRenderSeriesAndSaveToFile()));
 
 	// view stettings
@@ -96,10 +118,20 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// action_quit() makes sure to set the settings before we quit
 	connect (actionQuit, SIGNAL( triggered() ), this, SLOT( action_quit() ));
 
+	// animation editor
+	connect (toolButtonKeyFrameNext, SIGNAL( pressed() ), this, SLOT( action_next_keyframe() ));
+	connect (toolButtonKeyFramePrev, SIGNAL( pressed() ), this, SLOT( action_prev_keyframe() ));
+
 	// keyboard shortcuts
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
+
+	connect (actionSaveAnimation, SIGNAL ( triggered() ), this, SLOT(action_save_animation()));
+	connect (actionSaveAnimationTo, SIGNAL ( triggered() ), this, SLOT(action_save_animation_to()));
+
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
+
+	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
 
 	loadSettings();
 }
@@ -161,11 +193,23 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["repeat"] = checkBoxLoopAnimation->isChecked();
+	settings_json["configuration"]["docks"]["animationeditor_settings"]["visible"] = dockAnimationEditor->isVisible();
+	settings_json["configuration"]["docks"]["animationeditor_settings"]["auto_update"] = autoUpdateVariablesCheckBox->isChecked();
 
 	settings_json["configuration"]["window"]["width"] = width();
 	settings_json["configuration"]["window"]["height"] = height();
 	settings_json["configuration"]["window"]["xpos"] = x();
 	settings_json["configuration"]["window"]["ypos"] = y();
+
+	settings_json["configuration"]["render"]["width"]  = renderImageSeriesDialog->WidthSpinBox->value();
+	settings_json["configuration"]["render"]["height"] = renderImageSeriesDialog->HeightSpinBox->value();
+	settings_json["configuration"]["render"]["fps"]    = renderImageSeriesDialog->FpsSpinBox->value();
+
+	settings_json["configuration"]["render"]["fps_mode"]         = renderImageSeriesDialog->fpsModeRadioButton->isChecked();
+	settings_json["configuration"]["render"]["frame_count_mode"] = renderImageSeriesDialog->frameCountModeRadioButton->isChecked();
+	settings_json["configuration"]["render"]["mencoder"]         = renderImageSeriesDialog->mencoderBox->isChecked();
+	settings_json["configuration"]["render"]["composite"]        = renderImageSeriesDialog->compositeBox->isChecked();
+	settings_json["configuration"]["render"]["transparent"]      = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
 
 	string home_dir = getenv("HOME");
 
@@ -225,6 +269,18 @@ void MeshupApp::loadSettings () {
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
 	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
+	dockAnimationEditor->setVisible(settings_json["configuration"]["docks"]["animationeditor_settings"].get("visible", false).asBool());
+	autoUpdateVariablesCheckBox->setChecked(settings_json["configuration"]["docks"]["animationeditor_settings"].get("auto_update", true).asBool());
+
+	renderImageSeriesDialog->WidthSpinBox->setValue(settings_json["configuration"]["render"].get("width", glWidget->width()).asInt());
+	renderImageSeriesDialog->HeightSpinBox->setValue(settings_json["configuration"]["render"].get("height", glWidget->height()).asInt());
+	renderImageSeriesDialog->FpsSpinBox->setValue(settings_json["configuration"]["render"].get("fps", 25).asInt());
+
+	renderImageSeriesDialog->fpsModeRadioButton->setChecked(settings_json["configuration"]["render"].get("fps_mode", true).asBool());
+	renderImageSeriesDialog->frameCountModeRadioButton->setChecked(settings_json["configuration"]["render"].get("frame_count_mode", false).asBool());
+	renderImageSeriesDialog->mencoderBox->setChecked(settings_json["configuration"]["render"].get("mencoder", false).asBool());
+	renderImageSeriesDialog->compositeBox->setChecked(settings_json["configuration"]["render"].get("composite", false).asBool());
+	renderImageSeriesDialog->transparentBackgroundCheckBox->setChecked(settings_json["configuration"]["render"].get("transparent", true).asBool());
 
 	int x, y, w, h;
 
@@ -282,6 +338,23 @@ void MeshupApp::action_load_animation() {
 	}	
 }
 
+void MeshupApp::action_save_animation() {
+	glWidget->animation_data->saveToFile (glWidget->animation_data->animation_filename.c_str());
+}
+
+void MeshupApp::action_save_animation_to() {
+	QFileDialog file_dialog (this, "Save Animation File...");
+	file_dialog.setAcceptMode (QFileDialog::AcceptSave);
+	file_dialog.setFileMode (QFileDialog::AnyFile);
+
+	file_dialog.setNameFilter(tr("MeshupAnimation (*.txt *.csv)"));
+
+	if (file_dialog.exec()) {
+		glWidget->animation_data->animation_filename = file_dialog.selectedFiles().at(0).toStdString().c_str();
+		action_save_animation();
+	}	
+}
+
 void MeshupApp::action_reload_files() {
 	MeshupModelPtr test_model (new MeshupModel());
 	AnimationPtr test_animation (new Animation());
@@ -324,30 +397,149 @@ void MeshupApp::action_quit () {
 	qApp->quit();
 }
 
-void MeshupApp::timeline_frame_changed (int frame_index) {
-//	qDebug () << __func__ << " frame_index = " << frame_index;
+void MeshupApp::animation_loaded() {
+	qDebug() << __func__;
+	animation_edit_model->call_reset();
+	glWidget->animation_data->saveToFile ("animation_save.txt");
 
-	horizontalSliderTime->setValue (frame_index);
+	// qDebug() << "initializing curves";
 
-	timeLine->setDuration (glWidget->getAnimationDuration() * 1000.f /(spinBoxSpeed->value()/100.0));
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
+	float curve_frame_rate = 60.f;
+	float duration = glWidget->animation_data->duration;
+	
+	float time_step = duration / curve_frame_rate;
+	unsigned int step_count = duration * curve_frame_rate;
+	float current_time = 0.f;
+
+	// cout << "duration = " << scientific << duration << endl;
+	// cout << "time_step = " << scientific << time_step << endl;
+	// cout << "step_count = " << scientific << step_count << endl;
+
+	while (current_time < duration) {
+		current_time += time_step;
+		if (current_time > duration)
+			current_time = duration;
+
+		float fraction = current_time / duration * 2.f - 1.f;
+
+		UpdateModelFromAnimation (glWidget->model_data, glWidget->animation_data, current_time);
+
+		MeshupModel::FrameMap::iterator frame_iter = glWidget->model_data->framemap.begin();
+
+		for (frame_iter; frame_iter != glWidget->model_data->framemap.end(); frame_iter++) {
+			Matrix44f pose_matrix = frame_iter->second->pose_transform;
+			Vector3f pose_translation (
+					pose_matrix (3,0),
+					pose_matrix (3,1),
+					pose_matrix (3,2)
+					);
+
+			glWidget->model_data->addCurvePoint (frame_iter->first,
+					pose_translation,
+					Vector3f (
+						colorscale::red(fraction),
+						colorscale::green(fraction),
+						colorscale::blue(fraction))
+					);
+		}
+	}
+
+//	qDebug() << "initializing curves done";
 }
 
-void MeshupApp::timeline_set_frame (int frame_index) {
+void MeshupApp::action_next_keyframe() {
+	float animation_time = glWidget->animation_data->current_time;
+	float next_frame = glWidget->animation_data->values.getNextKeyFrameTime(keyFrameTimeSpinBox->value() + 0.01);
+
+	keyFrameTimeSpinBox->setValue (next_frame);
+	animation_edit_model->call_reset();
+
+	if (autoUpdateVariablesCheckBox->isChecked()) {
+		glWidget->animation_data->current_time = next_frame;
+	}
+
+	update_time_widgets();
+}
+
+void MeshupApp::action_prev_keyframe() {
+	float animation_time = glWidget->animation_data->current_time;
+	float prev_frame = glWidget->animation_data->values.getPrevKeyFrameTime(keyFrameTimeSpinBox->value() - 0.01);
+
+	keyFrameTimeSpinBox->setValue (prev_frame);
+	animation_edit_model->call_reset();
+
+	if (autoUpdateVariablesCheckBox->isChecked()) {
+		glWidget->animation_data->current_time = prev_frame;
+	}
+
+	update_time_widgets();
+}
+
+/** \brief Modifies the widgets to show the current time
+ */
+void MeshupApp::timeline_frame_changed (int frame_index) {
 //	qDebug () << __func__ << " frame_index = " << frame_index;
 
 	static bool repeat_gate = false;
 
 	if (!repeat_gate) {
 		repeat_gate = true;
-		timeLine->setCurrentTime (frame_index * glWidget->getAnimationDuration());
+
+		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+		
+		update_time_widgets();
+
 		repeat_gate = false;
 	}
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
+}
+
+/** \brief Modifies timeLine so that it reflects the value from the
+ * horizontalSliderTime
+ */
+void MeshupApp::timeline_set_frame (int frame_index) {
+//	qDebug () << __func__ << " frame_index = " << frame_index;
+	static bool repeat_gate = false;
+
+	if (!repeat_gate) {
+		repeat_gate = true;
+
+		// this automatically calls timeline_frame_changed and thus updates
+		// the horizontal slider
+		timeLine->setCurrentTime (frame_index * glWidget->getAnimationDuration());
+
+		repeat_gate = false;
+	}
+	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
 }
 
 void MeshupApp::timeslider_value_changed (int frame_index) {
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / 1000.);
+	float current_time = static_cast<float>(frame_index) / TimeLineDuration * glWidget->getAnimationDuration();
+	
+	int num_seconds = static_cast<int>(floor(current_time));
+	int num_milliseconds = static_cast<int>(round((current_time - num_seconds) * 1000.f));
+
+	stringstream time_string("");
+	time_string << num_seconds << "." << num_milliseconds;
+	timeLabel->setText(time_string.str().c_str());
+
+	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+}
+
+void MeshupApp::update_time_widgets () {
+//	qDebug() << __func__;
+	if (glWidget->animation_data && glWidget->animation_data->duration > 0.) {
+		double time_fraction = glWidget->animation_data->current_time / glWidget->animation_data->duration;
+		int frame_index = static_cast<int>(round(time_fraction * TimeLineDuration));
+
+		horizontalSliderTime->setValue (frame_index);
+		timeLine->setDuration (glWidget->getAnimationDuration() * TimeLineDuration / (spinBoxSpeed->value() / 100.0));
+		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+	}
+
+	if (dockAnimationEditor->isVisible() && autoUpdateVariablesCheckBox->isChecked()) {
+		animation_edit_model->call_reset();
+		keyFrameTimeSpinBox->setValue (glWidget->animation_data->current_time);
+	}
 }
 
 void MeshupApp::actionRenderAndSaveToFile () {
@@ -383,20 +575,27 @@ void MeshupApp::actionRenderAndSaveToFile () {
 }
 
 void MeshupApp::actionRenderSeriesAndSaveToFile () {
-	static int fps=25;
-	static bool doMencoder=true;
-	static bool doComposite=true;
-	static bool render_transparent=false;
-
-	renderImageSeriesDialog->WidthSpinBox->setValue(glWidget->width());
-	renderImageSeriesDialog->HeightSpinBox->setValue(glWidget->height());
-	renderImageSeriesDialog->FpsSpinBox->setValue(fps);
-	renderImageSeriesDialog->mencoderBox->setChecked(doMencoder);
+	int fps;
+	bool fps_mode;
+	bool doMencoder;
+	bool doComposite;
+	bool render_transparent;
+	int width;
+	int height;
 
 	int result = renderImageSeriesDialog->exec();
 
 	if (result == QDialog::Rejected)
 		return;
+
+	width = renderImageSeriesDialog->WidthSpinBox->value();
+	height = renderImageSeriesDialog->HeightSpinBox->value();
+	fps = renderImageSeriesDialog->FpsSpinBox->value();
+	
+	if (renderImageSeriesDialog->fpsModeRadioButton->isChecked())
+		fps_mode = true;
+	else
+		fps_mode = false;
 
 	doMencoder = renderImageSeriesDialog->mencoderBox->isChecked();
 	doComposite = renderImageSeriesDialog->compositeBox->isChecked();
@@ -414,29 +613,37 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		series_nr++;
 	}
 
+	float duration = glWidget->animation_data->duration;
+	float speedup = 100.f / static_cast<float>(spinBoxSpeed->value());
+	float timestep;
+	int image_count;
 
-	//~ cout << "starting offscreen rendering (this may take a while)..." << endl;
-	int w = renderImageSeriesDialog->WidthSpinBox->value();
-	int h = renderImageSeriesDialog->HeightSpinBox->value();
-	fps = renderImageSeriesDialog->FpsSpinBox->value();
-	
-	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, fps*glWidget->animation_data->duration* 100.0 / spinBoxSpeed->value(), this);
+	if (fps_mode) {
+		timestep = 1.f / fps / speedup;
+		image_count = static_cast<int>(floor(duration / timestep));
+	} else {
+		timestep = duration / (fps - 1.f);
+		image_count = static_cast<int>(roundf(fps));
+	}
+
+	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, image_count, this);
 	pbar.setMinimumDuration(0);
 	pbar.show();
 	stringstream overlayFilename;
 	overlayFilename << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-overlay.png";
-	
-	for(int i = 0; i < (float) fps*glWidget->animation_data->duration* 100.0 / spinBoxSpeed->value(); i++) {
+
+	for(int i = 0; i < image_count; i++) {
 		pbar.setValue(i);
 		pbar.show();
+
+		float current_time = (float) i * timestep;
+
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
-		glWidget->animation_data->current_time = (float) i / fps*  spinBoxSpeed->value() / 100.0;
-		QImage image = glWidget->renderContentOffscreen (w,h,render_transparent);
+		glWidget->animation_data->current_time = current_time;
+		QImage image = glWidget->renderContentOffscreen (width, height, render_transparent);
 		image.save (filename_stream.str().c_str(), 0, -1);
-		//not used:
-		//if (pbar.wasCanceled())
-		//	return;
+
 		if (doComposite) {
 			string cmd("composite -compose plus ");
 			if (i==0) {
@@ -455,7 +662,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		cout << "running mencoder to produce a movie" << endl;
 		stringstream mencoder;
 		mencoder << "mencoder mf://"  << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-"<< "*.png ";
-		mencoder << "-mf w=" << w << ":h="<< h << ":fps=" << fps << ":type=png -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
+		mencoder << "-mf w=" << width << ":h="<< height << ":fps=" << fps << ":type=png -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
 		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".avi";
 		
 		cout << mencoder.str() << endl;
