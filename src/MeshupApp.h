@@ -48,6 +48,7 @@ public slots:
 		void action_quit();
 
 		void animation_loaded();
+		void initialize_curves();
 
 		void action_next_keyframe();
 		void action_prev_keyframe();

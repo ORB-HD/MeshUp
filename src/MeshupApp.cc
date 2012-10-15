@@ -402,6 +402,9 @@ void MeshupApp::animation_loaded() {
 	animation_edit_model->call_reset();
 	glWidget->animation_data->saveToFile ("animation_save.txt");
 
+}
+
+void MeshupApp::initialize_curves() {
 	// qDebug() << "initializing curves";
 
 	float curve_frame_rate = 60.f;
@@ -409,6 +412,7 @@ void MeshupApp::animation_loaded() {
 	
 	float time_step = duration / curve_frame_rate;
 	unsigned int step_count = duration * curve_frame_rate;
+	float old_time = glWidget->animation_data->current_time;
 	float current_time = 0.f;
 
 	// cout << "duration = " << scientific << duration << endl;
@@ -444,6 +448,7 @@ void MeshupApp::animation_loaded() {
 		}
 	}
 
+	glWidget->animation_data->current_time = old_time;
 //	qDebug() << "initializing curves done";
 }
 
