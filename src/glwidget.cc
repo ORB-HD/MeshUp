@@ -47,7 +47,8 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_floor (true),
 		draw_meshes (true),
 		draw_shadows (false),
-		draw_curves (false)
+		draw_curves (false),
+		draw_orthographic (false)
 {
 	poi.set (0.f, 1.f, 0.f);
 	eye.set (6.f, 3.f, 6.f);
@@ -178,19 +179,46 @@ void GLWidget::toggle_draw_curves (bool status) {
 	draw_curves = status;
 }
 
-void GLWidget::toggle_front_view () {
-	phi = 0.;
-	theta = 90. * M_PI / 180.;
+void GLWidget::toggle_draw_orthographic (bool status) {
+	draw_orthographic = status;
+
+	resizeGL (windowWidth, windowHeight);
 }
 
-void GLWidget::toggle_side_view () {
-	phi = 90. * M_PI / 180.;
-	theta = 90. * M_PI / 180.;
+void GLWidget::set_front_view () {
+	if (fabs(fabs(theta) - 90. * M_PI / 180.) > 1.0e-5 && fabs(phi) > 1.0e-5) {
+		// front
+		theta = 90. * M_PI / 180.;
+		phi = 0.;
+	}	else {
+		// back
+		theta = 90. * M_PI / 180.;
+		phi = 180 * M_PI / 180.;
+	}
 }
 
-void GLWidget::toggle_top_view () {
-	phi = 180. * M_PI / 180.;
-	theta = 0.;
+void GLWidget::set_side_view () {
+	if (fabs(fabs(phi) - 90. * M_PI / 180.) > 1.0e-5 && fabs(fabs(theta) - 90. * M_PI / 180.)) {
+		// right
+		theta = 90. * M_PI / 180.;
+		phi = 90. * M_PI / 180.;
+	} else {
+		// left
+		theta = 90. * M_PI / 180.;
+		phi = 270. * M_PI / 180.;
+	}
+}
+
+void GLWidget::set_top_view () {
+	if (fabs(fabs(phi) - 180. * M_PI / 180. > 1.0e-5 && fabs(theta) > 1.0e-5)) {
+		// top
+		phi = 180. * M_PI / 180.;
+		theta = 0.;
+	} else {
+		// bottom
+		phi = 0. * M_PI / 180.;
+		theta = 180. * M_PI / 180.;
+	}
 }
 
 void GLWidget::update_timer() {
@@ -327,6 +355,27 @@ void GLWidget::updateCamera() {
 
 	up = right.cross (eye_normalized);
 
+	// setup of the projection
+	glMatrixMode (GL_PROJECTION);
+	glLoadIdentity ();
+
+	fov = 45;
+	GLfloat aspect = (GLfloat) windowWidth / (GLfloat) windowHeight;
+
+	if (draw_orthographic) {
+		GLfloat distance = (GLfloat) (poi - eye).norm();
+
+		GLfloat w = tan(fov * M_PI / 180.) * 0.01 * windowWidth * distance / 10.f;
+		GLfloat h = w / aspect; 
+
+		glOrtho (- w * 0.5, w * 0.5,
+				-h * 0.5, h * 0.5,
+			0.005, 200);
+	} else {
+		gluPerspective (fov, aspect, 0.005, 200);
+	}
+
+	// setup of the modelview matrix
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
@@ -721,16 +770,8 @@ void GLWidget::resizeGL(int width, int height)
 
 	glViewport (0, 0, width, height);
 
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-
-	fov = 45;
-	gluPerspective (fov, (GLfloat) width / (GLfloat) height, 0.005, 200);
-
 	windowWidth = width;
 	windowHeight = height;
-
-	glMatrixMode (GL_MODELVIEW);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {

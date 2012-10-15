@@ -39,6 +39,8 @@ class GLWidget : public QGLWidget
 		bool draw_shadows;
 		bool draw_curves;
 
+		bool draw_orthographic;
+
 	protected:
 		void update_timer();
 		void drawGrid();
@@ -96,9 +98,11 @@ class GLWidget : public QGLWidget
 		void toggle_draw_shadows(bool status);
 		void toggle_draw_curves(bool status);
 
-		void toggle_front_view ();
-		void toggle_side_view ();
-		void toggle_top_view ();
+		void toggle_draw_orthographic(bool status);
+
+		void set_front_view ();
+		void set_side_view ();
+		void set_top_view ();
 
 		void actionRenderImage();
 		void actionRenderSeriesImage();

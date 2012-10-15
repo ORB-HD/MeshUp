@@ -71,6 +71,7 @@
     <addaction name="actionFrontView"/>
     <addaction name="actionSideView"/>
     <addaction name="actionTopView"/>
+    <addaction name="actionToggleOrthographic"/>
     <addaction name="separator"/>
     <addaction name="actionToggleViewSettings"/>
     <addaction name="actionTogglePlayerControls"/>
@@ -503,6 +504,20 @@
   <action name="actionPerspective">
    <property name="text">
     <string>Perspective</string>
+   </property>
+  </action>
+  <action name="actionToggleOrthographic">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Orthographic</string>
+   </property>
+   <property name="shortcut">
+    <string>5</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>
