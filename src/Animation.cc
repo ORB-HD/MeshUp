@@ -658,7 +658,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 			// do columny stuff
 			// cout << "COLUMN:" << line << endl;
 
-			std::vector<string> elements = tokenize(line, ", \t\n\r");
+			std::vector<string> elements = tokenize_strip_whitespaces (line, ",\t\n\r");
 			for (int ei = 0; ei < elements.size(); ei++) {
 				// skip elements that had multiple spaces in them
 				if (elements[ei].size() == 0)
