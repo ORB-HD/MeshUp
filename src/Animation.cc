@@ -128,6 +128,10 @@ float RawValues::getNextKeyFrameTime (const float time) const {
 }
 
 void RawValues::addKeyValue (const float time, unsigned int index, float value) {
+	if (haveKeyValue (time, index)) {
+		deleteKeyValue (time, index);
+	}
+	
 	RawKeyFrameList::iterator frame_iter = getKeyFrameIter (time);
 
 	if (frame_iter == frames.end()) {
@@ -141,10 +145,6 @@ void RawValues::addKeyValue (const float time, unsigned int index, float value) 
 	}
 
 	assert (frame_iter != frames.end());
-
-	if (haveKeyValue (time, index)) {
-		deleteKeyValue (time, index);
-	}
 
 	frame_iter->value_list.push_back (KeyValue (value, index));
 	frame_iter->value_list.sort(compare_keyvalues_index);
@@ -278,8 +278,9 @@ void RawValues::deleteKeyValue (const float time, unsigned int index) {
 
 bool RawValues::haveKeyValue (const float time, unsigned int index) const {
 	RawKeyFrameList::iterator frame_iter = const_cast<RawValues*>(this)->getKeyFrameIter (time);
-	if (frame_iter == frames.end())
+	if (frame_iter == frames.end()) {
 		return false;
+	}
 
 	KeyValueList::iterator value_iter = frame_iter->value_list.begin();
 
