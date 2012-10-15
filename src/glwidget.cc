@@ -178,6 +178,21 @@ void GLWidget::toggle_draw_curves (bool status) {
 	draw_curves = status;
 }
 
+void GLWidget::toggle_front_view () {
+	phi = 0.;
+	theta = 90. * M_PI / 180.;
+}
+
+void GLWidget::toggle_side_view () {
+	phi = 90. * M_PI / 180.;
+	theta = 90. * M_PI / 180.;
+}
+
+void GLWidget::toggle_top_view () {
+	phi = 180. * M_PI / 180.;
+	theta = 0.;
+}
+
 void GLWidget::update_timer() {
 	struct timeval clock_value;
 	gettimeofday (&clock_value, NULL);

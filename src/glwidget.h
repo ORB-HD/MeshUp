@@ -96,6 +96,10 @@ class GLWidget : public QGLWidget
 		void toggle_draw_shadows(bool status);
 		void toggle_draw_curves(bool status);
 
+		void toggle_front_view ();
+		void toggle_side_view ();
+		void toggle_top_view ();
+
 		void actionRenderImage();
 		void actionRenderSeriesImage();
 

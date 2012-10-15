@@ -105,6 +105,10 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
 	connect (checkBoxDrawCurves, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_curves(bool)));
 
+	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (toggle_front_view()));
+	connect (actionSideView, SIGNAL (triggered()), glWidget, SLOT (toggle_side_view()));
+	connect (actionTopView, SIGNAL (triggered()), glWidget, SLOT (toggle_top_view()));
+
 	// timeline & timeSlider
 	connect (timeLine, SIGNAL(frameChanged(int)), this, SLOT(timeline_frame_changed(int)));
 	connect (horizontalSliderTime, SIGNAL(sliderMoved(int)), this, SLOT(timeline_set_frame(int)));
