@@ -54,6 +54,23 @@ inline std::vector<std::string> tokenize (const std::string &line_in, std::strin
 	return result;
 }
 
+inline std::vector<std::string> tokenize_strip_whitespaces (const std::string &line_in, std::string delimiter=",\t\r\n", std::string whitespaces=whitespaces_std) {
+	std::vector<std::string> result;
+	std::string line = line_in;
+
+	while (line.find_first_of (delimiter) != std::string::npos) {
+		std::string token = line.substr (0, line.find_first_of (delimiter));
+
+		line = line.substr (token.size() + 1, line.size());
+		result.push_back (strip_whitespaces(token, whitespaces));
+	}
+
+	if (line.size() > 0)
+		result.push_back (strip_whitespaces(line, whitespaces));
+
+	return result;
+}
+
 /** Counts the number of occurrences of a list of characters.
  *
  * \param line_in The hay-stack to search for.

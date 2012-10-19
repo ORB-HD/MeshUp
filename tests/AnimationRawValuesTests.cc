@@ -25,7 +25,7 @@ TEST ( RawValuesAddKeyValueTwice ) {
 	raw.addKeyValue (0., 10, 1.23f);
 	raw.addKeyValue (0., 10, 1.23f);
 
-	CHECK (raw.haveKeyValue(0, 10));
+	CHECK (raw.haveKeyValue(0., 10));
 	CHECK_EQUAL (1.23f, raw.getKeyValue(0,10));
 }
 

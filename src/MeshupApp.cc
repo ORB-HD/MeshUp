@@ -105,6 +105,11 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
 	connect (checkBoxDrawCurves, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_curves(bool)));
 
+	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (set_front_view()));
+	connect (actionSideView, SIGNAL (triggered()), glWidget, SLOT (set_side_view()));
+	connect (actionTopView, SIGNAL (triggered()), glWidget, SLOT (set_top_view()));
+	connect (actionToggleOrthographic, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_orthographic(bool)));
+
 	// timeline & timeSlider
 	connect (timeLine, SIGNAL(frameChanged(int)), this, SLOT(timeline_frame_changed(int)));
 	connect (horizontalSliderTime, SIGNAL(sliderMoved(int)), this, SLOT(timeline_set_frame(int)));
@@ -189,6 +194,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["view"]["draw_meshes"] = checkBoxDrawMeshes->isChecked();
 	settings_json["configuration"]["view"]["draw_shadows"] = checkBoxDrawShadows->isChecked();
 	settings_json["configuration"]["view"]["draw_curves"] = checkBoxDrawCurves->isChecked();
+	settings_json["configuration"]["view"]["draw_orthographic"] = actionToggleOrthographic->isChecked();
 
 	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
@@ -265,6 +271,7 @@ void MeshupApp::loadSettings () {
 	checkBoxDrawMeshes->setChecked(settings_json["configuration"]["view"].get("draw_meshes", glWidget->draw_meshes).asBool());
 	checkBoxDrawShadows->setChecked(settings_json["configuration"]["view"].get("draw_shadows", glWidget->draw_shadows).asBool());
 	checkBoxDrawCurves->setChecked(settings_json["configuration"]["view"].get("draw_curves", glWidget->draw_curves).asBool());
+	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->draw_orthographic).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
@@ -402,6 +409,10 @@ void MeshupApp::animation_loaded() {
 	animation_edit_model->call_reset();
 	glWidget->animation_data->saveToFile ("animation_save.txt");
 
+	initialize_curves();
+}
+
+void MeshupApp::initialize_curves() {
 	// qDebug() << "initializing curves";
 
 	float curve_frame_rate = 60.f;
@@ -409,6 +420,7 @@ void MeshupApp::animation_loaded() {
 	
 	float time_step = duration / curve_frame_rate;
 	unsigned int step_count = duration * curve_frame_rate;
+	float old_time = glWidget->animation_data->current_time;
 	float current_time = 0.f;
 
 	// cout << "duration = " << scientific << duration << endl;
@@ -444,6 +456,7 @@ void MeshupApp::animation_loaded() {
 		}
 	}
 
+	glWidget->animation_data->current_time = old_time;
 //	qDebug() << "initializing curves done";
 }
 
