@@ -37,5 +37,13 @@ void Curve::draw() {
 	}
 
 	glLineWidth (width);
+	glEnable (GL_LINE_SMOOTH);
+	glEnable (GL_BLEND);
+	glDepthMask (GL_FALSE);
+	glHint (GL_LINE_SMOOTH_HINT, GL_NICEST);
+
 	meshVBO.draw(GL_LINE_STRIP);
+
+	glDisable (GL_BLEND);
+	glDepthMask (GL_TRUE);
 }

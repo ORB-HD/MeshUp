@@ -3,6 +3,8 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QProgressDialog>
+#include <QRegExp>
+#include <QRegExpValidator>
 
 #include "glwidget.h" 
 #include "MeshupApp.h"
@@ -76,6 +78,13 @@ MeshupApp::MeshupApp(QWidget *parent)
 	DoubleSpinBoxDelegate *spinBoxDelegate = new DoubleSpinBoxDelegate (this);
 	animationValuesTableView->setItemDelegateForColumn (1, spinBoxDelegate);
 
+	// camera controls
+	QRegExp	coord_expr ("^\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*$");
+	QRegExpValidator *coord_validator_eye = new QRegExpValidator (coord_expr, lineEditCameraEye);
+	QRegExpValidator *coord_validator_center = new QRegExpValidator (coord_expr, lineEditCameraCenter);
+	lineEditCameraEye->setValidator (coord_validator_eye);
+	lineEditCameraCenter->setValidator (coord_validator_center);
+
 //	CheckBoxDelegate *checkBoxDelegate = new CheckBoxDelegate (this);
 //	animationValuesTableView->setItemDelegateForColumn (2, checkBoxDelegate);
 
@@ -85,6 +94,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// player is paused on startup
 	playerPaused = true;
 
+	dockCameraControls->setVisible(false);
 	dockPlayerControls->setVisible(true);
 	dockViewSettings->setVisible(false);
 	dockAnimationEditor->setVisible(false);
@@ -137,6 +147,9 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
 	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
+	connect (glWidget, SIGNAL (camera_changed()), this, SLOT (camera_changed()));
+
+	connect (pushButtonUpdateCamera, SIGNAL (clicked()), this, SLOT (update_camera()));
 
 	loadSettings();
 }
@@ -196,6 +209,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["view"]["draw_curves"] = checkBoxDrawCurves->isChecked();
 	settings_json["configuration"]["view"]["draw_orthographic"] = actionToggleOrthographic->isChecked();
 
+	settings_json["configuration"]["docks"]["camera_controls"]["visible"] = dockCameraControls->isVisible();
 	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["repeat"] = checkBoxLoopAnimation->isChecked();
@@ -274,6 +288,7 @@ void MeshupApp::loadSettings () {
 	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->draw_orthographic).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
+	dockCameraControls->setVisible(settings_json["configuration"]["docks"]["camera_controls"].get("visible", false).asBool());
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
 	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
 	dockAnimationEditor->setVisible(settings_json["configuration"]["docks"]["animationeditor_settings"].get("visible", false).asBool());
@@ -297,6 +312,53 @@ void MeshupApp::loadSettings () {
 	h = settings_json["configuration"]["window"].get("height", 650).asInt();
 
 	setGeometry (x, y, w, h);
+	camera_changed();
+}
+
+void MeshupApp::camera_changed() {
+	Vector3f center = glWidget->getCameraPoi();	
+	Vector3f eye = glWidget->getCameraEye();	
+
+	unsigned int digits = 2;
+
+	stringstream center_stream ("");
+	center_stream << std::fixed << std::setprecision(digits) << center[0] << ", " << center[1] << ", " << center[2];
+
+	stringstream eye_stream ("");
+	eye_stream << std::fixed << std::setprecision(digits) << eye[0] << ", " << eye[1] << ", " << eye[2];
+
+	lineEditCameraEye->setText (eye_stream.str().c_str());
+	lineEditCameraCenter->setText (center_stream.str().c_str());
+}
+
+Vector3f parse_vec3_string (const std::string vec3_string) {
+	Vector3f result;
+
+	unsigned int token_start = 0;
+	unsigned int token_end = vec3_string.find(",");
+	for (unsigned int i = 0; i < 3; i++) {
+		string token = vec3_string.substr (token_start, token_end - token_start);
+
+		result[i] = static_cast<float>(atof(token.c_str()));
+
+		token_start = token_end + 1;
+		token_end = vec3_string.find (", ", token_start);
+	}
+
+//	cout << "Parsed '" << vec3_string << "' to " << result.transpose() << endl;
+
+	return result;
+}
+
+void MeshupApp::update_camera() {
+	string center_string = lineEditCameraCenter->text().toStdString();
+	Vector3f poi = parse_vec3_string (center_string);
+
+	string eye_string = lineEditCameraEye->text().toStdString();
+	Vector3f eye = parse_vec3_string (eye_string);
+
+	glWidget->setCameraPoi(poi);
+	glWidget->setCameraEye(eye);
 }
 
 void MeshupApp::toggle_play_animation (bool status) {

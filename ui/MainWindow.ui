@@ -75,7 +75,7 @@
     <addaction name="separator"/>
     <addaction name="actionToggleViewSettings"/>
     <addaction name="actionTogglePlayerControls"/>
-    <addaction name="actionToggleAnimationEditor"/>
+    <addaction name="actionToggleCameraControls"/>
    </widget>
    <widget class="QMenu" name="menuRender">
     <property name="title">
@@ -87,6 +87,139 @@
    <addaction name="menuFile"/>
    <addaction name="menuControl_Panels"/>
    <addaction name="menuRender"/>
+  </widget>
+  <widget class="QDockWidget" name="dockCameraControls">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>206</width>
+     <height>148</height>
+    </size>
+   </property>
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Camera Controls</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents">
+    <layout class="QVBoxLayout" name="verticalLayout_6">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Eye:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditCameraEye">
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="inputMask">
+          <string/>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="minimumSize">
+          <size>
+           <width>50</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Center:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditCameraCenter">
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>0,0,0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_7">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonUpdateCamera">
+         <property name="text">
+          <string>Update</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>0</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QDockWidget" name="dockViewSettings">
    <property name="enabled">
@@ -291,6 +424,9 @@
    </widget>
   </widget>
   <widget class="QDockWidget" name="dockAnimationEditor">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="floating">
     <bool>false</bool>
    </property>
@@ -366,6 +502,21 @@
        </attribute>
        <attribute name="verticalHeaderHighlightSections">
         <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="horizontalHeaderStretchLastSection">
+        <bool>true</bool>
+       </attribute>
+       <attribute name="verticalHeaderHighlightSections">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>125</number>
        </attribute>
       </widget>
      </item>
@@ -520,9 +671,21 @@
     <string>5</string>
    </property>
   </action>
+  <action name="actionToggleCameraControls">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Camera Controls</string>
+   </property>
+   <property name="shortcut">
+    <string>C</string>
+   </property>
+  </action>
   <zorder>dockPlayerControls</zorder>
   <zorder>dockViewSettings</zorder>
   <zorder>dockAnimationEditor</zorder>
+  <zorder>dockCameraControls</zorder>
  </widget>
  <customwidgets>
   <customwidget>
@@ -625,6 +788,54 @@
     <hint type="sourcelabel">
      <x>136</x>
      <y>308</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEditCameraCenter</sender>
+   <signal>editingFinished()</signal>
+   <receiver>pushButtonUpdateCamera</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>164</x>
+     <y>486</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>221</x>
+     <y>521</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionToggleCameraControls</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dockCameraControls</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>136</x>
+     <y>498</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>dockCameraControls</sender>
+   <signal>visibilityChanged(bool)</signal>
+   <receiver>actionToggleCameraControls</receiver>
+   <slot>setChecked(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>951</x>
+     <y>98</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
