@@ -186,7 +186,7 @@ void GLWidget::toggle_draw_orthographic (bool status) {
 }
 
 void GLWidget::set_front_view () {
-	if (fabs(fabs(theta) - 90. * M_PI / 180.) > 1.0e-5 && fabs(phi) > 1.0e-5) {
+	if (fabs(phi) > 1.0e-5) {
 		// front
 		theta = 90. * M_PI / 180.;
 		phi = 0.;
@@ -213,7 +213,7 @@ void GLWidget::set_side_view () {
 }
 
 void GLWidget::set_top_view () {
-	if (fabs(fabs(phi) - 180. * M_PI / 180. > 1.0e-5 && fabs(theta) > 1.0e-5)) {
+	if (fabs(theta) > 1.0e-5) {
 		// top
 		phi = 180. * M_PI / 180.;
 		theta = 0.;
