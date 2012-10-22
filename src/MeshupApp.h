@@ -35,6 +35,9 @@ public slots:
 		void saveSettings ();
 		void loadSettings ();
 
+		void camera_changed ();
+		void update_camera ();
+
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);
 

@@ -195,6 +195,8 @@ void GLWidget::set_front_view () {
 		theta = 90. * M_PI / 180.;
 		phi = 180 * M_PI / 180.;
 	}
+
+	emit camera_changed();
 }
 
 void GLWidget::set_side_view () {
@@ -207,6 +209,7 @@ void GLWidget::set_side_view () {
 		theta = 90. * M_PI / 180.;
 		phi = 270. * M_PI / 180.;
 	}
+	emit camera_changed();
 }
 
 void GLWidget::set_top_view () {
@@ -219,6 +222,7 @@ void GLWidget::set_top_view () {
 		phi = 0. * M_PI / 180.;
 		theta = 180. * M_PI / 180.;
 	}
+	emit camera_changed();
 }
 
 void GLWidget::update_timer() {
@@ -329,6 +333,14 @@ void GLWidget::updateSphericalCoordinates() {
 	r = los.norm();
 	theta = acos (-los[1] / r);
 	phi = atan (los[2] / los[0]);
+
+	// atan only returns +- pi/2 so we have to fix the azimuth here
+	if (los[0] > 0.f) {
+		if (los[2] >= 0.f)
+			phi += M_PI;
+		else
+			phi -= M_PI;
+	}
 }
 
 void GLWidget::updateCamera() {
@@ -800,6 +812,9 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
 		theta = std::max(theta, 0.01f);
 		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
+
+		emit camera_changed();
+
 #if QT_VERSION <= 0x040700
 	} else if (event->buttons().testFlag(Qt::MidButton)) {
 #else
@@ -814,10 +829,14 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 		Vector3f local_up = eye_normalized.cross(right);
 		poi += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
 		eye += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
+
+		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
 		// zoom
 		r += 0.05 * dy;
 		r = std::max (0.01f, r);
+
+		emit camera_changed();
 	}
 
 	lastMousePos = event->pos();

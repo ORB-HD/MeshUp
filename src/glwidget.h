@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "MeshupModel.h"
+
 struct Animation;
 typedef boost::shared_ptr<Animation> AnimationPtr;
 
@@ -27,6 +28,23 @@ class GLWidget : public QGLWidget
 		float getAnimationDuration();
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
+
+		Vector3f getCameraPoi() {
+			return poi;
+		}
+		Vector3f getCameraEye() {
+			return eye;
+		}
+
+		void setCameraPoi (const Vector3f values) {
+			poi = values;
+		}
+
+		void setCameraEye (const Vector3f values) {
+			eye = values;
+		}
+
+		void updateSphericalCoordinates();
 
 		MeshupModelPtr model_data;
 		AnimationPtr animation_data;
@@ -55,7 +73,6 @@ class GLWidget : public QGLWidget
 		void mouseMoveEvent(QMouseEvent *event);
 
 	private:
-		void updateSphericalCoordinates();
 		void updateCamera();
 		void updateLightingMatrices();
 
@@ -112,6 +129,7 @@ class GLWidget : public QGLWidget
 	signals:
 		void animation_loaded();
 		void model_loaded();
+		void camera_changed();
 };
 
 #endif
