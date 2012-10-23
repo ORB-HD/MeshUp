@@ -1,0 +1,148 @@
+/** \file Mainpage.dox
+\mainpage MeshUp - Visualization
+\image html meshup_logo.png
+
+\section introduction Introduction
+
+MeshUp is a 3-d visualization tool for rigid-body motions. It is based on
+skeletal animation. The visualization needs three things: a model file,
+meshes and an animation file.
+
+\subsection introduction_models Models
+
+Models define a hierarchy of Frames to which geometric objects such as
+spheres, boxes or a generic mesh can be attached. There is one special
+Frame called BASE which is the global reference frame.
+
+MeshUp tries to find the model file by searching for a file called
+"<model_name>", "<model_name>.lua>", or "<model_name>.json". It first
+checks in the local directory "./" and "./models/". After that MeshUp
+checks whether the environment variable MESHUP_PATH is set and checks for
+the file in $MESHUP_PATH/ or $MESHUP_PATH/models.
+
+Please note that as default MeshUp interprets by default all angular
+values as degree values, not radians.
+
+\subsection introduction_animation Animations
+
+Animation files are designed so that they can be written to a comma or tab
+separated file and still be read by MeshUp. There is a small number of
+keywords that specify how the data is being interpreted.
+
+\section luamodel_format Model Format Overview 
+
+Models have to be specified as a specially formatted Lua table which must
+be returned by the script, i.e. if the model is specified in the table
+"model = { ... }" the script has to return this when loaded. Within the
+returned table, MeshUp goes through the table "frames" and builds
+the model from the individual Frame Information Tables (see further down
+for more information about those).
+
+A valid file could look like this:
+
+\code
+model = {
+  frames = {
+    {
+      <frame 1 information table>
+    },
+    {
+      <frame 2 information table>
+    }
+  }
+}
+
+return model
+\endcode
+
+Apart from the frames you can also specify gravity in the model file.
+
+Example:
+\code
+model = {
+  gravity = {0., 0., -9.81}
+
+  frames = {
+  ...
+  }
+}
+\endcode
+
+\note The table frames must contain all Frame Information Tables as a list
+and individual tables must *not* be specified with a key, i.e.
+\code
+  frames = {
+    some_frame = {
+      ...
+    },
+    {
+      ..
+    }
+  }
+\endcode
+is not possible as Lua does not retain the order of the individual
+frames when an explicit key is specified.
+
+\section luamodel_frame_table Frame Information Table
+
+The Frame Information Table is searched for values needed to call
+Model::AddBody(). The following fields are used by MeshUp
+(everything else is ignored):
+
+\par name (required, type: string):
+    Name of the body that is being added. This name must be unique.
+
+\par parent (required, type: string):
+    If the value is "ROOT" the parent frame of this body is assumed to be
+    the base coordinate system, otherwise it must be the exact same string
+    as was used for the "name"-field of the parent frame.
+  
+\par body (optional, type: table)
+    Specification of the dynamical parameters of the body. It uses the
+    values (if existing):
+    \code
+      mass (scalar value, default 0.),
+      com (3-d vector, default:  (0., 0., 0.))
+      inertia (3x3  matrix, default: identity matrix)
+    \endcode
+\par
+    to create a \ref RigidBodyDynamics::Body.
+
+\par joint (optional, type: table)
+    Specifies the type of joint, fixed or up to 6 degrees of freedom. Each
+    entry in the joint table should be a 6-d that defines the motion
+    subspace of a single degree of freedom.
+\par
+    Default joint type is a fixed joint that attaches the body rigidly to
+    its parent.
+\par
+   Examples:
+\code    
+      joint_fixed = {}
+      joint_translate_x = { {0., 0., 0., 1., 0., 0.} }
+      joint_translate_xy = { 
+        {0., 0., 0., 1., 0., 0.},
+        {0., 0., 0., 0., 1., 0.}
+      }
+      joint_rotate_zyx = {
+        {0., 0., 1., 0., 0., 0.},
+        {0., 1., 0., 0., 0., 0.},
+        {1., 0., 0., 0., 0., 0.},
+      }
+  \endcode
+      
+\par  joint_frame (optional, type: table)
+    Specifies the origin of the joint in the frame of the parent. It uses
+    the values (if existing):
+  \code
+      r (3-d vector, default: (0., 0., 0.))
+      E (3x3 matrix, default: identity matrix)
+  \endcode
+\par
+   for which r is the translation and E the rotation of the joint frame
+   
+\section luamodel_example Example
+Here is an example of a model:
+\include samplemodel.lua
+
+*/

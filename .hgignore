@@ -1,12 +1,13 @@
 syntax:glob
 
-jsoncpp/dist/
-jsoncpp/devtools/*.pyc
-jsoncpp/doc/doxyfile
+vendor/jsoncpp/dist/
+vendor/jsoncpp/devtools/*.pyc
+vendor/jsoncpp/doc/doxyfile
 
 Debug/
 RelWithDebInfo/
 Release/
+doc/html/
 
 meshup
 CMakeCache.txt
