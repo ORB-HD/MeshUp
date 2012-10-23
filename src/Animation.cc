@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #include "GL/glew.h"
 
 #include "Animation.h"
