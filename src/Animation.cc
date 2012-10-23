@@ -536,7 +536,6 @@ void Animation::updateAnimationFromRawValues () {
 
 			float raw_value = values.getInterpolatedValue (time, ci);
 
-
 			if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
 				switch (column_infos[ci].axis) {
 					case ColumnInfo::AxisTypeX: pose_translation[0] = raw_value; break;
@@ -594,11 +593,11 @@ void Animation::updateAnimationFromRawValues () {
 	}
 }
 
-bool Animation::loadFromFile (const char* filename, bool strict) {
-	return loadFromFileAtFrameRate (filename, -1.f, strict);
+bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict) {
+	return loadFromFileAtFrameRate (filename, frame_config, -1.f, strict);
 }
 
-bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_second, bool strict) {
+bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig &frame_config, float frames_per_second, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
@@ -609,6 +608,8 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 
 		return false;
 	}
+
+	configuration = frame_config;
 
 	double force_fps_previous_frame = 0.;
 	int force_fps_frame_count = 0;

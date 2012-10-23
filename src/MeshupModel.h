@@ -194,13 +194,17 @@ struct MeshupModel {
 		return frame_iter->second;
 	}
 
+	void clearCurves() {
+		curvemap.clear();
+	}
+
 	void clear() {
 		segments.clear();
 		frames.clear();
 		framemap.clear();
 		meshmap.clear();
-		curvemap.clear();
-
+		clearCurves();
+	
 		*this = MeshupModel();
 	}
 

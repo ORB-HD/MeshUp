@@ -97,7 +97,11 @@ void GLWidget::loadModel(const char* filename) {
 
 void GLWidget::loadAnimation(const char* filename) {
 	if (opengl_initialized) {
-		animation_data->loadFromFileAtFrameRate(filename, 60.f);
+		if (!model_data) {
+			std::cerr << "Error: could not load Animation without a model!" << std::endl;
+			abort();
+		}
+		animation_data->loadFromFileAtFrameRate(filename, model_data->configuration, 60.f);
 		emit animation_loaded();
 	} else {
 		// mark file for later loading

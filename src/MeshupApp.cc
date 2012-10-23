@@ -458,7 +458,7 @@ void MeshupApp::action_reload_files() {
 	if (animation_filename.size() == 0)
 		return;
 
-	status = test_animation->loadFromFile(animation_filename.c_str(), false);
+	status = test_animation->loadFromFile(animation_filename.c_str(), glWidget->model_data->configuration, false);
 	if (!status) {
 		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
 		return;
@@ -497,6 +497,8 @@ void MeshupApp::initialize_curves() {
 	// cout << "time_step = " << scientific << time_step << endl;
 	// cout << "step_count = " << scientific << step_count << endl;
 
+	glWidget->model_data->clearCurves();
+		
 	while (current_time < duration) {
 		current_time += time_step;
 		if (current_time > duration)
