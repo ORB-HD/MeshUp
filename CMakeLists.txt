@@ -18,16 +18,16 @@ SET( QT_WRAP_CPP TRUE )
 FIND_PACKAGE (Qt4 REQUIRED)
 FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (Boost COMPONENTS filesystem system REQUIRED)
-FIND_PACKAGE (Lua51 REQUIRED)
 
 INCLUDE_DIRECTORIES ( 
-	glew/include 
-	${LUA_INCLUDE_DIR}
+	vendor/glew/include 
+	vendor/lua-5.1/src/
 	src/luatables )
 
 SUBDIRS ( 
 	tests/ 
-	jsoncpp/
+	vendor/jsoncpp/
+	vendor/lua-5.1/
 	)
 
 ADD_LIBRARY ( MeshUp
@@ -40,9 +40,9 @@ ADD_LIBRARY ( MeshUp
 	)
 
 ADD_LIBRARY ( glew
-	glew/src/glew.c
-	glew/src/glewinfo.c
-	glew/src/visualinfo.c
+	vendor/glew/src/glew.c
+	vendor/glew/src/glewinfo.c
+	vendor/glew/src/visualinfo.c
 	)
 
 ADD_DEFINITIONS (${QT_DEFINITIONS})
@@ -92,7 +92,7 @@ INCLUDE_DIRECTORIES (${CMAKE_CURRENT_BINARY_DIR})
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES ( include )
-INCLUDE_DIRECTORIES ( jsoncpp/include )
+INCLUDE_DIRECTORIES ( vendor/jsoncpp/include )
 
 SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
 	LINKER_LANGUAGE CXX
@@ -102,7 +102,7 @@ SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
 TARGET_LINK_LIBRARIES ( MeshUp
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}
-	${LUA_LIBRARIES}
+	lua-static
 	glew
 	json
 	)
