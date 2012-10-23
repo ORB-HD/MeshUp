@@ -623,6 +623,8 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 	string previous_line;
 	string line;
 
+	bool found_column_section = false;
+	bool found_data_section = false;
 	bool column_section = false;
 	bool data_section = false;
 	int column_index = 0;
@@ -650,6 +652,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 			continue;
 
 		if (line.substr (0, string("COLUMNS:").size()) == "COLUMNS:") {
+			found_column_section = true;
 			column_section = true;
 
 			// we set it to -1 and can then easily increasing the value
@@ -658,6 +661,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 		}
 
 		if (line.substr (0, string("DATA:").size()) == "DATA:") {
+			found_data_section = true;
 			column_section = false;
 			data_section = true;
 			continue;
@@ -830,6 +834,16 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 			}
 			continue;
 		}
+	}
+
+	if (!found_column_section) {
+		cerr << "Error: did not find COLUMNS: section in animation file!" << endl;
+		abort();
+	}
+
+	if (!found_data_section) {
+		cerr << "Error: did not find DATA: section in animation file!" << endl;
+		abort();
 	}
 
 	if (frames_per_second != -1.f) {

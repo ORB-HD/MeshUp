@@ -127,6 +127,7 @@ LIBRARY DESTINATION lib
 
 FILE ( GLOB model_files
 	models/*.json
+	models/*.lua
 	)
 
 FILE ( GLOB mesh_files

@@ -77,11 +77,16 @@ std::string find_model_file_by_name (const std::string &model_name) {
 		if (boost::filesystem::is_regular_file(model_filename))
 			break;
 
-		model_filename += ".json";
-//		cout << "checking " << model_filename << endl;
+		string model_filename_json = model_filename + ".json";
+		string model_filename_lua = model_filename + ".lua";
 
-		if (boost::filesystem::is_regular_file(model_filename))
+		if (boost::filesystem::is_regular_file(model_filename_lua)) {
+			return model_filename_lua;
 			break;
+		} else if (boost::filesystem::is_regular_file(model_filename_json)) {
+			return model_filename_json;
+			break;
+		} 
 	}
 
 	if (iter != paths.end())
@@ -783,6 +788,8 @@ bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 
 		return false;
 	}
+
+	cout << "Load model " << filename << endl;
 
 	if (tolower(filename_str.substr(filename_str.size() - 4, 4)) == ".lua")
 		return loadModelFromLuaFile (filename, strict);
