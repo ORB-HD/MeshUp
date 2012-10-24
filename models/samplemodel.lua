@@ -11,7 +11,7 @@ meshes = {
     dimensions = { 0.3, 0.6, 0.7 },
     color = { 0.8, 0.8, 0.4},
     mesh_center = { 0, 0, 0.35 },
-    src = "meshes/unit_cube.obj",
+    src = "meshes/unit_cone_medres.obj",
   },
   UpperArm_L = {
     name = "UpperArm_L",
@@ -76,14 +76,6 @@ meshes = {
     mesh_center = { 0, 0, -0.225 },
     src = "meshes/unit_cube.obj",
   },
-	Joint = {
-    name = "Joint",
-    dimensions = { 0.3, 0.3, 0.3},
-    color = { 0., 1., 0.},
-    mesh_center = { 0, 0., 0},
-    src = "meshes/unit_sphere_medres.obj",
-  },
-
 }
 
 model = {
@@ -103,7 +95,6 @@ model = {
       },
       visuals = {
         meshes.HipMesh1,
-				meshes.Joint,
       },
     },
     {
@@ -114,7 +105,6 @@ model = {
       },
       visuals = {
         meshes.UpperBody,
- 				meshes.Joint,
      },
     },
     {
@@ -125,7 +115,6 @@ model = {
       },
       visuals = {
         meshes.UpperArm_L,
- 				meshes.Joint,
      },
     },
     {
@@ -136,7 +125,6 @@ model = {
       },
       visuals = {
         meshes.LowerArm_L,
- 				meshes.Joint,
      },
     },
     {
@@ -147,7 +135,6 @@ model = {
       },
       visuals = {
         meshes.UpperArm_R,
- 				meshes.Joint,
      },
     },
     {
@@ -158,7 +145,6 @@ model = {
       },
       visuals = {
         meshes.LowerArm_R,
- 				meshes.Joint,
      },
     },
     {
@@ -169,7 +155,6 @@ model = {
       },
       visuals = {
         meshes.Head,
- 				meshes.Joint,
      },
     },
     {
@@ -180,7 +165,6 @@ model = {
       },
       visuals = {
         meshes.UpperLeg_L,
- 				meshes.Joint,
      },
     },
     {
@@ -191,7 +175,6 @@ model = {
       },
       visuals = {
         meshes.LowerLeg_L,
- 				meshes.Joint,
      },
     },
     {
@@ -202,7 +185,6 @@ model = {
       },
       visuals = {
         meshes.UpperLeg_R,
- 				meshes.Joint,
      },
     },
     {
@@ -213,7 +195,6 @@ model = {
       },
       visuals = {
         meshes.LowerLeg_R,
- 				meshes.Joint,
      },
     },
   }
