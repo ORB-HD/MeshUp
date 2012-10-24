@@ -989,7 +989,7 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 		Vector3f scale(1.0f,1.0f,1.0f) ;
 
 		//only scale, if the dimensions are valid, i.e. are set in json-File
-		if (seg_iter->dimensions[0] != 0.f) {
+		if (seg_iter->dimensions.squaredNorm() > 1.0e-4) {
 			scale = Vector3f(
 					fabs(seg_iter->dimensions[0]) / bbox_size[0],
 					fabs(seg_iter->dimensions[1]) / bbox_size[1],

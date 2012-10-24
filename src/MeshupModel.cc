@@ -954,7 +954,7 @@ Vector3f lua_get_vector3f (lua_State *L, const string &path, int index = -1) {
 		cerr << "Invalid array size for 3d vector variable '" << path << "'." << endl;
 		abort();
 	}
-
+	
 	for (unsigned int i = 0; i < 3; i++) {
 		result[i] = static_cast<float>(array[i]);
 	}
@@ -987,7 +987,7 @@ Matrix33f lua_get_matrix3f (lua_State *L, const string &path) {
 
 	std::vector<double> array = get_array (L, path, -1);
 	if (array.size() != 9) {
-		cerr << "Invalid array size for 3d matrix variable '" << path << "'." << endl;
+		cerr << "Invalid array size for 3d matrix variable '" << path << "'. Expected 9 but was " << array.size() << endl;
 		abort();
 	}
 

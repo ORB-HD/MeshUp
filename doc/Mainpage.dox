@@ -148,11 +148,13 @@ The Mesh Information Table can use the following attributes:
 
 \par scale (3-d vector, default:  {1., 1., 1.})
 	Scales the model relative to its default size. A scale of {2., 2., 2. }
-	will draw the mesh twice as big as its default size.
+	will draw the mesh twice as big as its default size. Note that dimensions
+	takes precedence over scale.
 	
 \par dimensions (3-d vector, default:  {1., 1., 1.})
 	Scales the mesh so that its absolute size (more precisely its bounding
-	box) is that of dimensions.
+	box) is that of dimensions. Note that dimensions takes precedence over
+	scale.
 
 \par color (3-d vector, default:  {1., 1., 1.})
   The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
