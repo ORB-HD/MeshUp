@@ -818,20 +818,12 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	float dx = static_cast<float>(event->x() - lastMousePos.x());
 	float dy = static_cast<float>(event->y() - lastMousePos.y());
 
-	if (event->buttons().testFlag(Qt::LeftButton)) {
-		// rotate
-		phi += 0.01 * dx;
-		theta -= 0.01 * dy;
-
-		theta = std::max(theta, 0.01f);
-		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
-
-		emit camera_changed();
-
 #if QT_VERSION <= 0x040700
-	} else if (event->buttons().testFlag(Qt::MidButton)) {
+	if (event->buttons().testFlag(Qt::MidButton)
+			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
 #else
-	} else if (event->buttons().testFlag(Qt::MiddleButton)) {
+	if (event->buttons().testFlag(Qt::MiddleButton)
+			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
 #endif
 		// move
 		Vector3f eye_normalized (poi - eye);
@@ -842,6 +834,15 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 		Vector3f local_up = eye_normalized.cross(right);
 		poi += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
 		eye += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
+
+		emit camera_changed();
+	} else if (event->buttons().testFlag(Qt::LeftButton)) {
+		// rotate
+		phi += 0.01 * dx;
+		theta -= 0.01 * dy;
+
+		theta = std::max(theta, 0.01f);
+		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
 
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
