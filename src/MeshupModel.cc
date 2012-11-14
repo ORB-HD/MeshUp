@@ -978,9 +978,9 @@ Matrix33f lua_get_matrix3f (lua_State *L, const string &path) {
 		result(1,2) = row[2];
 
 		row = lua_get_vector3f (L, path, 3);
-		result(1,0) = row[0];
-		result(1,1) = row[1];
-		result(1,2) = row[2];
+		result(2,0) = row[0];
+		result(2,1) = row[1];
+		result(2,2) = row[2];
 
 		return result;
 	}
