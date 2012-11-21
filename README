@@ -59,9 +59,13 @@ The mapping for joints is specified in the following syntax:
   t,translation for translational motions
   r,rotation    for rotational motions
   s,scale       for scaling motions
-<axis> can be either of x,y,z for the respective axes
+<axis> can be either of x,y,z for the respective axes. Negative axes can
+  be specified by prepending a '-' to the axis name.
 <unit> (optional) can be r,rad, or radian to specify that the columns
   should be interpreted as radians instead of the default degrees.
+
+For a single frame all column specifications must be consecutive in the
+COLUMN section.
 
 See sampleanimation.txt for an example.
 

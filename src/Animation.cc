@@ -634,6 +634,8 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 
 	AnimationKeyPoses animation_keyposes;
 
+	std::list<std::string> column_frame_names;
+
 	while (!file_in.eof()) {
 		previous_line = line;
 		getline (file_in, line);
@@ -658,7 +660,10 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 
 			// we set it to -1 and can then easily increasing the value
 			column_index = -1;
-			continue;
+
+			line = strip_comments (strip_whitespaces (line.substr(string("COLUMNS:").size() + 1, line.size())));
+			if (line.size() == 0)
+				continue;
 		}
 
 		if (line.substr (0, string("DATA:").size()) == "DATA:") {
@@ -708,7 +713,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 					cerr << "Error: parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
 
 					if (strict)
-						exit(1);
+						abort();
 
 					return false;
 				}
@@ -831,6 +836,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
 					value *= 180. / M_PI;
 				}
+//				cout << "Adding value column_time = " << column_time << " ci = " << ci << " value = " << value << endl;
 				values.addKeyValue(column_time, ci, value);
 			}
 			continue;
