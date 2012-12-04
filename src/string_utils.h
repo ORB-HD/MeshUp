@@ -80,6 +80,35 @@ inline std::vector<std::string> tokenize_strip_whitespaces (const std::string &l
 	return result;
 }
 
+inline std::vector<std::string> tokenize_csv_strip_whitespaces (const std::string &line_in, std::string whitespaces=whitespaces_std) {
+	std::vector<std::string> result;
+	std::string line = line_in;
+
+	size_t search_start = 0;
+
+	while (line.find_first_of (",", search_start) != std::string::npos) {
+		size_t comma_pos = line.find_first_of (",", search_start);
+		if (comma_pos < line.size() - 1 && whitespaces.find_first_of (line[comma_pos + 1]) == std::string::npos) {
+			search_start = comma_pos + 1;
+			continue;
+		}
+
+		std::string token = line.substr (0, comma_pos - 1);
+
+		line = line.substr (token.size() + 1, line.size());
+
+		std::cout << " adding token: " << strip_whitespaces(token, whitespaces) << std::endl;
+		result.push_back (strip_whitespaces(token, whitespaces));
+		search_start = 0;
+	}
+
+	if (line.size() > 0)
+		result.push_back (strip_whitespaces(line, whitespaces));
+
+	return result;
+}
+
+
 /** Counts the number of occurrences of a list of characters.
  *
  * \param line_in The hay-stack to search for.

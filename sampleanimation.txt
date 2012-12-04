@@ -6,15 +6,15 @@
 # Specification of the columns starts with the keyword 'COLUMNS:'. The
 # descriptions can be specified separated by commas or whitespaces such as
 # tabs.
-MODEL: samplemodel
 COLUMNS:
 Time,
-HIP:T:X, HIP:T:Y,		HIP:T:Z,
-UPPERBODY:R:Z,
-UPPERBODY:R:Y,
-UPPERBODY:R:X,
+UPPERARM_R:R:-Y,
+LOWERARM_R:R:-Y,
+UPPERARM_R:R:X
 # The actual data part starts with the keyword 'DATA:'. The values are
 # separated by spaces or tabs.
 DATA:
-0.	0.	0.	0.	0.	0.	0.
-1.	2.	0.5	1.	20.	30.	39.
+0.	100.	30.	10.
+2.5	100.	30.	10.
+5.	100.	30.	10.
+7.5	100.	30.	10.

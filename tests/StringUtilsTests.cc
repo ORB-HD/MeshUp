@@ -33,3 +33,17 @@ TEST ( StringUtilsCountChar ) {
 
 	CHECK_EQUAL (2, count_char(line, "/"));
 }
+
+TEST ( StringUtilsTokenizeCSVStrip ) {
+	string line ("1,1, 2,4,   ,521 ,\t\t923\t, \t123,321");
+
+	vector<string> tokens = tokenize_csv_strip_whitespaces (line);
+
+	CHECK_EQUAL (5, tokens.size());
+
+	CHECK_EQUAL ("1,1", tokens[0]);
+	CHECK_EQUAL ("2,4", tokens[0]);
+	CHECK_EQUAL (",521", tokens[0]);
+	CHECK_EQUAL ("923", tokens[0]);
+	CHECK_EQUAL ("123,321", tokens[0]);
+}

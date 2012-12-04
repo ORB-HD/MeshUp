@@ -35,7 +35,6 @@ extern "C"
 }
 #include "luatables.h"
 
-#include "objloader.h"
 #include "MeshupModel.h"
 #include "Animation.h"
 
