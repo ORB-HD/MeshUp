@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #include "GL/glew.h"
 
 #include "MeshupModel.h"
@@ -68,11 +77,16 @@ std::string find_model_file_by_name (const std::string &model_name) {
 		if (boost::filesystem::is_regular_file(model_filename))
 			break;
 
-		model_filename += ".json";
-//		cout << "checking " << model_filename << endl;
+		string model_filename_json = model_filename + ".json";
+		string model_filename_lua = model_filename + ".lua";
 
-		if (boost::filesystem::is_regular_file(model_filename))
+		if (boost::filesystem::is_regular_file(model_filename_lua)) {
+			return model_filename_lua;
 			break;
+		} else if (boost::filesystem::is_regular_file(model_filename_json)) {
+			return model_filename_json;
+			break;
+		} 
 	}
 
 	if (iter != paths.end())
@@ -775,6 +789,8 @@ bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 		return false;
 	}
 
+	cout << "Load model " << filename << endl;
+
 	if (tolower(filename_str.substr(filename_str.size() - 4, 4)) == ".lua")
 		return loadModelFromLuaFile (filename, strict);
 	else if (tolower(filename_str.substr(filename_str.size() - 5, 5)) == ".json")
@@ -938,7 +954,7 @@ Vector3f lua_get_vector3f (lua_State *L, const string &path, int index = -1) {
 		cerr << "Invalid array size for 3d vector variable '" << path << "'." << endl;
 		abort();
 	}
-
+	
 	for (unsigned int i = 0; i < 3; i++) {
 		result[i] = static_cast<float>(array[i]);
 	}
@@ -962,16 +978,16 @@ Matrix33f lua_get_matrix3f (lua_State *L, const string &path) {
 		result(1,2) = row[2];
 
 		row = lua_get_vector3f (L, path, 3);
-		result(1,0) = row[0];
-		result(1,1) = row[1];
-		result(1,2) = row[2];
+		result(2,0) = row[0];
+		result(2,1) = row[1];
+		result(2,2) = row[2];
 
 		return result;
 	}
 
 	std::vector<double> array = get_array (L, path, -1);
 	if (array.size() != 9) {
-		cerr << "Invalid array size for 3d matrix variable '" << path << "'." << endl;
+		cerr << "Invalid array size for 3d matrix variable '" << path << "'. Expected 9 but was " << array.size() << endl;
 		abort();
 	}
 

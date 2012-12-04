@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #include "GL/glew.h"
 
 #include "Animation.h"
@@ -527,7 +536,6 @@ void Animation::updateAnimationFromRawValues () {
 
 			float raw_value = values.getInterpolatedValue (time, ci);
 
-
 			if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
 				switch (column_infos[ci].axis) {
 					case ColumnInfo::AxisTypeX: pose_translation[0] = raw_value; break;
@@ -585,11 +593,11 @@ void Animation::updateAnimationFromRawValues () {
 	}
 }
 
-bool Animation::loadFromFile (const char* filename, bool strict) {
-	return loadFromFileAtFrameRate (filename, -1.f, strict);
+bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict) {
+	return loadFromFileAtFrameRate (filename, frame_config, -1.f, strict);
 }
 
-bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_second, bool strict) {
+bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig &frame_config, float frames_per_second, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
@@ -600,6 +608,8 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 
 		return false;
 	}
+
+	configuration = frame_config;
 
 	double force_fps_previous_frame = 0.;
 	int force_fps_frame_count = 0;
@@ -614,6 +624,8 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 	string previous_line;
 	string line;
 
+	bool found_column_section = false;
+	bool found_data_section = false;
 	bool column_section = false;
 	bool data_section = false;
 	int column_index = 0;
@@ -621,6 +633,8 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 	column_infos.clear();
 
 	AnimationKeyPoses animation_keyposes;
+
+	std::list<std::string> column_frame_names;
 
 	while (!file_in.eof()) {
 		previous_line = line;
@@ -641,14 +655,19 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 			continue;
 
 		if (line.substr (0, string("COLUMNS:").size()) == "COLUMNS:") {
+			found_column_section = true;
 			column_section = true;
 
 			// we set it to -1 and can then easily increasing the value
 			column_index = -1;
-			continue;
+
+			line = strip_comments (strip_whitespaces (line.substr(string("COLUMNS:").size() + 1, line.size())));
+			if (line.size() == 0)
+				continue;
 		}
 
 		if (line.substr (0, string("DATA:").size()) == "DATA:") {
+			found_data_section = true;
 			column_section = false;
 			data_section = true;
 			continue;
@@ -694,7 +713,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 					cerr << "Error: parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
 
 					if (strict)
-						exit(1);
+						abort();
 
 					return false;
 				}
@@ -817,10 +836,21 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, float frames_per_
 				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
 					value *= 180. / M_PI;
 				}
+//				cout << "Adding value column_time = " << column_time << " ci = " << ci << " value = " << value << endl;
 				values.addKeyValue(column_time, ci, value);
 			}
 			continue;
 		}
+	}
+
+	if (!found_column_section) {
+		cerr << "Error: did not find COLUMNS: section in animation file!" << endl;
+		abort();
+	}
+
+	if (!found_data_section) {
+		cerr << "Error: did not find DATA: section in animation file!" << endl;
+		abort();
 	}
 
 	if (frames_per_second != -1.f) {
@@ -965,7 +995,7 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 		Vector3f scale(1.0f,1.0f,1.0f) ;
 
 		//only scale, if the dimensions are valid, i.e. are set in json-File
-		if (seg_iter->dimensions[0] != 0.f) {
+		if (seg_iter->dimensions.squaredNorm() > 1.0e-4) {
 			scale = Vector3f(
 					fabs(seg_iter->dimensions[0]) / bbox_size[0],
 					fabs(seg_iter->dimensions[1]) / bbox_size[1],

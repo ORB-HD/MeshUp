@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #include <QtGui> 
 #include <QFile>
 #include <QDir>
@@ -449,7 +458,7 @@ void MeshupApp::action_reload_files() {
 	if (animation_filename.size() == 0)
 		return;
 
-	status = test_animation->loadFromFile(animation_filename.c_str(), false);
+	status = test_animation->loadFromFile(animation_filename.c_str(), glWidget->model_data->configuration, false);
 	if (!status) {
 		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
 		return;
@@ -469,7 +478,6 @@ void MeshupApp::action_quit () {
 void MeshupApp::animation_loaded() {
 	qDebug() << __func__;
 	animation_edit_model->call_reset();
-	glWidget->animation_data->saveToFile ("animation_save.txt");
 
 	initialize_curves();
 }
@@ -489,6 +497,8 @@ void MeshupApp::initialize_curves() {
 	// cout << "time_step = " << scientific << time_step << endl;
 	// cout << "step_count = " << scientific << step_count << endl;
 
+	glWidget->model_data->clearCurves();
+		
 	while (current_time < duration) {
 		current_time += time_step;
 		if (current_time > duration)

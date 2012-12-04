@@ -1,0 +1,177 @@
+/** \file Mainpage.dox
+\mainpage MeshUp - Visualization
+\image html meshup_logo.png
+
+\section introduction Introduction
+
+MeshUp is a 3-d visualization tool for rigid-body motions. It is based on
+skeletal animation. The visualization needs three things: a model file,
+meshes and an animation file.
+
+\subsection introduction_models Models
+
+Models define a hierarchy of Frames to which geometric objects such as
+spheres, boxes or a generic mesh can be attached. There is one special
+Frame called BASE which is the global reference frame.
+
+Between a parent and a joint frame there can be a transformation
+(translation and rotation) which is called the joint frame. If the joint
+frame contains no transformation the parent and child frame coincide.
+
+\subsection introduction_meshes Meshes
+
+Meshes are geometric objects thar can be created with 3d content creation
+tools such as Blender, MilkShape, etc. So far MeshUp only supports the OBJ
+file format to load meshes. Furthermore there are some limitations (see
+README for more details).
+
+\subsection introduction_animation Animations
+
+Animation files contain the motion information independent of the model.
+The actual data is stored in a comma separated format which allows easy
+export from a simulation program and also plotting using Octave or even a
+Spreadsheet program.
+
+\section luamodel_format Model Format Overview 
+
+Models have to be specified as a specially formatted Lua table which must
+be returned by the script, i.e. if the model is specified in the table
+"model = { ... }" the script has to return this when loaded. Within the
+returned table, MeshUp goes through the table "frames" and builds
+the model from the individual Frame Information Tables (see further down
+for more information about those).
+
+A valid file could look like this:
+
+\code
+model = {
+  configuration = { ... }
+  frames = {
+    {
+      <frame 1 information table>
+    },
+    {
+      <frame 2 information table>
+    }
+  }
+}
+
+return model
+\endcode
+
+\subsection model_configuration Configuration
+
+The configuration table describes your coordinate system. Note that in
+general the coordinate system is assumed to be right-handed. The
+configuration is specified using the principal axes of your global
+coordinate system:
+
+Example:
+\code
+model = {
+	configuration = {
+    axis_front = { 1, 0, 0 },
+    axis_up    = { 0, 0, 1 },
+    axis_right = { 0, -1, 0 },
+    rotation_order = { 2, 1, 0},
+  },
+
+  frames = {
+  ...
+  }
+}
+\endcode
+
+This defines a right-handed coordinate system for which X poits forward, Y
+to the left and Z up (as seen from the model).
+
+\note The table frames must contain all Frame Information Tables as a list
+and individual tables must *not* be specified with a key, i.e.
+\code
+  frames = {
+    some_frame = {
+      ...
+    },
+    {
+      ..
+    }
+  }
+\endcode
+is not possible as Lua does not retain the order of the individual
+frames when an explicit key is specified.
+
+\section model_frame_table Frame Information Table
+
+The Frame Information Table is searched for values to build the skeletal
+hierarchy. The following fields are used by MeshUp (everything else is ignored):
+
+\par name (required, type: string):
+    Name of the body that is being added. This name must be unique.
+
+\par parent (required, type: string):
+    If the value is "ROOT" the parent frame of this body is assumed to be
+    the base coordinate system, otherwise it must be the exact same string
+    as was used for the "name"-field of the parent frame.
+  
+\par  joint_frame (optional, type: table)
+    Specifies the origin of the joint in the frame of the parent. It uses
+    the values (if existing):
+  \code
+      r (3-d vector, default: (0., 0., 0.))
+      E (3x3 matrix, default: identity matrix)
+  \endcode
+\par
+   for which r is the translation and E the rotation of the joint frame
+
+\par visuals (optional, type: array of Mesh Information Tables)
+   Specification of all meshes that are attached to the current frame.
+
+\subsection model_visual Mesh Information Table
+The Mesh Information Table describes the geometric mesh including its
+properties such as color and dimensions and where it origin should be
+placed in the current frame.
+
+An example Mesh Information Table looks like this:
+
+\code
+ HipMesh1 = {
+		name = "HipMesh1",
+		dimensions = { 0.25, 0.4, 0.25 },
+		color = { 0.8, 0.8, 0.2},
+		mesh_center = { 0, 0, 0.125 },
+		src = "meshes/unit_cube.obj",
+	},
+\endcode
+
+\par
+The Mesh Information Table can use the following attributes:
+
+\par scale (3-d vector, default:  {1., 1., 1.})
+	Scales the model relative to its default size. A scale of {2., 2., 2. }
+	will draw the mesh twice as big as its default size. Note that dimensions
+	takes precedence over scale.
+	
+\par dimensions (3-d vector, default:  {1., 1., 1.})
+	Scales the mesh so that its absolute size (more precisely its bounding
+	box) is that of dimensions. Note that dimensions takes precedence over
+	scale.
+
+\par color (3-d vector, default:  {1., 1., 1.})
+  The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
+	and white is (1., 1., 1.).
+
+\par translate (3-d vector, default:  {1., 1., 1.})
+  Shifts the whole mesh by a given vector.
+
+\par mesh_center (3-d vector, default:  {1., 1., 1.})
+	Shifts the whole mesh so that the center of its bounding box is at the
+	position defined by mesh_center.	
+
+\par src (string)
+  The path to the mesh file.
+
+\section luamodel_example Example
+  Here is an example of a model:
+\include examplemodel.lua
+
+*/

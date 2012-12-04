@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #ifndef _MESHUPMODEL_H
 #define _MESHUPMODEL_H
 
@@ -185,13 +194,17 @@ struct MeshupModel {
 		return frame_iter->second;
 	}
 
+	void clearCurves() {
+		curvemap.clear();
+	}
+
 	void clear() {
 		segments.clear();
 		frames.clear();
 		framemap.clear();
 		meshmap.clear();
-		curvemap.clear();
-
+		clearCurves();
+	
 		*this = MeshupModel();
 	}
 

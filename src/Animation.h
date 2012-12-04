@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #ifndef _ANIMATION_H
 #define _ANIMATION_H
 
@@ -147,8 +156,8 @@ struct Animation {
 			);
 	void updateAnimationFromRawValues ();
 
-	bool loadFromFile (const char* filename, bool strict = true);
-	bool loadFromFileAtFrameRate (const char* filename, float frames_per_second, bool strict = true);
+	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
+	bool loadFromFileAtFrameRate (const char* filename, const FrameConfig &frame_config, float frames_per_second, bool strict = true);
 	bool saveToFile (const char* filename);
 
 	std::string name;

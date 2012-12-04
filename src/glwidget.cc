@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 #include "GL/glew.h"
 
 #include <QtGui>
@@ -88,7 +97,11 @@ void GLWidget::loadModel(const char* filename) {
 
 void GLWidget::loadAnimation(const char* filename) {
 	if (opengl_initialized) {
-		animation_data->loadFromFileAtFrameRate(filename, 60.f);
+		if (!model_data) {
+			std::cerr << "Error: could not load Animation without a model!" << std::endl;
+			abort();
+		}
+		animation_data->loadFromFileAtFrameRate(filename, model_data->configuration, 60.f);
 		emit animation_loaded();
 	} else {
 		// mark file for later loading
@@ -805,20 +818,12 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	float dx = static_cast<float>(event->x() - lastMousePos.x());
 	float dy = static_cast<float>(event->y() - lastMousePos.y());
 
-	if (event->buttons().testFlag(Qt::LeftButton)) {
-		// rotate
-		phi += 0.01 * dx;
-		theta -= 0.01 * dy;
-
-		theta = std::max(theta, 0.01f);
-		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
-
-		emit camera_changed();
-
 #if QT_VERSION <= 0x040700
-	} else if (event->buttons().testFlag(Qt::MidButton)) {
+	if (event->buttons().testFlag(Qt::MidButton)
+			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
 #else
-	} else if (event->buttons().testFlag(Qt::MiddleButton)) {
+	if (event->buttons().testFlag(Qt::MiddleButton)
+			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
 #endif
 		// move
 		Vector3f eye_normalized (poi - eye);
@@ -829,6 +834,15 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 		Vector3f local_up = eye_normalized.cross(right);
 		poi += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
 		eye += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
+
+		emit camera_changed();
+	} else if (event->buttons().testFlag(Qt::LeftButton)) {
+		// rotate
+		phi += 0.01 * dx;
+		theta -= 0.01 * dy;
+
+		theta = std::max(theta, 0.01f);
+		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
 
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::RightButton)) {

@@ -1,3 +1,12 @@
+/*
+ * MeshUp - A visualization tool for multi-body systems based on skeletal
+ * animation and magic.
+ *
+ * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ *
+ * Licensed under the MIT license. See LICENSE for more details.
+ */
+
 /**
  * Allows interpolation of a matlab like color scale. Taken from:
  *   http://stackoverflow.com/questions/7706339/grayscale-to-red-green-blue-matlab-jet-color-scale

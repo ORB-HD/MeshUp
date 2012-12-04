@@ -9,12 +9,12 @@
 COLUMNS:
 Time,
 HIP:T:X,
-UPPERLEG_L:R:Z,
-UPPERLEG_R:R:Z,
-UPPERARM_L:R:Z,
-LOWERARM_L:R:Z,
-UPPERARM_R:R:Z,
-LOWERARM_R:R:Z,
+UPPERLEG_L:R:-Y,
+UPPERLEG_R:R:-Y,
+UPPERARM_L:R:-Y,
+LOWERARM_L:R:-Y,
+UPPERARM_R:R:-Y,
+LOWERARM_R:R:-Y,
 # The actual data part starts with the keyword 'DATA:'. The values are
 # separated by spaces or tabs.
 DATA:
