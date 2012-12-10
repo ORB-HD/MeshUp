@@ -80,30 +80,40 @@ inline std::vector<std::string> tokenize_strip_whitespaces (const std::string &l
 	return result;
 }
 
-inline std::vector<std::string> tokenize_csv_strip_whitespaces (const std::string &line_in, std::string whitespaces=whitespaces_std) {
+inline std::vector<std::string> tokenize_csv_strip_whitespaces (const std::string &line_in, const std::string whitespaces=whitespaces_std) {
 	std::vector<std::string> result;
 	std::string line = line_in;
 
 	size_t search_start = 0;
 
-	while (line.find_first_of (",", search_start) != std::string::npos) {
-		size_t comma_pos = line.find_first_of (",", search_start);
-		if (comma_pos < line.size() - 1 && whitespaces.find_first_of (line[comma_pos + 1]) == std::string::npos) {
-			search_start = comma_pos + 1;
-			continue;
-		}
-
-		std::string token = line.substr (0, comma_pos - 1);
-
-		line = line.substr (token.size() + 1, line.size());
-
-		std::cout << " adding token: " << strip_whitespaces(token, whitespaces) << std::endl;
-		result.push_back (strip_whitespaces(token, whitespaces));
-		search_start = 0;
+	// first replace all whitespaces by regular spaces to simplify things
+	search_start = line.find_first_of (whitespaces);
+	while (search_start != std::string::npos) {
+		line[search_start] = ' ';
+		search_start = line.find_first_of (whitespaces, search_start + 1);
 	}
 
-	if (line.size() > 0)
-		result.push_back (strip_whitespaces(line, whitespaces));
+	search_start = 0;
+
+	while (line.size() > 0) {
+		size_t separator_pos = std::string::npos;
+	
+		separator_pos = line.find (", ");
+		// std::cout << "  search '" << ", " << "' in '" << search_start << "' found at " << separator_pos << std::endl;
+
+		if (separator_pos == std::string::npos) {
+			separator_pos = line.size();
+		}
+
+		std::string token = line.substr (0, separator_pos);
+		// std::cout << "token = '" << token << "' separator_pos = " << separator_pos << std::endl;
+		result.push_back (strip_whitespaces(token, whitespaces));
+
+		if (line.size() == token.size())
+			break;
+
+		line = line.substr (token.size() + 2, line.size());
+	}
 
 	return result;
 }
