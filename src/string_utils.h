@@ -107,12 +107,15 @@ inline std::vector<std::string> tokenize_csv_strip_whitespaces (const std::strin
 
 		std::string token = line.substr (0, separator_pos);
 		// std::cout << "token = '" << token << "' separator_pos = " << separator_pos << std::endl;
-		result.push_back (strip_whitespaces(token, whitespaces));
+		token = strip_whitespaces (token, whitespaces);
+		if (token[token.size() - 1] == ',')
+			token = token.substr (0, token.size() - 1);
+		result.push_back (token);
 
-		if (line.size() == token.size())
+		if (line.size() <= separator_pos + 2)
 			break;
 
-		line = line.substr (token.size() + 2, line.size());
+		line = line.substr (separator_pos + 2, line.size());
 	}
 
 	return result;

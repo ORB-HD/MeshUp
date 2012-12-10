@@ -46,11 +46,11 @@ TEST ( StringUtilsTokenizeCSVStripSimple ) {
 }
 
 TEST ( StringUtilsTokenizeCSVStrip ) {
-	string line ("1,1, 2,4,   ,521 ,\t\t923\t, , \t123,321, ");
+	string line ("1,1, 2,4,   ,521 ,\t\t923\t, , \t123,321, somestuff,");
 
 	vector<string> tokens = tokenize_csv_strip_whitespaces (line);
 
-	CHECK_EQUAL (6, tokens.size());
+	CHECK_EQUAL (7, tokens.size());
 
 	CHECK_EQUAL ("1,1", tokens[0]);
 	CHECK_EQUAL ("2,4", tokens[1]);
@@ -58,4 +58,5 @@ TEST ( StringUtilsTokenizeCSVStrip ) {
 	CHECK_EQUAL ("923", tokens[3]);
 	CHECK_EQUAL ("", tokens[4]);
 	CHECK_EQUAL ("123,321", tokens[5]);
+	CHECK_EQUAL ("somestuff", tokens[6]);
 }

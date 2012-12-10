@@ -614,6 +614,12 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 	int force_fps_frame_count = 0;
 	int force_fps_skipped_frame_count = 0;
 	bool last_line = false;
+	bool csv_mode = false;
+
+	string filename_str (filename);
+
+	if (filename_str.size() > 4 && filename_str.substr(filename_str.size() - 4) == ".csv") 
+		csv_mode = true;
 
 	cout << "Loading animation " << filename << endl;
 
@@ -660,7 +666,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			// we set it to -1 and can then easily increasing the value
 			column_index = -1;
 
-			line = strip_comments (strip_whitespaces (line.substr(string("COLUMNS:").size() + 1, line.size())));
+			line = strip_comments (strip_whitespaces (line.substr(string("COLUMNS:").size(), line.size())));
 			if (line.size() == 0)
 				continue;
 		}
@@ -676,7 +682,13 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			// do columny stuff
 			// cout << "COLUMN:" << line << endl;
 
-			std::vector<string> elements = tokenize_strip_whitespaces (line, ",\t\n\r");
+			std::vector<string> elements;
+			
+			if (csv_mode)
+				elements = tokenize_csv_strip_whitespaces (line);
+			else
+				elements = tokenize_strip_whitespaces (line, ",\t\n\r");
+
 			for (int ei = 0; ei < elements.size(); ei++) {
 				// skip elements that had multiple spaces in them
 				if (elements[ei].size() == 0)
@@ -778,7 +790,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 				col_info.axis = axis_name;
 				col_info.is_radian = unit_is_radian;
 
-				// cout << "Adding column " << column_index << " " << frame->name << ", " << type << ", " << axis_name << " radians = " << col_info.is_radian << endl;
+				// cout << "Adding column " << column_index << " " << frame_name << ", " << type << ", " << axis_name << " radians = " << col_info.is_radian << endl;
 				column_infos.push_back(col_info);
 			}
 
@@ -792,7 +804,12 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			// cout << "DATA  :" << line << endl;
 			// parse the DOF description and set the column info in
 			// animation_keyposes
-			std::vector<string> columns = tokenize (line);
+			std::vector<string> columns;
+			if (csv_mode)
+				columns = tokenize_csv_strip_whitespaces (line);
+			else
+				columns = tokenize (line);
+
 			assert (columns.size() >= column_infos.size());
 			std::vector<float> column_values;
 
