@@ -62,6 +62,7 @@ std::string find_model_file_by_name (const std::string &model_name) {
 
 			paths.push_back (env_meshup_dir);
 			paths.push_back (env_meshup_dir + "models/");
+			paths.push_back (env_meshup_dir + "share/meshup/models/");
 		}
 	}
 
@@ -109,6 +110,7 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 				env_meshup_dir += '/';
 
 			paths.push_back (env_meshup_dir);
+			paths.push_back (env_meshup_dir + "share/meshup/" ) ;
 		}
 	}
 
