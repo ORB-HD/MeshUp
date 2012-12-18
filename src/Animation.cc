@@ -780,7 +780,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 				bool unit_is_radian = false;
 				if (spec.size() == 4) {
 					string unit_str = tolower(strip_whitespaces(spec[3]));
-					if (unit_str == "r" || unit_str == "rad" || unit_str == "radians")
+					if (unit_str == "r" || unit_str == "rad" || unit_str == "radian" || unit_str == "radians")
 						unit_is_radian = true;
 				}
 
