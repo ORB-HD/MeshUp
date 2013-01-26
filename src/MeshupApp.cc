@@ -46,8 +46,14 @@ MeshupApp::MeshupApp(QWidget *parent)
 	renderImageDialog = new RenderImageDialog(this);
 	renderImageSeriesDialog = new RenderImageSeriesDialog(this);
 
+	// this is NOT the default value,
+	//  its just an initialization of the memory with something
+	//  that makes sense
+	glRefreshTime=20; 
+
 	timer->setSingleShot(false);
-	timer->start(20);
+	// Start of timer is now at the end of this function
+	//  to allow the settings being used
 
 	timeLine = new QTimeLine (TimeLineDuration, this);
 	timeLine->setCurveShape(QTimeLine::LinearCurve);
@@ -159,6 +165,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (pushButtonUpdateCamera, SIGNAL (clicked()), this, SLOT (update_camera()));
 
 	loadSettings();
+	
+	timer->start(glRefreshTime);
 }
 
 void print_usage() {
@@ -227,6 +235,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["window"]["height"] = height();
 	settings_json["configuration"]["window"]["xpos"] = x();
 	settings_json["configuration"]["window"]["ypos"] = y();
+	settings_json["configuration"]["window"]["glRefreshTime"] = glRefreshTime;
 
 	settings_json["configuration"]["render"]["width"]  = renderImageSeriesDialog->WidthSpinBox->value();
 	settings_json["configuration"]["render"]["height"] = renderImageSeriesDialog->HeightSpinBox->value();
@@ -317,6 +326,7 @@ void MeshupApp::loadSettings () {
 	y = settings_json["configuration"]["window"].get("xpos", 50).asInt();
 	w = settings_json["configuration"]["window"].get("width", 650).asInt();
 	h = settings_json["configuration"]["window"].get("height", 650).asInt();
+	glRefreshTime = settings_json["configuration"]["window"].get("glRefreshTime", 20).asInt();
 
 	setGeometry (x, y, w, h);
 	camera_changed();

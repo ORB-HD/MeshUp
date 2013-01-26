@@ -25,10 +25,12 @@ public:
     MeshupApp(QWidget *parent = 0);
 
 		void parseArguments (int argc, char* argv[]);
-
+		
 protected:
 		QTimer *timer;
 		QTimeLine *timeLine;
+
+		int glRefreshTime;
 
 		bool playerPaused;
 		RenderImageDialog* renderImageDialog;
