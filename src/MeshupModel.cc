@@ -51,6 +51,7 @@ std::string find_model_file_by_name (const std::string &model_name) {
 
 	std::vector<std::string> paths;
 	paths.push_back("./");
+	paths.push_back("/");
 	paths.push_back("./models/");
 
 	if (getenv ("MESHUP_PATH")) {
@@ -101,6 +102,7 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 
 	std::vector<std::string> paths;
 	paths.push_back("./");
+	paths.push_back("/");
 
 	if (getenv ("MESHUP_PATH")) {
 		std::string env_meshup_dir (getenv("MESHUP_PATH"));
