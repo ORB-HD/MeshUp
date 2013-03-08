@@ -14,7 +14,7 @@ UPPERARM_R:R:X
 # The actual data part starts with the keyword 'DATA:'. The values are
 # separated by spaces or tabs.
 DATA:
-0.	100.	30.	10.
-2.5	100.	30.	10.
-5.	100.	30.	10.
-7.5	100.	30.	10.
+0.,  100., 30., 10.
+2.5, 100., 30., 10.
+5.,  100., 30., 10.
+7.5, 100., 30., 10.
