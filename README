@@ -67,6 +67,16 @@ The mapping for joints is specified in the following syntax:
 For a single frame all column specifications must be consecutive in the
 COLUMN section.
 
+The DATA section has to be specified as multi-column data of the raw values
+for which each column is separated by a "," (comma) and at least one
+	whitespace (space or tab).
+
+The section either starts with "DATA:" and directly after it the data or
+alternatively, one can use "DATA_FROM: <some_path_to_filename>" to load the
+actual data from another data file. This can be useful when wanting to keep
+the actual data as a clear .csv file or if one wants to re-use the header
+of a file.
+
 See sampleanimation.txt for an example.
 
 NOTES:

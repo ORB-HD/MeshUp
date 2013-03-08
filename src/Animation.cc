@@ -676,6 +676,35 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			column_section = false;
 			data_section = true;
 			continue;
+		} else if (line.substr (0, string("DATA_FROM:").size()) == "DATA_FROM:") {
+			file_in.close();
+
+			boost::filesystem::path data_path (strip_whitespaces(line.substr(string("DATA_FROM:").size(), line.size())));
+
+			// search for the file in the same directory as the original file,
+			// unless we have an absolutue path
+			if (!data_path.is_absolute()) {
+				boost::filesystem::path file_path (filename);
+				boost::filesystem::path data_directory = file_path.parent_path();
+				data_path = data_directory /= data_path;
+			}
+
+			file_in.open(data_path.c_str());
+			cout << "Loading animation data from " << data_path.string() << endl;
+
+			if (!file_in) {
+				cerr << "Error opening animation file " << data_path.string() << "!" << std::endl;
+
+				if (strict)
+					exit (1);
+
+				return false;
+			}
+
+			found_data_section = true;
+			column_section = false;
+			data_section = true;
+			continue;
 		}
 
 		if (column_section) {
