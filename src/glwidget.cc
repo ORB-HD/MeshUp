@@ -101,8 +101,16 @@ void GLWidget::loadAnimation(const char* filename) {
 			std::cerr << "Error: could not load Animation without a model!" << std::endl;
 			abort();
 		}
-		animation_data->loadFromFileAtFrameRate(filename, model_data->configuration, 60.f);
-		emit animation_loaded();
+		AnimationPtr new_animation (new Animation());
+		if (new_animation->loadFromFileAtFrameRate (filename, model_data->configuration, 60.f)) {
+			if (animation_data->current_time <= new_animation->duration) {
+				new_animation->current_time = animation_data->current_time;
+			}
+			animation_data = new_animation;
+			emit animation_loaded();
+		} else {
+			std::cerr << "Error: could not load Animation!" << std::endl;
+		}
 	} else {
 		// mark file for later loading
 		animation_filename = filename;

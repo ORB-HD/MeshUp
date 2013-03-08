@@ -67,6 +67,7 @@ struct Frame {
 	 * to compute the default transformations first. This is done in this function.
 	 * */
 	void initDefaultFrameTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config);
+	void resetPoseTransform ();
 
 	Matrix33f getFrameTransformRotation() {
 		return Matrix33f (
@@ -181,6 +182,7 @@ struct MeshupModel {
 			const Vector3f &color
 			);
 
+	void resetPoses();
 	void updateFrames();
 
 	FramePtr findFrame (const char* frame_name) {

@@ -487,6 +487,10 @@ void MeshupApp::animation_loaded() {
 	qDebug() << __func__;
 	animation_edit_model->call_reset();
 
+	glWidget->model_data->resetPoses();
+
+	UpdateModelFromAnimation (glWidget->model_data, glWidget->animation_data, glWidget->animation_data->current_time);
+
 	initialize_curves();
 }
 

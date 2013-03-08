@@ -175,6 +175,18 @@ void Frame::initDefaultFrameTransform(const Matrix44f &parent_frame_transform, c
 	}
 }
 
+void Frame::resetPoseTransform () {
+	pose_translation = Vector3f::Zero();
+	pose_rotation = Vector3f::Zero();
+	pose_rotation_quaternion = smQuaternion(0.f, 0.f, 0.f, 1.f);
+	pose_scaling = Vector3f (1.f, 1.f, 1.f);
+	pose_transform = Matrix44f::Identity();
+
+	for (unsigned int i = 0; i < children.size(); i++) {
+		children[i]->resetPoseTransform();
+	}
+}
+
 /*********************************
  * MeshupModel
  *********************************/
@@ -296,6 +308,14 @@ void MeshupModel::addCurvePoint (
 			coords[0], coords[1], coords[2],
 			color[0], color[1], color[2]
 			);
+}
+
+void MeshupModel::resetPoses() {
+	for (unsigned int i = 0; i < frames.size(); i++) {
+		frames[i]->resetPoseTransform();
+	}
+	frames_initialized = false;
+	updateFrames();
 }
 
 void MeshupModel::updateFrames() {
