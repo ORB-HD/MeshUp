@@ -195,9 +195,9 @@ void MeshupModel::addFrame (
 		const std::string &frame_name,
 		const Matrix44f &parent_transform) {
 	// cout << "addFrame(" << endl
-	//	<< "  parent_frame_name = " << parent_frame_name << endl
-	//	<< "  frame_name = " << frame_name << endl
-	//	<< "  parent_transform = " << endl << parent_transform << endl;
+	// 	<< "  parent_frame_name = " << parent_frame_name << endl
+	// 	<< "  frame_name = " << frame_name << endl
+	// 	<< "  parent_transform = " << endl << parent_transform << endl;
 
 	// mark frame transformations as dirty
 	frames_initialized = false;
@@ -255,6 +255,7 @@ void MeshupModel::addSegment (
 
 	segment.color = color;
 	segment.scale = scale;
+	// cout << "configuration = " << endl << configuration.axes_rotation << endl;
 	segment.translate = translate;
 
 	// check whether we have the mesh, if not try to load it
@@ -1156,7 +1157,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 		}
 
 		Matrix44f parent_transform = Matrix44f::Identity(); 
-		parent_transform.block<3,3>(0,0) = parent_rotation.transpose();
+		parent_transform.block<3,3>(0,0) = configuration.axes_rotation.transpose() *parent_rotation.transpose() * configuration.axes_rotation;
 		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 		addFrame (parent_frame, frame_name, parent_transform);
 
