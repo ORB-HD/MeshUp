@@ -520,16 +520,18 @@ Json::Value frame_configuration_to_json_value (const FrameConfig &config) {
 	return result;
 }
 
-Json::Value frame_to_json_value (const FramePtr &frame, FrameConfig frame_config) {
+Json::Value frame_to_json_value (const FramePtr &frame, FrameConfig configuration) {
 	using namespace Json;
 
 	Value result;
 
 	result["name"] = frame->name;
 
-	result["parent_translation"] = vec3_to_json(frame_config.axes_rotation * frame->getFrameTransformTranslation());
-	
-	Matrix33f rotation = frame->getFrameTransformRotation();
+	Vector3f translation = configuration.axes_rotation * frame->getFrameTransformTranslation();
+	Matrix33f rotation = configuration.axes_rotation * frame->getFrameTransformRotation() * configuration.axes_rotation.transpose();
+
+	result["parent_translation"] = vec3_to_json(translation);
+
 	if (Matrix33f::Identity() != rotation) {
 		cerr << "Error: cannot convert non-zero parent_rotation to Json value." << endl;
 		abort();
@@ -640,7 +642,7 @@ string vec3_to_string_no_brackets (const Vector3f &vector) {
 	return out.str();
 }
 
-string frame_to_lua_string (const FramePtr frame, const string &parent_name, vector<string> meshes, int indent = 0) {
+string frame_to_lua_string (FrameConfig configuration, const FramePtr frame, const string &parent_name, vector<string> meshes, int indent = 0) {
 	ostringstream out;
 	string indent_str;
 
@@ -651,9 +653,9 @@ string frame_to_lua_string (const FramePtr frame, const string &parent_name, vec
 		<< indent_str << "  name = \"" << frame->name << "\"," << endl
 		<< indent_str << "  parent = \"" << parent_name << "\"," << endl;
 
-	Vector3f translation = frame->getFrameTransformTranslation();
-	Matrix33f rotation = frame->getFrameTransformRotation();
-
+	Vector3f translation = configuration.axes_rotation * frame->getFrameTransformTranslation();
+	Matrix33f rotation = configuration.axes_rotation * frame->getFrameTransformRotation() * configuration.axes_rotation.transpose();
+		
 	// only write joint_frame if we actually have a transformation
 	if (Vector3f::Zero() != translation
 			|| Matrix33f::Identity() != rotation) {
@@ -664,8 +666,9 @@ string frame_to_lua_string (const FramePtr frame, const string &parent_name, vec
 
 		if (Matrix33f::Identity() != rotation) {
 			out << indent_str << "    E = {" << endl;
+
 			for (unsigned int i = 0; i < 3; i++) {
-			out << indent_str << "      { ";
+				out << indent_str << "      { ";
 				for (unsigned int j = 0; j < 2; j++) {
 					out << setiosflags(ios_base::fixed) << rotation(i,j) << ", ";
 				}
@@ -768,7 +771,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 		}
 
 		if (frame_stack.top()->name != "ROOT") {
-			file_out << frame_to_lua_string(frame_stack.top(), "ROOT", frame_segment_map["ROOT"], 2) << "," << endl;
+			file_out << frame_to_lua_string(configuration, frame_stack.top(), "ROOT", frame_segment_map["ROOT"], 2) << "," << endl;
 			frame_index++;
 		}
 
@@ -779,7 +782,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 			if (child_idx < cur_frame->children.size()) {
 				FramePtr child_frame = cur_frame->children[child_idx];
 
-				file_out << frame_to_lua_string(child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
+				file_out << frame_to_lua_string(configuration, child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
 				frame_index++;
 				
 				child_index_stack.pop();
