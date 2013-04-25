@@ -683,13 +683,13 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 
 			// search for the file in the same directory as the original file,
 			// unless we have an absolutue path
-			if (!data_path.is_absolute()) {
+			if (!data_path.string()[0] == '/') {
 				boost::filesystem::path file_path (filename);
 				boost::filesystem::path data_directory = file_path.parent_path();
 				data_path = data_directory /= data_path;
 			}
 
-			file_in.open(data_path.c_str());
+			file_in.open(data_path.string().c_str());
 			cout << "Loading animation data from " << data_path.string() << endl;
 
 			if (!file_in) {
