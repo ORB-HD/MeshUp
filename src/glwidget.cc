@@ -10,7 +10,14 @@
 #include "GL/glew.h"
 
 #include <QtGui>
+
+#ifdef __APPLE__
+#include <QtOpenGL/QGLWidget>
+#include <QtOpenGL/QGLFrameBufferObjectFormat>
+#else
 #include <QtOpenGL>
+#endif
+
 #include <QDebug>
 
 #include <algorithm>
@@ -22,7 +29,12 @@
 
 #include <assert.h>
 #include "glwidget.h"
+
+#ifdef __APPLE__
+#include <OpenGL/glu.h>
+#else
 #include <GL/glu.h>
+#endif
 
 #include "timer.h"
 #include "Animation.h"
