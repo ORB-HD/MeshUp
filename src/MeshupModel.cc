@@ -88,7 +88,7 @@ std::string find_model_file_by_name (const std::string &model_name) {
 		} else if (boost::filesystem::is_regular_file(model_filename_json)) {
 			return model_filename_json;
 			break;
-		} 
+		}
 	}
 
 	if (iter != paths.end())
@@ -146,7 +146,7 @@ std::string find_mesh_file_by_name (const std::string &filename) {
  */
 void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const FrameConfig &config) {
 	// first translate, then rotate as specified in the angles
-	pose_transform = 
+	pose_transform =
 		frame_transform
 		* parent_pose_transform;
 
@@ -256,7 +256,7 @@ void MeshupModel::addSegment (
 	segment.color = color;
 	segment.scale = scale;
 	// cout << "configuration = " << endl << configuration.axes_rotation << endl;
-	segment.translate = translate;
+	segment.translate = configuration.axes_rotation.transpose() * translate;
 
 	// check whether we have the mesh, if not try to load it
 	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
@@ -352,12 +352,12 @@ void MeshupModel::draw() {
 
 	while (seg_iter != segments.end()) {
 		glPushMatrix();
-		
+
 		glMultMatrixf (seg_iter->gl_matrix.data());
 
 		// drawing
 		glColor3f (seg_iter->color[0], seg_iter->color[1], seg_iter->color[2]);
-		
+
 		seg_iter->mesh->draw(GL_TRIANGLES);
 
 		glPopMatrix();
@@ -398,7 +398,7 @@ void MeshupModel::drawFrameAxes() {
 		}
 		glPushMatrix();
 
-			
+
 		Matrix44f transform_matrix = axes_rotation_matrix * frame_iter->second->pose_transform;
 		glMultMatrixf (transform_matrix.data());
 
@@ -570,7 +570,7 @@ Json::Value segment_to_json_value (const Segment &segment, FrameConfig frame_con
 
 void MeshupModel::saveModelToJsonFile (const char* filename) {
 	// we absoulutely have to set the locale to english for numbers.
-	// Otherwise we might wrongly formatted data. 
+	// Otherwise we might wrongly formatted data.
 	std::setlocale(LC_NUMERIC, "POSIX");
 	Json::Value root_node;
 
@@ -602,7 +602,7 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 				root_node["frames"][frame_index] = frame_to_json_value(child_frame, configuration);
 				root_node["frames"][frame_index]["parent"] = cur_frame->name;
 				frame_index++;
-				
+
 				child_index_stack.pop();
 				child_index_stack.push (child_idx + 1);
 
@@ -620,7 +620,7 @@ void MeshupModel::saveModelToJsonFile (const char* filename) {
 	}
 
 	// segments
-	
+
 	int segment_index = 0;
 	SegmentList::iterator seg_iter = segments.begin();
 	while (seg_iter != segments.end()) {
@@ -655,7 +655,7 @@ string frame_to_lua_string (FrameConfig configuration, const FramePtr frame, con
 
 	Vector3f translation = configuration.axes_rotation * frame->getFrameTransformTranslation();
 	Matrix33f rotation = configuration.axes_rotation * frame->getFrameTransformRotation() * configuration.axes_rotation.transpose();
-		
+
 	// only write joint_frame if we actually have a transformation
 	if (Vector3f::Zero() != translation
 			|| Matrix33f::Identity() != rotation) {
@@ -705,8 +705,8 @@ string segment_to_lua_string (const Segment &segment, FrameConfig frame_config, 
 	out << indent_str << segment.name << " = {" << endl
 		<< indent_str << "  name = \"" << segment.name << "\"," << endl;
 	if (Vector3f::Zero() != segment.dimensions)
-		out << indent_str << "  dimensions = { " 
-			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.dimensions) 
+		out << indent_str << "  dimensions = { "
+			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.dimensions)
 			<< "}," << endl;
 
 	if (Vector3f(0.f, 0.f, 0.f) != segment.scale)
@@ -716,7 +716,7 @@ string segment_to_lua_string (const Segment &segment, FrameConfig frame_config, 
 		out	<< indent_str << "  color = { " << vec3_to_string_no_brackets(segment.color) << "}," << endl;
 
 	if (Vector3f::Zero() != segment.meshcenter && !isnan(segment.meshcenter[0]))
-		out	<< indent_str << "  mesh_center = { " 
+		out	<< indent_str << "  mesh_center = { "
 			<< vec3_to_string_no_brackets(frame_config.axes_rotation * segment.meshcenter)
 			<< "}," << endl;
 
@@ -784,7 +784,7 @@ void MeshupModel::saveModelToLuaFile (const char* filename) {
 
 				file_out << frame_to_lua_string(configuration, child_frame, cur_frame->name, frame_segment_map[child_frame->name], 2) << "," << endl;
 				frame_index++;
-				
+
 				child_index_stack.pop();
 				child_index_stack.push (child_idx + 1);
 
@@ -864,7 +864,7 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 
 	if (!file_in) {
 		cerr << "Error opening file " << filename << "!" << endl;
-		
+
 		if (strict)
 			abort();
 
@@ -918,11 +918,11 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 //	cout << "up   : " << configuration.axis_up.transpose() << endl;
 //	cout << "right: " << configuration.axis_right.transpose() << endl;
 //
-//	cout << "rot  : " << configuration.rotation_order[0] 
-//		<< ", " << configuration.rotation_order[1] 
+//	cout << "rot  : " << configuration.rotation_order[0]
+//		<< ", " << configuration.rotation_order[1]
 //		<< ", " << configuration.rotation_order[2] << endl;
 //
-//	cout << "axes: " << endl << configuration.axes_rotation << endl;	
+//	cout << "axes: " << endl << configuration.axes_rotation << endl;
 
 	// read the frames:
 	ValueIterator node_iter = root["frames"].begin();
@@ -933,7 +933,7 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 		Vector3f parent_translation = configuration.axes_rotation.transpose() * json_to_vec3(frame_node["parent_translation"]);
 		Vector3f parent_rotation = json_to_vec3(frame_node["parent_rotation"]);
 
-		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation) 
+		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation)
 			* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
 
 		if (frame_node["parent"].asString() == "BASE") {
@@ -982,7 +982,7 @@ Vector3f lua_get_vector3f (lua_State *L, const string &path, int index = -1) {
 		cerr << "Invalid array size for 3d vector variable '" << path << "'." << endl;
 		abort();
 	}
-	
+
 	for (unsigned int i = 0; i < 3; i++) {
 		result[i] = static_cast<float>(array[i]);
 	}
@@ -1064,7 +1064,7 @@ bool lua_read_frame (
 
 bool lua_read_visual_info (
 		lua_State *L,
-		const string &visual_path,	
+		const string &visual_path,
 		std::string &segment_name,
 		Vector3f &dimensions,
 		Vector3f &scale,
@@ -1073,7 +1073,7 @@ bool lua_read_visual_info (
 		Vector3f &translate,
 		Vector3f &mesh_center) {
 
-	if (value_exists (L, visual_path + ".name")) 
+	if (value_exists (L, visual_path + ".name"))
 		segment_name = get_string (L, visual_path + ".name");
 
 	if (value_exists (L, visual_path + ".dimensions"))
@@ -1112,16 +1112,16 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 	}
 
 	clear();
-	
+
 	// configuration
 	if (value_exists (L, "configuration.axis_front")) {
-		configuration.axis_front = lua_get_vector3f (L, "configuration.axis_front");	
+		configuration.axis_front = lua_get_vector3f (L, "configuration.axis_front");
 	}
 	if (value_exists (L, "configuration.axis_up")) {
-		configuration.axis_up = lua_get_vector3f (L, "configuration.axis_up");	
+		configuration.axis_up = lua_get_vector3f (L, "configuration.axis_up");
 	}
 	if (value_exists (L, "configuration.axis_right")) {
-		configuration.axis_right = lua_get_vector3f (L, "configuration.axis_right");	
+		configuration.axis_right = lua_get_vector3f (L, "configuration.axis_right");
 	}
 	if (value_exists (L, "configuration.rotation_order")) {
 		Vector3f rotation_order = lua_get_vector3f (L, "configuration.rotation_order");
@@ -1159,7 +1159,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			return false;
 		}
 
-		Matrix44f parent_transform = Matrix44f::Identity(); 
+		Matrix44f parent_transform = Matrix44f::Identity();
 		parent_transform.block<3,3>(0,0) = configuration.axes_rotation.transpose() *parent_rotation.transpose() * configuration.axes_rotation;
 		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 		addFrame (parent_frame, frame_name, parent_transform);
