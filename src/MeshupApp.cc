@@ -15,6 +15,8 @@
 #include <QRegExp>
 #include <QRegExpValidator>
 
+#include "meshup_config.h"
+
 #include "glwidget.h" 
 #include "MeshupApp.h"
 #include "Animation.h"
@@ -42,6 +44,11 @@ MeshupApp::MeshupApp(QWidget *parent)
 {
 	timer = new QTimer (this);
 	setupUi(this); // this sets up GUI
+
+	// version label
+	string version_str = string("v") + MESHUP_VERSION_STRING;
+	versionLabel = new QLabel(version_str.c_str(), this);
+	menubar->setCornerWidget (versionLabel);
 
 	renderImageDialog = new RenderImageDialog(this);
 	renderImageSeriesDialog = new RenderImageSeriesDialog(this);

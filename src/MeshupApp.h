@@ -29,6 +29,7 @@ public:
 protected:
 		QTimer *timer;
 		QTimeLine *timeLine;
+		QLabel *versionLabel;
 
 		int glRefreshTime;
 
