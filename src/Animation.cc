@@ -35,7 +35,7 @@ extern "C"
 }
 #include "luatables.h"
 
-#include "MeshupModel.h"
+#include "Model.h"
 #include "Animation.h"
 
 using namespace std;

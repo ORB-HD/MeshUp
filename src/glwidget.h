@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-#include "MeshupModel.h"
+#include "Model.h"
 
 struct Animation;
 typedef boost::shared_ptr<Animation> AnimationPtr;

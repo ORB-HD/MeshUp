@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <MeshupModel.h>
+#include <Model.h>
 
 using namespace std;
 
