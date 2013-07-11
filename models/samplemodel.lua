@@ -11,7 +11,7 @@ meshes = {
     dimensions = { 0.3, 0.6, 0.7 },
     color = { 0.8, 0.8, 0.4},
     mesh_center = { 0, 0, 0.35 },
-    src = "meshes/unit_cone_medres.obj",
+    src = "meshes/unit_cube.obj",
   },
   UpperArm_L = {
     name = "UpperArm_L",
