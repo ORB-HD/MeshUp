@@ -676,7 +676,7 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			column_section = false;
 			data_section = true;
 			continue;
-		} else if (line.substr (0, string("DATA_FROM:").size()) == "DATA_FROM:") {
+		} else if (!data_section && line.substr (0, string("DATA_FROM:").size()) == "DATA_FROM:") {
 			file_in.close();
 
 			boost::filesystem::path data_path (strip_whitespaces(line.substr(string("DATA_FROM:").size(), line.size())));
@@ -700,6 +700,9 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 
 				return false;
 			}
+
+			filename_str = data_path.string();
+			line_number = 0;
 
 			found_data_section = true;
 			column_section = false;
@@ -838,6 +841,12 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 				columns = tokenize_csv_strip_whitespaces (line);
 			else
 				columns = tokenize (line);
+
+			if (columns.size() < column_infos.size()) {
+				cerr << "Error: only found " << columns.size() << " data columns in file " 
+					<< filename_str << " line " << line_number << ", but " << column_infos.size() << " columns were specified in the COLUMNS section." << endl;
+				abort();
+			}
 
 			assert (columns.size() >= column_infos.size());
 			std::vector<float> column_values;
