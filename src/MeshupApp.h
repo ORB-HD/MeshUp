@@ -15,7 +15,6 @@
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
-#include "ui/AnimationEditModel.h"
 
 class MeshupApp : public QMainWindow, public Ui::MainWindow
 {
@@ -36,8 +35,6 @@ protected:
 		bool playerPaused;
 		RenderImageDialog* renderImageDialog;
 		RenderImageSeriesDialog* renderImageSeriesDialog;
-
-		AnimationEditModel *animation_edit_model;
 
 public slots:
 		virtual void closeEvent(QCloseEvent *event);
@@ -64,9 +61,6 @@ public slots:
 
 		void animation_loaded();
 		void initialize_curves();
-
-		void action_next_keyframe();
-		void action_prev_keyframe();
 
 		void timeline_frame_changed (int frame_index);
 		void timeline_set_frame (int frame_index);
