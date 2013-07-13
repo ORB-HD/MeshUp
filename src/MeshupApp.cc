@@ -139,9 +139,6 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
 
-	connect (actionSaveAnimation, SIGNAL ( triggered() ), this, SLOT(action_save_animation()));
-	connect (actionSaveAnimationTo, SIGNAL ( triggered() ), this, SLOT(action_save_animation_to()));
-
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
 	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
@@ -402,23 +399,6 @@ void MeshupApp::action_load_animation() {
 
 	if (file_dialog.exec()) {
 		glWidget->loadAnimation (file_dialog.selectedFiles().at(0).toStdString().c_str());
-	}	
-}
-
-void MeshupApp::action_save_animation() {
-	glWidget->animation_data->saveToFile (glWidget->animation_data->animation_filename.c_str());
-}
-
-void MeshupApp::action_save_animation_to() {
-	QFileDialog file_dialog (this, "Save Animation File...");
-	file_dialog.setAcceptMode (QFileDialog::AcceptSave);
-	file_dialog.setFileMode (QFileDialog::AnyFile);
-
-	file_dialog.setNameFilter(tr("MeshupAnimation (*.txt *.csv)"));
-
-	if (file_dialog.exec()) {
-		glWidget->animation_data->animation_filename = file_dialog.selectedFiles().at(0).toStdString().c_str();
-		action_save_animation();
 	}	
 }
 

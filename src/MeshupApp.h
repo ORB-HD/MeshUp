@@ -53,9 +53,6 @@ public slots:
 		void action_load_model();
 		void action_load_animation();
 
-		void action_save_animation();
-		void action_save_animation_to();
-
 		void action_reload_files ();
 		void action_quit();
 
