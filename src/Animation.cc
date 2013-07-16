@@ -438,10 +438,17 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			force_fps_frame_count++;
 			// cout << "Reading frame at t = " << scientific << force_fps_previous_frame << endl;
 
-			// check whether we have actual values and add them as KeyValues
+			KeyFrame keyframe;
+			keyframe.timestamp = column_time;
+
 			for (int ci = 1; ci < column_infos.size(); ci++) {
-				if (columns[ci] == "," || columns[ci].size() == 0)
+				if (column_infos[ci].is_empty)
 					continue;
+
+				if (keyframe.transformations.find(column_infos[ci].frame_name) == keyframe.transformations.end())
+					keyframe.transformations[column_infos[ci].frame_name] = TransformInfo();
+
+				TransformInfo transform = keyframe.transformations[column_infos[ci].frame_name];
 
 				value_stream.clear();
 				value_stream.str(columns[ci]);
@@ -456,9 +463,37 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
 					value *= 180. / M_PI;
 				}
+
+				Vector3f axis (0.f, 0.f, 0.f);
+				switch (column_infos[ci].axis) {
+					case ColumnInfo::AxisTypeX: axis[0] = 1.f;
+																			break;
+					case ColumnInfo::AxisTypeY: axis[1] = 1.f;
+																			break;
+					case ColumnInfo::AxisTypeZ: axis[2] = 1.f;
+																			break;
+					case ColumnInfo::AxisTypeNegativeX: axis[0] = -1.f;
+																	  	break;
+					case ColumnInfo::AxisTypeNegativeY: axis[1] = -1.f;
+																	 		break;
+					case ColumnInfo::AxisTypeNegativeZ: axis[2] = -1.f;
+																			break;
+					default: cerr << "Error: invalid axis type!"; abort();
+				}
+
+				if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
+					transform.translation = transform.translation + axis * value;
+				} else if (column_infos[ci].type == ColumnInfo::TransformTypeScale) {
+				} else if (column_infos[ci].type == ColumnInfo::TransformTypeRotation) {
+					transform.rotation_quaternion *= smQuaternion::fromGLRotate(value, axis[0], axis[1], axis[2]);
+				}
+
 //				cout << "Adding value column_time = " << column_time << " ci = " << ci << " value = " << value << endl;
 				assert (0 && !"Not yet implemented!");
 			}
+
+			keyframes.push_back(keyframe);	
+
 			continue;
 		}
 	}
