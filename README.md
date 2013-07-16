@@ -37,11 +37,11 @@ values, not radians.
 Meshes
 ======
 
-Similar as in storing [Model Files](#ModelFiles), MeshUp tries to find meshes in various
+Similar as in storing [Model Files](#markdown-header-model-files), MeshUp tries to find meshes in various
 places. Unlike for models, meshes are required to be in a subfolder called
 "meshes/".
 
-See [Notes](#Notes) further down for information on how to export meshes to OBJ files
+See [Notes](#markdown-header-notes) further down for information on how to export meshes to OBJ files
 that can be included directly into Meshup.
 
 Animation Files
