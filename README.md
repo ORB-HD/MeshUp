@@ -22,8 +22,6 @@ Usage:
 
 See meshup --help for more options.
 
-<a id="ModelFiles"/>
-
 Model Files
 ===========
 
@@ -36,8 +34,6 @@ $MESHUP_PATH/ or $MESHUP_PATH/models.
 Please note that as default MeshUp interprets all angular values as degree
 values, not radians.
 
-<a id="Meshes" />
-
 Meshes
 ======
 
@@ -48,8 +44,6 @@ places. Unlike for models, meshes are required to be in a subfolder called
 See [Notes](#Notes) further down for information on how to export meshes to OBJ files
 that can be included directly into Meshup.
 
-<a id="AnimationFiles"/>
-
 Animation Files
 ===============
 
@@ -58,8 +52,6 @@ separated file and still be read by MeshUp. There is a small number of
 keywords that specify how the data is being interpreted.
 
 There are two sections in the animation file: COLUMNS and DATA.
-
-<a id="ColumnsSection"/>
 
 COLUMNS section
 ---------------
@@ -77,6 +69,8 @@ The mapping for joints is specified in the following syntax:
 
 	<frame name>:<joint type>:<axis>[:<unit>]
 
+where
+
 	<frame name> is the name of the frame used in the model.
 	<joint type> can be 
 	  t,translation for translational motions
@@ -90,7 +84,6 @@ The mapping for joints is specified in the following syntax:
 For a single frame all column specifications must be consecutive in the
 COLUMN section.
 
-<a id="DataSection"/>
 
 DATA section
 ------------
@@ -106,8 +99,6 @@ the actual data as a clear .csv file or if one wants to re-use the header
 of a file.
 
 See sampleanimation.txt for an example.
-
-<a id="Notes"/a>
 
 Notes
 =====
