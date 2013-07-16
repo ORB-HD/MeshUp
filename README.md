@@ -62,8 +62,8 @@ that may be separated by commas or whitespaces specifies a single degree of
 freedom for a frame or the time. The first entry corresponds to the first
 column, the second for the second and so on.
 
-If a column contains the time values for the frames set the entry to
-"time". If a column should be ignored by MeshUp set the entry to "empty".
+The first column must always be "time". If a column should be
+ignored by MeshUp set the entry to "empty".
 
 The mapping for joints is specified in the following syntax:
 
@@ -83,7 +83,6 @@ where
 
 For a single frame all column specifications must be consecutive in the
 COLUMN section.
-
 
 DATA section
 ------------
