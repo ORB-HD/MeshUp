@@ -114,7 +114,7 @@ void GLWidget::loadAnimation(const char* filename) {
 			abort();
 		}
 		AnimationPtr new_animation (new Animation());
-		if (new_animation->loadFromFileAtFrameRate (filename, model_data->configuration, 60.f)) {
+		if (new_animation->loadFromFile (filename, model_data->configuration)) {
 			if (animation_data->current_time <= new_animation->duration) {
 				new_animation->current_time = animation_data->current_time;
 			}
