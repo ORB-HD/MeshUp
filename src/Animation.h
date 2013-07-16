@@ -71,16 +71,16 @@ struct TransformInfo {
 	TransformInfo() :
 		timestamp (0.),
 		translation (0.f, 0.f, 0.f),
-		rotation_angles (0.f, 0.f, 0.f),
 		rotation_quaternion (0.f, 0.f, 0.f, 1.f),
 		scaling (1.f, 1.f, 1.f)
 	{}
 
 	float timestamp;
 	Vector3f translation;
-	Vector3f rotation_angles;
 	smQuaternion rotation_quaternion;
 	Vector3f scaling;
+
+	void applyColumnValue (const ColumnInfo &column_info, float value, const FrameConfig &frame_config);
 };
 
 /** \brief Contains for all frames the transformations at a single keyframe
@@ -97,8 +97,6 @@ struct Animation {
 		duration (0.f),
 		loop (false)
 	{}
-
-	void updateAnimationFromRawValues ();
 
 	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
 	bool loadFromFileAtFrameRate (const char* filename, const FrameConfig &frame_config, float frames_per_second, bool strict = true);

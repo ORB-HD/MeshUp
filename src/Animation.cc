@@ -46,116 +46,40 @@ const string invalid_id_characters = "{}[],;: \r\n\t#";
  * poses */
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 
-/** \brief Keeps transformation information for all model frames at a single keyframe 
- *
- * This struct is used to assemble the pose information for all model
- * frames in a single keyframe. It maps from the column index to the actual
- * model frame and transformation type.
- */
-struct AnimationKeyPoses {
-	float timestamp;
-	typedef std::map<std::string, TransformInfo> FramePoseMap;
-	FramePoseMap frame_poses;
-	
-	void clearFramePoses() {
-		frame_poses.clear();	
+void TransformInfo::applyColumnValue (const ColumnInfo &column_info, float value, const FrameConfig &frame_config) {
+	// handle radian
+	if (column_info.type==ColumnInfo::TransformTypeRotation && column_info.is_radian) {
+		value *= 180. / M_PI;
 	}
-	bool setValue (int column_index, const std::vector<ColumnInfo> columns, float value, bool strict = true) {
-		assert (column_index <= columns.size());
-		ColumnInfo col_info = columns[column_index];
 
-		if (col_info.is_time_column) {
-			timestamp = value;
-			return true;
-		}
-		if (col_info.is_empty) {
-			return true;
-		}
-
-		string frame_name = col_info.frame_name;
-
-		if (frame_poses.find(frame_name) == frame_poses.end()) {
-			// create new frame and insert it
-			frame_poses[frame_name] = TransformInfo();
-		}
-
-		if (col_info.type == ColumnInfo::TransformTypeRotation) {
-			if (col_info.axis == ColumnInfo::AxisTypeX) {
-				frame_poses[frame_name].rotation_angles[0] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeY) {
-				frame_poses[frame_name].rotation_angles[1] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeZ) {
-				frame_poses[frame_name].rotation_angles[2] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeX) {
-				frame_poses[frame_name].rotation_angles[0] = -value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeY) {
-				frame_poses[frame_name].rotation_angles[1] = -value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeZ) {
-				frame_poses[frame_name].rotation_angles[2] = -value;
-			}
-		} else if (col_info.type == ColumnInfo::TransformTypeTranslation) {
-			if (col_info.axis == ColumnInfo::AxisTypeX) {
-				frame_poses[frame_name].translation[0] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeY) {
-				frame_poses[frame_name].translation[1] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeZ) {
-				frame_poses[frame_name].translation[2] = value;
-			}	
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeX) {
-				frame_poses[frame_name].translation[0] = -value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeY) {
-				frame_poses[frame_name].translation[1] = -value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeZ) {
-				frame_poses[frame_name].translation[2] = -value;
-			}	
-		} else if (col_info.type == ColumnInfo::TransformTypeScale) {
-			if (col_info.axis == ColumnInfo::AxisTypeX) {
-				frame_poses[frame_name].scaling[0] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeY) {
-				frame_poses[frame_name].scaling[1] = value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeZ) {
-				frame_poses[frame_name].scaling[2] = value;
-			}	
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeX) {
-				frame_poses[frame_name].scaling[0] = -value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeY) {
-				frame_poses[frame_name].scaling[1] = -value;
-			}
-			if (col_info.axis == ColumnInfo::AxisTypeNegativeZ) {
-				frame_poses[frame_name].scaling[2] = -value;
-			}	
-		} else {
-			cerr << "Error: invalid column info type: " << col_info.type << ". Something really weird happened!" << endl;
-
-			if (strict)
-				exit (1);
-
-			return false;
-		}
-
-		return true;
+	Vector3f axis (0.f, 0.f, 0.f);
+	switch (column_info.axis) {
+		case ColumnInfo::AxisTypeX: axis[0] = 1.f; break;
+		case ColumnInfo::AxisTypeY: axis[1] = 1.f; break;
+		case ColumnInfo::AxisTypeZ: axis[2] = 1.f; break;
+		case ColumnInfo::AxisTypeNegativeX: axis[0] = -1.f; break;
+		case ColumnInfo::AxisTypeNegativeY: axis[1] = -1.f; break;
+		case ColumnInfo::AxisTypeNegativeZ: axis[2] = -1.f; break;
+		default: cerr << "Error: invalid axis type!"; abort();
 	}
-	void updateTimeValues () {
-		for (FramePoseMap::iterator pose_iter = frame_poses.begin(); pose_iter != frame_poses.end(); pose_iter++) {
-			pose_iter->second.timestamp = timestamp;
-		}
-	}
-};
 
-void Animation::updateAnimationFromRawValues () {
-	assert (0 && !"Not yet implemented");
+	axis = frame_config.axes_rotation.transpose() * axis;
+
+	if (column_info.type == ColumnInfo::TransformTypeTranslation) {
+		translation = translation + axis * value;
+	} else if (column_info.type == ColumnInfo::TransformTypeScale) {
+		switch (column_info.axis) {
+			case ColumnInfo::AxisTypeX: scaling[0] = value; break;
+			case ColumnInfo::AxisTypeY: scaling[1] = value; break;
+			case ColumnInfo::AxisTypeZ: scaling[2] = value; break;
+			case ColumnInfo::AxisTypeNegativeX: scaling[0] = -value; break;
+			case ColumnInfo::AxisTypeNegativeY: scaling[1] = -value; break;
+			case ColumnInfo::AxisTypeNegativeZ: scaling[2] = -value; break;
+			default: cerr << "Error: invalid axis type!"; abort();	
+		}
+	} else if (column_info.type == ColumnInfo::TransformTypeRotation) {
+		rotation_quaternion *= smQuaternion::fromGLRotate(value, axis[0], axis[1], axis[2]);
+	}
 }
 
 bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict) {
@@ -202,8 +126,6 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 	int column_index = 0;
 	int line_number = 0;
 	column_infos.clear();
-
-	AnimationKeyPoses animation_keyposes;
 
 	std::list<std::string> column_frame_names;
 
@@ -399,9 +321,6 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			// Data part:
 			// columns have been read
 		
-			// cout << "DATA  :" << line << endl;
-			// parse the DOF description and set the column info in
-			// animation_keyposes
 			std::vector<string> columns;
 			if (csv_mode)
 				columns = tokenize_csv_strip_whitespaces (line);
@@ -459,40 +378,14 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 					abort();
 				}
 
-				// handle radian
-				if (column_infos[ci].type==ColumnInfo::TransformTypeRotation && column_infos[ci].is_radian) {
-					value *= 180. / M_PI;
-				}
+				transform.applyColumnValue (column_infos[ci], value, configuration);
 
-				Vector3f axis (0.f, 0.f, 0.f);
-				switch (column_infos[ci].axis) {
-					case ColumnInfo::AxisTypeX: axis[0] = 1.f;
-																			break;
-					case ColumnInfo::AxisTypeY: axis[1] = 1.f;
-																			break;
-					case ColumnInfo::AxisTypeZ: axis[2] = 1.f;
-																			break;
-					case ColumnInfo::AxisTypeNegativeX: axis[0] = -1.f;
-																	  	break;
-					case ColumnInfo::AxisTypeNegativeY: axis[1] = -1.f;
-																	 		break;
-					case ColumnInfo::AxisTypeNegativeZ: axis[2] = -1.f;
-																			break;
-					default: cerr << "Error: invalid axis type!"; abort();
-				}
-
-				if (column_infos[ci].type == ColumnInfo::TransformTypeTranslation) {
-					transform.translation = transform.translation + axis * value;
-				} else if (column_infos[ci].type == ColumnInfo::TransformTypeScale) {
-				} else if (column_infos[ci].type == ColumnInfo::TransformTypeRotation) {
-					transform.rotation_quaternion *= smQuaternion::fromGLRotate(value, axis[0], axis[1], axis[2]);
-				}
-
-//				cout << "Adding value column_time = " << column_time << " ci = " << ci << " value = " << value << endl;
-				assert (0 && !"Not yet implemented!");
+				keyframe.transformations[column_infos[ci].frame_name] = transform;
 			}
 
-			keyframes.push_back(keyframe);	
+			keyframes.push_back(keyframe);
+			if (column_time > duration)
+				duration = column_time;
 
 			continue;
 		}
@@ -512,21 +405,19 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 		cout << "Read " << force_fps_frame_count << " frames (skipped " << force_fps_skipped_frame_count << " frames)" << endl;
 	}
 
-	updateAnimationFromRawValues ();
-
 	animation_filename = filename;
 
 	return true;
 }
 
-void InterpolateModelFramePose (FramePtr frame, const TransformInfo &start_pose, const TransformInfo &end_pose, const float fraction) {
-	frame->pose_translation = start_pose.translation + fraction * (end_pose.translation - start_pose.translation);
-	frame->pose_rotation_quaternion = start_pose.rotation_quaternion.slerp (fraction, end_pose.rotation_quaternion);
-	frame->pose_scaling = start_pose.scaling + fraction * (end_pose.scaling - start_pose.scaling);
+void InterpolateModelFramePose (FramePtr frame, const TransformInfo &transform_prev, const TransformInfo &transform_next, const float fraction) {
+	frame->pose_translation = transform_prev.translation + fraction * (transform_next.translation - transform_prev.translation);
+	frame->pose_rotation_quaternion = transform_prev.rotation_quaternion.slerp (fraction, transform_next.rotation_quaternion);
+	frame->pose_scaling = transform_prev.scaling + fraction * (transform_next.scaling - transform_prev.scaling);
 }
 
 void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
-	// update the time
+	// update and loop time if necessary
 	animation->current_time = time;
 
 	if (animation->current_time > animation->duration) {
@@ -538,7 +429,43 @@ void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr ani
 		}
 	}
 
-	assert (0 && !"Not yet implemented!");
+	if (animation->keyframes.size() == 0)
+		return;
+
+	// compute interpolating frames and the time fraction
+	int frame_prev = 0, frame_next = 0;
+	float time_fraction = 0.f;
+
+	if (animation->keyframes.size() > 1) {
+		while (animation->current_time > animation->keyframes[frame_next].timestamp) {
+			frame_prev = frame_next;
+			frame_next ++;
+
+			if (frame_next == animation->keyframes.size()) {
+				frame_prev = animation->keyframes.size() - 2;
+				frame_next = animation->keyframes.size() - 1;
+				time_fraction = 1.;
+				break;
+			}
+
+			time_fraction = (animation->current_time - animation->keyframes[frame_prev].timestamp) / (animation->keyframes[frame_next].timestamp - animation->keyframes[frame_prev].timestamp);
+		}
+	}
+
+	// perform interpolation for all frames
+	std::map<std::string, TransformInfo>::iterator frame_iter = animation->keyframes[frame_prev].transformations.begin();
+
+	while (frame_iter != animation->keyframes[frame_prev].transformations.end()) {
+		std::string frame_name = frame_iter->first;
+		FramePtr model_frame = model->findFrame(frame_name.c_str());
+
+		TransformInfo transform_prev = animation->keyframes[frame_prev].transformations[frame_name];
+		TransformInfo transform_next = animation->keyframes[frame_next].transformations[frame_name];
+
+		InterpolateModelFramePose (model_frame, transform_prev, transform_next, time_fraction);
+
+		frame_iter++;
+	}
 }
 
 void UpdateModelSegmentTransformations (MeshupModelPtr model) {
