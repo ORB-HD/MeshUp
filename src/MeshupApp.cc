@@ -20,9 +20,6 @@
 #include "glwidget.h" 
 #include "MeshupApp.h"
 #include "Animation.h"
-#include "ui/AnimationEditModel.h"
-#include "ui/DoubleSpinBoxDelegate.h"
-#include "ui/CheckBoxDelegate.h"
 
 #include <assert.h>
 #include <iostream>
@@ -90,14 +87,6 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
 	checkBoxDrawCurves->setChecked (glWidget->draw_curves);
 
-	// animation editor
-	animation_edit_model = new AnimationEditModel (this);	
-	animation_edit_model->setGlWidget (glWidget);
-	animation_edit_model->setTimeSpinBox (keyFrameTimeSpinBox);
-	animationValuesTableView->setModel (animation_edit_model);
-	DoubleSpinBoxDelegate *spinBoxDelegate = new DoubleSpinBoxDelegate (this);
-	animationValuesTableView->setItemDelegateForColumn (1, spinBoxDelegate);
-
 	// camera controls
 	QRegExp	coord_expr ("^\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*$");
 	QRegExpValidator *coord_validator_eye = new QRegExpValidator (coord_expr, lineEditCameraEye);
@@ -105,19 +94,12 @@ MeshupApp::MeshupApp(QWidget *parent)
 	lineEditCameraEye->setValidator (coord_validator_eye);
 	lineEditCameraCenter->setValidator (coord_validator_center);
 
-//	CheckBoxDelegate *checkBoxDelegate = new CheckBoxDelegate (this);
-//	animationValuesTableView->setItemDelegateForColumn (2, checkBoxDelegate);
-
-	animationValuesTableView->setColumnWidth (1, 80);
-	animationValuesTableView->setColumnWidth (2, 40);
-
 	// player is paused on startup
 	playerPaused = true;
 
 	dockCameraControls->setVisible(false);
 	dockPlayerControls->setVisible(true);
 	dockViewSettings->setVisible(false);
-	dockAnimationEditor->setVisible(false);
 
 	// the timer is used to continously redraw the OpenGL widget
 	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
@@ -152,10 +134,6 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	// action_quit() makes sure to set the settings before we quit
 	connect (actionQuit, SIGNAL( triggered() ), this, SLOT( action_quit() ));
-
-	// animation editor
-	connect (toolButtonKeyFrameNext, SIGNAL( pressed() ), this, SLOT( action_next_keyframe() ));
-	connect (toolButtonKeyFramePrev, SIGNAL( pressed() ), this, SLOT( action_prev_keyframe() ));
 
 	// keyboard shortcuts
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
@@ -235,8 +213,6 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["docks"]["view_settings"]["visible"] = dockViewSettings->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["visible"] = dockPlayerControls->isVisible();
 	settings_json["configuration"]["docks"]["player_controls"]["repeat"] = checkBoxLoopAnimation->isChecked();
-	settings_json["configuration"]["docks"]["animationeditor_settings"]["visible"] = dockAnimationEditor->isVisible();
-	settings_json["configuration"]["docks"]["animationeditor_settings"]["auto_update"] = autoUpdateVariablesCheckBox->isChecked();
 
 	settings_json["configuration"]["window"]["width"] = width();
 	settings_json["configuration"]["window"]["height"] = height();
@@ -314,8 +290,6 @@ void MeshupApp::loadSettings () {
 	dockCameraControls->setVisible(settings_json["configuration"]["docks"]["camera_controls"].get("visible", false).asBool());
 	dockPlayerControls->setVisible(settings_json["configuration"]["docks"]["player_controls"].get("visible", true).asBool());
 	checkBoxLoopAnimation->setChecked(settings_json["configuration"]["docks"]["player_controls"].get("repeat", true).asBool());
-	dockAnimationEditor->setVisible(settings_json["configuration"]["docks"]["animationeditor_settings"].get("visible", false).asBool());
-	autoUpdateVariablesCheckBox->setChecked(settings_json["configuration"]["docks"]["animationeditor_settings"].get("auto_update", true).asBool());
 
 	renderImageSeriesDialog->WidthSpinBox->setValue(settings_json["configuration"]["render"].get("width", glWidget->width()).asInt());
 	renderImageSeriesDialog->HeightSpinBox->setValue(settings_json["configuration"]["render"].get("height", glWidget->height()).asInt());
@@ -492,7 +466,6 @@ void MeshupApp::action_quit () {
 
 void MeshupApp::animation_loaded() {
 	qDebug() << __func__;
-	animation_edit_model->call_reset();
 
 	glWidget->model_data->resetPoses();
 
@@ -549,34 +522,6 @@ void MeshupApp::initialize_curves() {
 
 	glWidget->animation_data->current_time = old_time;
 //	qDebug() << "initializing curves done";
-}
-
-void MeshupApp::action_next_keyframe() {
-	float animation_time = glWidget->animation_data->current_time;
-	float next_frame = glWidget->animation_data->values.getNextKeyFrameTime(keyFrameTimeSpinBox->value() + 0.01);
-
-	keyFrameTimeSpinBox->setValue (next_frame);
-	animation_edit_model->call_reset();
-
-	if (autoUpdateVariablesCheckBox->isChecked()) {
-		glWidget->animation_data->current_time = next_frame;
-	}
-
-	update_time_widgets();
-}
-
-void MeshupApp::action_prev_keyframe() {
-	float animation_time = glWidget->animation_data->current_time;
-	float prev_frame = glWidget->animation_data->values.getPrevKeyFrameTime(keyFrameTimeSpinBox->value() - 0.01);
-
-	keyFrameTimeSpinBox->setValue (prev_frame);
-	animation_edit_model->call_reset();
-
-	if (autoUpdateVariablesCheckBox->isChecked()) {
-		glWidget->animation_data->current_time = prev_frame;
-	}
-
-	update_time_widgets();
 }
 
 /** \brief Modifies the widgets to show the current time
@@ -638,11 +583,6 @@ void MeshupApp::update_time_widgets () {
 		horizontalSliderTime->setValue (frame_index);
 		timeLine->setDuration (glWidget->getAnimationDuration() * TimeLineDuration / (spinBoxSpeed->value() / 100.0));
 		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
-	}
-
-	if (dockAnimationEditor->isVisible() && autoUpdateVariablesCheckBox->isChecked()) {
-		animation_edit_model->call_reset();
-		keyFrameTimeSpinBox->setValue (glWidget->animation_data->current_time);
 	}
 }
 
