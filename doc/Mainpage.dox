@@ -126,6 +126,10 @@ hierarchy. The following fields are used by MeshUp (everything else is ignored):
 \par visuals (optional, type: array of Mesh Information Tables)
    Specification of all meshes that are attached to the current frame.
 
+\par points (optional, type: array of Point Information Tables)
+   Additional points that are specified relative to the frame and move with
+	 it.
+
 \subsection model_visual Mesh Information Table
 The Mesh Information Table describes the geometric mesh including its
 properties such as color and dimensions and where it origin should be
@@ -169,6 +173,32 @@ The Mesh Information Table can use the following attributes:
 
 \par src (string)
   The path to the mesh file.
+
+\subsection model_visual Point Information Table
+
+The Point Information Table describes a single point relative to a frame.
+This point then moves together with the frame. The point is drawn with a
+line from the frame's origin to the location of the point.
+
+An example Point Information Table looks like this:
+
+\code
+ ToolCenterPoint = {
+		coordinates = { 0.25, 0.1, 0.5 },
+		color = { 0.8, 0.8, 0.2},
+	},
+\endcode
+
+\par
+The Point Information Table has the following attributes:
+
+\par coordinates (3-d vector)
+	These are the coordinates of the point in the frame in which the point is
+	defined.
+	
+\par color (3-d vector, default:  {1., 1., 1.})
+  The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
+	and white is (1., 1., 1.).
 
 \section luamodel_example Example
   Here is an example of a model:

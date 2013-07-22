@@ -311,6 +311,28 @@ void MeshupModel::addCurvePoint (
 			);
 }
 
+void MeshupModel::addPoint (
+		const std::string &name,
+		const std::string &frame_name,
+		const Vector3f &coords,
+		const Vector3f &color
+		) {
+	Point point;
+	point.name = name;
+	point.frame = findFrame (frame_name.c_str());
+	point.coordinates = coords;
+	point.color = color;
+
+	for (unsigned int i = 0; i < points.size(); i++) {
+		if (points[i].name == name) {
+			std::cerr << "Error: point '" << name << "' already defined in frame '" << points[i].frame->name << "'!" << endl;
+			abort();
+		}
+	}
+
+	points.push_back(point);
+}
+
 void MeshupModel::resetPoses() {
 	for (unsigned int i = 0; i < frames.size(); i++) {
 		frames[i]->resetPoseTransform();
@@ -363,6 +385,27 @@ void MeshupModel::draw() {
 		glPopMatrix();
 
 		seg_iter++;
+	}
+
+	MeshVBO sphere_mesh = CreateUVSphere (16, 16);
+
+	for (unsigned int i = 0; i < points.size(); i++) {
+		Vector3f frame_origin = points[i].frame->getPoseTransformTranslation();
+		Vector3f point_location = points[i].frame->getPoseTransformTranslation() + points[i].frame->getPoseTransformRotation() * points[i].coordinates;
+
+		glColor3fv (points[i].color.data());
+		glBegin (GL_LINES);
+		glVertex3fv (frame_origin.data());
+		glVertex3fv (point_location.data());
+		glEnd();
+
+		glPushMatrix();
+		glTranslatef (point_location[0], point_location[1], point_location[2]);
+		glScalef (0.025f, 0.025f, 0.025f);
+	
+		sphere_mesh.draw(GL_TRIANGLES);
+
+		glPopMatrix();
 	}
 
 	// disable normalize if it was previously not enabled
@@ -1163,6 +1206,33 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 		parent_transform.block<3,3>(0,0) = configuration.axes_rotation.transpose() *parent_rotation.transpose() * configuration.axes_rotation;
 		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 		addFrame (parent_frame, frame_name, parent_transform);
+
+		string points_path = frame_path.str() + ".points";
+		if (value_exists (L, points_path)) {
+			vector<string> points_keys = get_keys (L, points_path);
+
+			for (unsigned int j = 0; j < points_keys.size(); j++) {
+				string point_path = points_path + string (".") + string (points_keys[j]);
+				string coordinates_path = point_path + string (".") + string ("coordinates");
+				string color_path = point_path + string (".") + string ("color");
+
+				if (!value_exists (L, coordinates_path)) {
+					std::cerr << "Error: field 'coordinates' for point '" << points_keys[j] << "' is not defined!" << std::endl;
+					abort();
+				}
+				Vector3f coordinates = lua_get_vector3f (L, coordinates_path);
+
+				Vector3f color (1.f, 1.f, 1.f);
+				if (value_exists (L, color_path)) {
+					color = lua_get_vector3f (L, color_path);
+				}
+
+				addPoint (points_keys[j],
+						frame_name,
+						coordinates,
+						color);
+			}
+		}
 
 		string visuals_path = frame_path.str() + ".visuals";
 		if (!value_exists (L, visuals_path)) {

@@ -80,7 +80,18 @@ struct Frame {
 	Vector3f getFrameTransformTranslation() {
 		return Vector3f (frame_transform(3,0), frame_transform(3,1), frame_transform (3,2));
 	}
-};
+
+	Matrix33f getPoseTransformRotation() {
+		return Matrix33f (
+				pose_transform(0,0), pose_transform(1,0), pose_transform(2,0),
+				pose_transform(0,1), pose_transform(1,1), pose_transform(2,1),
+				pose_transform(0,2), pose_transform(1,2), pose_transform(2,2)
+				);
+	}
+
+	Vector3f getPoseTransformTranslation() {
+		return Vector3f (pose_transform(3,0), pose_transform(3,1), pose_transform (3,2));
+	}};
 
 struct Segment {
 	Segment () :
@@ -105,6 +116,20 @@ struct Segment {
 	Matrix44f gl_matrix;
 	FramePtr frame;
 	std::string mesh_filename;
+};
+
+struct Point {
+	Point() :
+		name ("unnamed"),
+		frame (FramePtr()),
+		coordinates (0.f, 0.f, 0.f),
+		color (1.f, 0.f, 0.f)
+	{}
+
+	std::string name;
+	FramePtr frame;
+	Vector3f coordinates;
+	Vector3f color;
 };
 
 struct MeshupModel {
@@ -150,6 +175,8 @@ struct MeshupModel {
 	FrameMap framemap;
 	typedef std::map<std::string, CurvePtr> CurveMap;
 	CurveMap curvemap;
+	typedef std::vector<Point> PointVector;
+	PointVector points;
 
 	/// Configuration how transformations are defined
 	FrameConfig configuration;
@@ -178,6 +205,13 @@ struct MeshupModel {
 
 	void addCurvePoint (
 			const std::string &curve_name,
+			const Vector3f &coords,
+			const Vector3f &color
+			);
+
+	void addPoint (
+			const std::string &name,
+			const std::string &frame_name,
 			const Vector3f &coords,
 			const Vector3f &color
 			);
