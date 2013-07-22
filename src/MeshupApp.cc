@@ -86,6 +86,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawMeshes->setChecked (glWidget->draw_meshes);
 	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
 	checkBoxDrawCurves->setChecked (glWidget->draw_curves);
+	checkBoxDrawPoints->setChecked (glWidget->draw_points);
 
 	// camera controls
 	QRegExp	coord_expr ("^\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*$");
@@ -116,6 +117,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawMeshes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_meshes(bool)));
 	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
 	connect (checkBoxDrawCurves, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_curves(bool)));
+	connect (checkBoxDrawPoints, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_points(bool)));
 
 	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (set_front_view()));
 	connect (actionSideView, SIGNAL (triggered()), glWidget, SLOT (set_side_view()));
@@ -204,6 +206,7 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["view"]["draw_meshes"] = checkBoxDrawMeshes->isChecked();
 	settings_json["configuration"]["view"]["draw_shadows"] = checkBoxDrawShadows->isChecked();
 	settings_json["configuration"]["view"]["draw_curves"] = checkBoxDrawCurves->isChecked();
+	settings_json["configuration"]["view"]["draw_points"] = checkBoxDrawPoints->isChecked();
 	settings_json["configuration"]["view"]["draw_orthographic"] = actionToggleOrthographic->isChecked();
 
 	settings_json["configuration"]["docks"]["camera_controls"]["visible"] = dockCameraControls->isVisible();
@@ -281,6 +284,7 @@ void MeshupApp::loadSettings () {
 	checkBoxDrawMeshes->setChecked(settings_json["configuration"]["view"].get("draw_meshes", glWidget->draw_meshes).asBool());
 	checkBoxDrawShadows->setChecked(settings_json["configuration"]["view"].get("draw_shadows", glWidget->draw_shadows).asBool());
 	checkBoxDrawCurves->setChecked(settings_json["configuration"]["view"].get("draw_curves", glWidget->draw_curves).asBool());
+	checkBoxDrawPoints->setChecked(settings_json["configuration"]["view"].get("draw_points", glWidget->draw_points).asBool());
 	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->draw_orthographic).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());

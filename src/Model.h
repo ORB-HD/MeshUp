@@ -254,6 +254,7 @@ struct MeshupModel {
 	void drawFrameAxes();
 	void drawBaseFrameAxes();
 	void drawCurves();
+	void drawPoints();
 
 	bool loadModelFromFile (const char* filename, bool strict = true);
 	void saveModelToFile (const char* filename);

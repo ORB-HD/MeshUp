@@ -69,6 +69,7 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_meshes (true),
 		draw_shadows (false),
 		draw_curves (false),
+		draw_points (true),
 		draw_orthographic (false)
 {
 	poi.set (0.f, 1.f, 0.f);
@@ -210,6 +211,10 @@ void GLWidget::toggle_draw_shadows (bool status) {
 
 void GLWidget::toggle_draw_curves (bool status) {
 	draw_curves = status;
+}
+
+void GLWidget::toggle_draw_points (bool status) {
+	draw_points = status;
 }
 
 void GLWidget::toggle_draw_orthographic (bool status) {
@@ -576,6 +581,9 @@ void GLWidget::drawScene() {
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
 	if (depth_test_enabled)
 		glDisable (GL_DEPTH_TEST);
+
+	if (draw_points)
+		model_data->drawPoints();
 
 	glDisable (GL_LIGHTING);
 

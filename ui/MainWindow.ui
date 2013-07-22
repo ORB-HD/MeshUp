@@ -248,6 +248,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBoxDrawCurves">
+            <property name="text">
+             <string>Curves</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QCheckBox" name="checkBoxDrawFloor">
             <property name="text">
              <string>Floor</string>
@@ -283,9 +290,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBoxDrawCurves">
+           <widget class="QCheckBox" name="checkBoxDrawPoints">
             <property name="text">
-             <string>Curves</string>
+             <string>Points</string>
             </property>
            </widget>
           </item>

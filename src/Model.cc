@@ -389,30 +389,6 @@ void MeshupModel::draw() {
 		seg_iter++;
 	}
 
-	MeshVBO sphere_mesh = CreateUVSphere (16, 16);
-
-	for (unsigned int i = 0; i < points.size(); i++) {
-		Vector3f frame_origin = points[i].frame->getPoseTransformTranslation();
-		Vector3f point_location = points[i].frame->getPoseTransformTranslation() + points[i].frame->getPoseTransformRotation() * points[i].coordinates;
-
-		glColor3fv (points[i].color.data());
-
-		if (points[i].draw_line) {
-			glBegin (GL_LINES);
-			glVertex3fv (frame_origin.data());
-			glVertex3fv (point_location.data());
-			glEnd();
-		}
-
-		glPushMatrix();
-		glTranslatef (point_location[0], point_location[1], point_location[2]);
-		glScalef (0.025f, 0.025f, 0.025f);
-	
-		sphere_mesh.draw(GL_TRIANGLES);
-
-		glPopMatrix();
-	}
-
 	// disable normalize if it was previously not enabled
 	if (!normalize_enabled)
 		glDisable (GL_NORMALIZE);
@@ -529,6 +505,42 @@ void MeshupModel::drawCurves() {
 		curve_iter->second->draw();
 		curve_iter++;
 	}
+}
+
+void MeshupModel::drawPoints() {
+	// save current state of GL_NORMALIZE to properly restore the original
+	// state
+	bool normalize_enabled = glIsEnabled (GL_NORMALIZE);
+	if (!normalize_enabled)
+		glEnable (GL_NORMALIZE);
+
+	MeshVBO sphere_mesh = CreateUVSphere (16, 16);
+
+	for (unsigned int i = 0; i < points.size(); i++) {
+		Vector3f frame_origin = points[i].frame->getPoseTransformTranslation();
+		Vector3f point_location = points[i].frame->getPoseTransformTranslation() + points[i].frame->getPoseTransformRotation() * points[i].coordinates;
+
+		glColor3fv (points[i].color.data());
+
+		if (points[i].draw_line) {
+			glBegin (GL_LINES);
+			glVertex3fv (frame_origin.data());
+			glVertex3fv (point_location.data());
+			glEnd();
+		}
+
+		glPushMatrix();
+		glTranslatef (point_location[0], point_location[1], point_location[2]);
+		glScalef (0.025f, 0.025f, 0.025f);
+	
+		sphere_mesh.draw(GL_TRIANGLES);
+
+		glPopMatrix();
+	}
+
+	// disable normalize if it was previously not enabled
+	if (!normalize_enabled)
+		glDisable (GL_NORMALIZE);
 }
 
 Json::Value vec3_to_json (const Vector3f &vec) {
