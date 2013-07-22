@@ -54,9 +54,6 @@
     <addaction name="actionLoadModel"/>
     <addaction name="actionLoadAnimation"/>
     <addaction name="separator"/>
-    <addaction name="actionSaveAnimation"/>
-    <addaction name="actionSaveAnimationTo"/>
-    <addaction name="separator"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
    </widget>
@@ -485,30 +482,6 @@
     <string>Load Animation...</string>
    </property>
   </action>
-  <action name="actionToggleAnimationEditor">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Animation Editor</string>
-   </property>
-   <property name="shortcut">
-    <string>A</string>
-   </property>
-  </action>
-  <action name="actionSaveAnimation">
-   <property name="text">
-    <string>Save Animation</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
-   </property>
-  </action>
-  <action name="actionSaveAnimationTo">
-   <property name="text">
-    <string>Save Animation...</string>
-   </property>
-  </action>
   <action name="actionFrontView">
    <property name="text">
     <string>Front View</string>
@@ -570,7 +543,6 @@
   </action>
   <zorder>dockPlayerControls</zorder>
   <zorder>dockViewSettings</zorder>
-  <zorder>dockAnimationEditor</zorder>
   <zorder>dockCameraControls</zorder>
  </widget>
  <customwidgets>
@@ -640,38 +612,6 @@
     <hint type="sourcelabel">
      <x>488</x>
      <y>279</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>actionToggleAnimationEditor</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>dockAnimationEditor</receiver>
-   <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>136</x>
-     <y>308</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>dockAnimationEditor</sender>
-   <signal>visibilityChanged(bool)</signal>
-   <receiver>actionToggleAnimationEditor</receiver>
-   <slot>setChecked(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>136</x>
-     <y>308</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>

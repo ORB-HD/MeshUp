@@ -136,7 +136,7 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 	for (iter = paths.begin(); iter != paths.end(); iter++) {
 		cout << "  " << *iter << endl;
 	}
-	exit(1);
+	abort();
 
 	return std::string("");
 }
@@ -215,7 +215,7 @@ void MeshupModel::addFrame (
 	FramePtr parent_frame = findFrame (parent_frame_name_sanitized.c_str());
 	if (parent_frame == NULL) {
 		cerr << "Could not find frame '" << parent_frame_name_sanitized << "'!" << endl;
-		exit (1);
+		abort();
 	}
 
 	parent_frame->children.push_back (frame);
