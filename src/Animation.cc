@@ -83,10 +83,6 @@ void TransformInfo::applyColumnValue (const ColumnInfo &column_info, float value
 }
 
 bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict) {
-	return loadFromFileAtFrameRate (filename, frame_config, -1.f, strict);
-}
-
-bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig &frame_config, float frames_per_second, bool strict) {
 	ifstream file_in (filename);
 
 	if (!file_in) {
@@ -112,9 +108,6 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 		csv_mode = true;
 
 	cout << "Loading animation " << filename << endl;
-
-	if (frames_per_second != -1.f)
-		cout << "Reading input using: " << frames_per_second << " frames per second." << endl;
 
 	string previous_line;
 	string line;
@@ -346,13 +339,6 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 			
 			column_time = value;
 
-			if (column_time != 0. && !last_line && frames_per_second != -1.f) {
-				if (force_fps_previous_frame + 1. / frames_per_second >= column_time) {
-					force_fps_skipped_frame_count++;
-					continue;
-				}
-			}
-
 			force_fps_previous_frame = column_time;
 			force_fps_frame_count++;
 			// cout << "Reading frame at t = " << scientific << force_fps_previous_frame << endl;
@@ -399,10 +385,6 @@ bool Animation::loadFromFileAtFrameRate (const char* filename, const FrameConfig
 	if (!found_data_section) {
 		cerr << "Error: did not find DATA: section in animation file!" << endl;
 		abort();
-	}
-
-	if (frames_per_second != -1.f) {
-		cout << "Read " << force_fps_frame_count << " frames (skipped " << force_fps_skipped_frame_count << " frames)" << endl;
 	}
 
 	animation_filename = filename;

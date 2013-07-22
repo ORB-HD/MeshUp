@@ -99,7 +99,6 @@ struct Animation {
 	{}
 
 	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
-	bool loadFromFileAtFrameRate (const char* filename, const FrameConfig &frame_config, float frames_per_second, bool strict = true);
 
 	std::string animation_filename;
 
