@@ -235,6 +235,33 @@ struct MeshupModel {
 		return frame_iter->second;
 	}
 
+	bool frameExists (const char* frame_name) {
+		FrameMap::iterator frame_iter = framemap.find (frame_name);
+
+		if (frame_iter == framemap.end())
+			return false;
+
+		return true;
+	}
+
+	unsigned int getPointIndex (const char* point_name) {
+		for (unsigned int i = 0; i < points.size(); i++) {
+			if (points[i].name == point_name)
+				return i;
+		}
+
+		return std::numeric_limits<unsigned int>::max();
+	}
+
+	bool pointExists (const char* point_name) {
+		for (unsigned int i = 0; i < points.size(); i++) {
+			if (points[i].name == point_name)
+				return true;
+		}
+
+		return false;
+	}
+
 	void clearCurves() {
 		curvemap.clear();
 	}

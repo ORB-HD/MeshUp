@@ -439,12 +439,22 @@ void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr ani
 
 	while (frame_iter != animation->keyframes[frame_prev].transformations.end()) {
 		std::string frame_name = frame_iter->first;
-		FramePtr model_frame = model->findFrame(frame_name.c_str());
+		
+		if (model->frameExists (frame_name.c_str())) {
+			FramePtr model_frame = model->findFrame(frame_name.c_str());
 
-		TransformInfo transform_prev = animation->keyframes[frame_prev].transformations[frame_name];
-		TransformInfo transform_next = animation->keyframes[frame_next].transformations[frame_name];
+			TransformInfo transform_prev = animation->keyframes[frame_prev].transformations[frame_name];
+			TransformInfo transform_next = animation->keyframes[frame_next].transformations[frame_name];
 
-		InterpolateModelFramePose (model_frame, transform_prev, transform_next, time_fraction);
+			InterpolateModelFramePose (model_frame, transform_prev, transform_next, time_fraction);
+		} else if (model->pointExists(frame_name.c_str())){
+			unsigned int point_index = model->getPointIndex (frame_name.c_str());
+
+			Vector3f pos_next = animation->keyframes[frame_next].transformations[frame_name].translation;
+			Vector3f pos_prev = animation->keyframes[frame_prev].transformations[frame_name].translation;
+
+			model->points[point_index].coordinates = pos_prev + time_fraction * (pos_next - pos_prev);
+		}
 
 		frame_iter++;
 	}
