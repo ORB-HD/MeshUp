@@ -321,7 +321,7 @@ void MeshupModel::addPoint (
 	Point point;
 	point.name = name;
 	point.frame = findFrame (frame_name.c_str());
-	point.coordinates = coords;
+	point.coordinates = configuration.axes_rotation.transpose() * coords;
 	point.color = color;
 	point.draw_line = draw_line;
 
