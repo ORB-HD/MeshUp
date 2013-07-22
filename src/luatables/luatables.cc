@@ -127,6 +127,36 @@ bool value_exists (lua_State *L, const std::string &path_str, int index) {
 	return true;
 }
 
+bool get_bool (lua_State *L, const string &path_str, int index) {
+	bool result = false;
+
+	int stack_top = lua_gettop(L);
+
+	if (!get_table_from_path(L, path_str, index)) {
+		cout << "Error: could not find table '" << path_str;
+		if (index > 0)
+			cout << "[" << index << "]";
+		cout << "'." << endl;
+		return result;
+	}
+
+	if (!lua_isboolean(L, -1)) {
+		cout << "Error: value at " << path_str;
+		if (index > 0)
+			cout << "[" << index << "]";
+		cout << " is not a boolean!" << endl;
+
+		return result;
+	}
+
+	result = lua_toboolean(L, -1);
+
+	// clean up the stack
+	lua_pop (L, lua_gettop(L) - stack_top);
+
+	return result;
+}
+
 std::string get_string (lua_State *L, const string &path_str, int index) {
 	std::string result;
 	

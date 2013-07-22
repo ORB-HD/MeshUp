@@ -48,6 +48,7 @@ bool get_table_from_path (lua_State *L, const std::string &path_str, int index =
 
 bool value_exists (lua_State *L, const std::string &path_str, int index = -1);
 
+bool get_bool (lua_State *L, const std::string &path_str, int index = -1);
 std::string get_string (lua_State *L, const std::string &path_str, int index = -1);
 double get_number (lua_State *L, const std::string &path_str, int index = -1);
 const void* get_pointer (lua_State *L, const std::string &path_str, int index = -1);

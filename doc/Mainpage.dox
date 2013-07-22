@@ -177,8 +177,8 @@ The Mesh Information Table can use the following attributes:
 \subsection model_visual Point Information Table
 
 The Point Information Table describes a single point relative to a frame.
-This point then moves together with the frame. The point is drawn with a
-line from the frame's origin to the location of the point.
+This point then moves together with the frame. The point is optionally
+drawn with a line from the frame's origin to the location of the point.
 
 An example Point Information Table looks like this:
 
@@ -186,6 +186,7 @@ An example Point Information Table looks like this:
  ToolCenterPoint = {
 		coordinates = { 0.25, 0.1, 0.5 },
 		color = { 0.8, 0.8, 0.2},
+		draw_line = true,
 	},
 \endcode
 
@@ -199,6 +200,10 @@ The Point Information Table has the following attributes:
 \par color (3-d vector, default:  {1., 1., 1.})
   The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
 	and white is (1., 1., 1.).
+
+\par draw_line (boolean, default:  false)
+	Specifies whether a line from the frame origin to the point should be
+	drawn.
 
 \section luamodel_example Example
   Here is an example of a model:

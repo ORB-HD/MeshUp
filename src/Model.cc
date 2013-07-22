@@ -315,13 +315,15 @@ void MeshupModel::addPoint (
 		const std::string &name,
 		const std::string &frame_name,
 		const Vector3f &coords,
-		const Vector3f &color
+		const Vector3f &color,
+		const bool draw_line
 		) {
 	Point point;
 	point.name = name;
 	point.frame = findFrame (frame_name.c_str());
 	point.coordinates = coords;
 	point.color = color;
+	point.draw_line = draw_line;
 
 	for (unsigned int i = 0; i < points.size(); i++) {
 		if (points[i].name == name) {
@@ -394,10 +396,13 @@ void MeshupModel::draw() {
 		Vector3f point_location = points[i].frame->getPoseTransformTranslation() + points[i].frame->getPoseTransformRotation() * points[i].coordinates;
 
 		glColor3fv (points[i].color.data());
-		glBegin (GL_LINES);
-		glVertex3fv (frame_origin.data());
-		glVertex3fv (point_location.data());
-		glEnd();
+
+		if (points[i].draw_line) {
+			glBegin (GL_LINES);
+			glVertex3fv (frame_origin.data());
+			glVertex3fv (point_location.data());
+			glEnd();
+		}
 
 		glPushMatrix();
 		glTranslatef (point_location[0], point_location[1], point_location[2]);
@@ -1215,6 +1220,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 				string point_path = points_path + string (".") + string (points_keys[j]);
 				string coordinates_path = point_path + string (".") + string ("coordinates");
 				string color_path = point_path + string (".") + string ("color");
+				string line_path = point_path + string (".") + string ("draw_line");
 
 				if (!value_exists (L, coordinates_path)) {
 					std::cerr << "Error: field 'coordinates' for point '" << points_keys[j] << "' is not defined!" << std::endl;
@@ -1227,10 +1233,15 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 					color = lua_get_vector3f (L, color_path);
 				}
 
+				bool draw_line = false;
+				if (value_exists (L, line_path)) {
+					draw_line = get_bool (L, line_path);
+				}
 				addPoint (points_keys[j],
 						frame_name,
 						coordinates,
-						color);
+						color,
+						draw_line);
 			}
 		}
 
