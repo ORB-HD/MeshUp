@@ -12,7 +12,7 @@
 
 #include <vector>
 #include <iostream>
-#include <boost/shared_ptr.hpp>
+#include <cstddef>
 #include <limits>
 
 #include "SimpleMath/SimpleMath.h"
@@ -40,6 +40,8 @@ struct MeshVBO {
 				-std::numeric_limits<float>::max(),
 				-std::numeric_limits<float>::max())
 	{}
+	MeshVBO (const MeshVBO& mesh);
+	MeshVBO& operator= (const MeshVBO& mesh);
 	~MeshVBO() {
 		if (vbo_id != 0) {
 			delete_vbo();
@@ -58,6 +60,7 @@ struct MeshVBO {
 
 	unsigned int generate_vbo();
 	void delete_vbo();
+	void debug_vbo();
 
 	void draw(unsigned int mode);
 
@@ -78,10 +81,16 @@ struct MeshVBO {
 	std::vector<Vector3f> vertices;
 	std::vector<Vector3f> normals;
 	std::vector<Vector3f> colors;
-
-	/// \note always 3 succeeding calls of addVertice are assumed to be a
-	// triangle!
-	std::vector<unsigned int> triangle_indices;
 };
+
+MeshVBO CreateUVSphere (unsigned int rows, unsigned int segments);
+
+MeshVBO CreateCuboid (float width, float height, float depth);
+
+MeshVBO CreateGrid (unsigned int cells_x, unsigned int cells_z, Vector3f color1, Vector3f color2);
+
+inline MeshVBO CreateCube () {
+	return CreateCuboid (1.f, 1.f, 1.f);
+}
 
 #endif
