@@ -161,6 +161,8 @@ struct MeshupModel {
 
 			configuration = other.configuration;
 			frames_initialized = other.frames_initialized;
+
+			points = other.points;
 		}
 		return *this;
 	}
