@@ -14,7 +14,7 @@ TEST ( FrameTestSimple ) {
 	MeshupModel model;
 
 	Matrix44f parent_transform = model.configuration.convertAnglesToMatrix (Vector3f( 0., 0., 0.)) 
-		* smTranslate (1., 2., 3.);
+		* SimpleMath::GL::TranslateMat44 (1., 2., 3.);
 
 	model.addFrame (
 			"ROOT",

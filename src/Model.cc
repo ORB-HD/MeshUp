@@ -152,9 +152,9 @@ void Frame::updatePoseTransform(const Matrix44f &parent_pose_transform, const Fr
 
 	// apply pose transform
 	pose_transform =
-		smScale (pose_scaling[0], pose_scaling[1], pose_scaling[2])
+		SimpleMath::GL::ScaleMat44 (pose_scaling[0], pose_scaling[1], pose_scaling[2])
 	  * pose_rotation_quaternion.toGLMatrix()
-		* smTranslate (pose_translation[0], pose_translation[1], pose_translation[2])
+		* SimpleMath::GL::TranslateMat44 (pose_translation[0], pose_translation[1], pose_translation[2])
 		* pose_transform;
 
 	for (unsigned int ci = 0; ci < children.size(); ci++) {
@@ -178,7 +178,7 @@ void Frame::initDefaultFrameTransform(const Matrix44f &parent_frame_transform, c
 void Frame::resetPoseTransform () {
 	pose_translation = Vector3f::Zero();
 	pose_rotation = Vector3f::Zero();
-	pose_rotation_quaternion = smQuaternion(0.f, 0.f, 0.f, 1.f);
+	pose_rotation_quaternion = SimpleMath::GL::Quaternion(0.f, 0.f, 0.f, 1.f);
 	pose_scaling = Vector3f (1.f, 1.f, 1.f);
 	pose_transform = Matrix44f::Identity();
 
@@ -994,7 +994,7 @@ bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
 		Vector3f parent_rotation = json_to_vec3(frame_node["parent_rotation"]);
 
 		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation)
-			* smTranslate (parent_translation[0], parent_translation[1], parent_translation[2]);
+			* SimpleMath::GL::TranslateMat44 (parent_translation[0], parent_translation[1], parent_translation[2]);
 
 		if (frame_node["parent"].asString() == "BASE") {
 			cerr << "Warning: global frame should be 'ROOT' instead of 'BASE'!" << endl;

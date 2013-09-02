@@ -77,7 +77,7 @@ struct TransformInfo {
 
 	float timestamp;
 	Vector3f translation;
-	smQuaternion rotation_quaternion;
+	SimpleMath::GL::Quaternion rotation_quaternion;
 	Vector3f scaling;
 
 	void applyColumnValue (const ColumnInfo &column_info, float value, const FrameConfig &frame_config);

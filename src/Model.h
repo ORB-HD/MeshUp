@@ -49,7 +49,7 @@ struct Frame {
 
 	Vector3f pose_translation;
 	Vector3f pose_rotation;
-	smQuaternion pose_rotation_quaternion;
+	SimpleMath::GL::Quaternion pose_rotation_quaternion;
 	Vector3f pose_scaling;
 
 	/** Transformation from base to pose */

@@ -78,7 +78,7 @@ void TransformInfo::applyColumnValue (const ColumnInfo &column_info, float value
 			default: cerr << "Error: invalid axis type!"; abort();	
 		}
 	} else if (column_info.type == ColumnInfo::TransformTypeRotation) {
-		rotation_quaternion *= smQuaternion::fromGLRotate(value, axis[0], axis[1], axis[2]);
+		rotation_quaternion *= SimpleMath::GL::Quaternion::fromGLRotate(value, axis[0], axis[1], axis[2]);
 	}
 }
 
@@ -491,8 +491,8 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 		
 		// we also have to apply the scaling after the transform:
 		seg_iter->gl_matrix = 
-			smScale (scale[0], scale[1], scale[2])
-			* smTranslate (translate[0], translate[1], translate[2])
+			SimpleMath::GL::ScaleMat44 (scale[0], scale[1], scale[2])
+			* SimpleMath::GL::TranslateMat44 (translate[0], translate[1], translate[2])
 			* seg_iter->frame->pose_transform;
 
 		seg_iter++;

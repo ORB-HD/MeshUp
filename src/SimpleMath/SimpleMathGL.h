@@ -4,7 +4,11 @@
 #include "SimpleMath.h"
 #include <cmath>
 
-inline Matrix44f smRotate (float rot_deg, float x, float y, float z) {
+namespace SimpleMath {
+
+namespace GL {
+
+inline Matrix44f RotateMat44 (float rot_deg, float x, float y, float z) {
 	float c = cosf (rot_deg * M_PI / 180.f);
 	float s = sinf (rot_deg * M_PI / 180.f);
 	return Matrix44f (
@@ -27,7 +31,7 @@ inline Matrix44f smRotate (float rot_deg, float x, float y, float z) {
 			);
 }
 
-inline Matrix44f smTranslate (float x, float y, float z) {
+inline Matrix44f TranslateMat44 (float x, float y, float z) {
 	return Matrix44f (
 			1.f, 0.f, 0.f, 0.f,
 			0.f, 1.f, 0.f, 0.f,
@@ -36,7 +40,7 @@ inline Matrix44f smTranslate (float x, float y, float z) {
 			);
 }
 
-inline Matrix44f smScale (float x, float y, float z) {
+inline Matrix44f ScaleMat44 (float x, float y, float z) {
 	return Matrix44f (
 			  x, 0.f, 0.f, 0.f,
 			0.f,   y, 0.f, 0.f,
@@ -49,27 +53,27 @@ inline Matrix44f smScale (float x, float y, float z) {
  *
  * order: x,y,z,w
  */
-class smQuaternion : public Vector4f {
+class Quaternion : public Vector4f {
 	public:
-		smQuaternion () :
+		Quaternion () :
 			Vector4f (0.f, 0.f, 0.f, 1.f)
 		{}
-		smQuaternion (const Vector4f vec4) :
+		Quaternion (const Vector4f vec4) :
 			Vector4f (vec4)
 		{}
-		smQuaternion (float x, float y, float z, float w):
+		Quaternion (float x, float y, float z, float w):
 			Vector4f (x, y, z, w)
 		{}
 		/** This function is equivalent to multiplicate their corresponding rotation matrices */
-		smQuaternion operator* (const smQuaternion &q) const {
-			return smQuaternion (
+		Quaternion operator* (const Quaternion &q) const {
+			return Quaternion (
 					q[3] * (*this)[0] + q[0] * (*this)[3] + q[1] * (*this)[2] - q[2] * (*this)[1],
 					q[3] * (*this)[1] + q[1] * (*this)[3] + q[2] * (*this)[0] - q[0] * (*this)[2],
 					q[3] * (*this)[2] + q[2] * (*this)[3] + q[0] * (*this)[1] - q[1] * (*this)[0],
 					q[3] * (*this)[3] - q[0] * (*this)[0] - q[1] * (*this)[1] - q[2] * (*this)[2]
 					);
 		}
-		smQuaternion& operator*=(const smQuaternion &q) {
+		Quaternion& operator*=(const Quaternion &q) {
 			set (
 					q[3] * (*this)[0] + q[0] * (*this)[3] + q[1] * (*this)[2] - q[2] * (*this)[1],
 					q[3] * (*this)[1] + q[1] * (*this)[3] + q[2] * (*this)[0] - q[0] * (*this)[2],
@@ -79,9 +83,9 @@ class smQuaternion : public Vector4f {
 			return *this;
 		}
 
-		static smQuaternion fromGLRotate (float angle, float x, float y, float z) {
+		static Quaternion fromGLRotate (float angle, float x, float y, float z) {
 			float st = sinf (angle * M_PI / 360.f);
-			return smQuaternion (
+			return Quaternion (
 						st * x,
 						st * y,
 						st * z,
@@ -89,11 +93,11 @@ class smQuaternion : public Vector4f {
 						);
 		}
 
-		smQuaternion normalize() {
+		Quaternion normalize() {
 			return Vector4f::normalize();
 		}
 
-		smQuaternion slerp (float alpha, const smQuaternion &quat) const {
+		Quaternion slerp (float alpha, const Quaternion &quat) const {
 			// check whether one of the two has 0 length
 			float s = sqrt (squaredNorm() * quat.squaredNorm());
 
@@ -101,19 +105,19 @@ class smQuaternion : public Vector4f {
 			assert (s != 0.f);
 
 			float angle = acos (dot(quat) / s);
-			if (angle == 0.f || std::isnan(angle)) {
+			if (angle == 0.f || isnan(angle)) {
 				return *this;
 			}
-			assert(!std::isnan(angle));
+			assert(!isnan(angle));
 
 			float d = 1.f / sinf (angle);
 			float p0 = sinf ((1.f - alpha) * angle);
 			float p1 = sinf (alpha * angle);
 
 			if (dot (quat) < 0.f) {
-				return smQuaternion( ((*this) * p0 - quat * p1) * d);
+				return Quaternion( ((*this) * p0 - quat * p1) * d);
 			}
-			return smQuaternion( ((*this) * p0 + quat * p1) * d);
+			return Quaternion( ((*this) * p0 + quat * p1) * d);
 		}
 
 		Matrix44f toGLMatrix() const {
@@ -143,8 +147,8 @@ class smQuaternion : public Vector4f {
 					1.f);
 		}
 
-		smQuaternion conjugate() const {
-			return smQuaternion (
+		Quaternion conjugate() const {
+			return Quaternion (
 					-(*this)[0],
 					-(*this)[1],
 					-(*this)[2],
@@ -155,7 +159,7 @@ class smQuaternion : public Vector4f {
 			Vector3f vn (vec);
 			vn.normalize();
 
-			smQuaternion vec_quat (vn[0], vn[1], vn[2], 0.f), res_quat;
+			Quaternion vec_quat (vn[0], vn[1], vn[2], 0.f), res_quat;
 
 			res_quat = vec_quat * (*this);
 			res_quat = conjugate() * res_quat;
@@ -163,6 +167,12 @@ class smQuaternion : public Vector4f {
 			return Vector3f (res_quat[0], res_quat[1], res_quat[2]);
 		}
 };
+
+// namespace GL
+}
+
+// namespace SimpleMath
+}
 
 /* _SIMPLEMATHGL_H_ */
 #endif

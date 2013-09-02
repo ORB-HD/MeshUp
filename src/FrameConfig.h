@@ -47,12 +47,12 @@ struct FrameConfig {
 	}
 
 	Matrix44f convertAnglesToMatrix (const Vector3f &rotation_angles) const {
-		return	smRotate (rotation_angles[0], 1.f, 0.f, 0.f)
-			* smRotate (rotation_angles[1], 0.f, 1.f, 0.f)
-			* smRotate (rotation_angles[2], 0.f, 0.f, 1.f);
+		return	SimpleMath::GL::RotateMat44 (rotation_angles[0], 1.f, 0.f, 0.f)
+			* SimpleMath::GL::RotateMat44 (rotation_angles[1], 0.f, 1.f, 0.f)
+			* SimpleMath::GL::RotateMat44 (rotation_angles[2], 0.f, 0.f, 1.f);
 	};
 
-	smQuaternion convertAnglesToQuaternion (const Vector3f &rotation_angles) const {
+	SimpleMath::GL::Quaternion convertAnglesToQuaternion (const Vector3f &rotation_angles) const {
 		int a0 = rotation_order[2];
 		int a1 = rotation_order[1];
 		int a2 = rotation_order[0];
@@ -75,15 +75,15 @@ struct FrameConfig {
 				axes_rotation(a2, 2)
 				);
 
-		return smQuaternion::fromGLRotate (
+		return SimpleMath::GL::Quaternion::fromGLRotate (
 				rotation_angles[a0],
 				axis_0[0], axis_0[1], axis_0[2]
 				)
-			* smQuaternion::fromGLRotate (
+			* SimpleMath::GL::Quaternion::fromGLRotate (
 					rotation_angles[a1],
 					axis_1[0], axis_1[1], axis_1[2]
 					)
-			* smQuaternion::fromGLRotate (
+			* SimpleMath::GL::Quaternion::fromGLRotate (
 					rotation_angles[a2],
 					axis_2[0], axis_2[1], axis_2[2]
 					);
