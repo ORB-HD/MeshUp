@@ -27,6 +27,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <fstream>
+#include <signal.h>
+#include <sys/socket.h>
 
 #include "json/json.h"
 #include "colorscale.h"
@@ -41,6 +43,13 @@ MeshupApp::MeshupApp(QWidget *parent)
 {
 	timer = new QTimer (this);
 	setupUi(this); // this sets up GUI
+
+	//setting up the socket pair for signal handling
+	if (!::socketpair(AF_UNIX, SOCK_STREAM,0,sigusr1Fd)) {
+		snUSR1 = new QSocketNotifier(sigusr1Fd[1], QSocketNotifier::Read, this);
+		connect(snUSR1, SIGNAL(activated(int)), this, SLOT(handleSIGUSR1()));
+	}
+	
 
 	// version label
 	string version_str = string("v") + MESHUP_VERSION_STRING;
@@ -703,3 +712,38 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	}
 	
 }
+//Signal handling stuff
+
+void MeshupApp::SIGUSR1Handler(int)
+ {
+     char a = 1;
+     ::write(sigusr1Fd[0], &a, sizeof(a));
+ }
+
+int setup_unix_signal_handlers()
+ {
+     struct sigaction usr1;
+
+     usr1.sa_handler = MeshupApp::SIGUSR1Handler;
+     sigemptyset(&usr1.sa_mask);
+     usr1.sa_flags = 0;
+     usr1.sa_flags |= SA_RESTART;
+
+     if (sigaction(SIGUSR1, &usr1, 0) > 0)
+        return 1;
+
+  
+     return 0;
+ }
+
+ void MeshupApp::handleSIGUSR1()
+ {
+     snUSR1->setEnabled(false);
+     char tmp;
+     ::read(sigusr1Fd[1], &tmp, sizeof(tmp));
+
+	action_reload_files();
+
+     snUSR1->setEnabled(true);
+ }
+int MeshupApp::sigusr1Fd[2];

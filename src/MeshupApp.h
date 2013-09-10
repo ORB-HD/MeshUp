@@ -12,6 +12,7 @@
 
 #include <QTimer>
 #include <QTimeLine>
+#include <QSocketNotifier>
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
@@ -24,6 +25,9 @@ public:
     MeshupApp(QWidget *parent = 0);
 
 		void parseArguments (int argc, char* argv[]);
+
+		// unix signal handler
+		static void SIGUSR1Handler(int unused);
 		
 protected:
 		QTimer *timer;
@@ -40,6 +44,8 @@ public slots:
 		virtual void closeEvent(QCloseEvent *event);
 		virtual void focusChanged (QFocusEvent *event);
 		virtual void focusInEvent (QFocusEvent *event);
+
+		void handleSIGUSR1();
 
 		void saveSettings ();
 		void loadSettings ();
@@ -67,6 +73,10 @@ public slots:
 
 		void actionRenderAndSaveToFile ();
 		void actionRenderSeriesAndSaveToFile ();
+	private:
+		static int sigusr1Fd[2];
+		QSocketNotifier *snUSR1;
 };
- 
+
+int setup_unix_signal_handlers();
 #endif

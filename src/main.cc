@@ -18,6 +18,7 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+	setup_unix_signal_handlers();
 	QApplication app(argc, argv);
 	MeshupApp *main_window = new MeshupApp;
 
