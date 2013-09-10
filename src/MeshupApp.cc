@@ -446,6 +446,13 @@ void MeshupApp::action_reload_files() {
 		return;
 	}
 
+	
+	// try to set old animation time.
+
+	if (glWidget->animation_data &&  glWidget->animation_data->current_time < test_animation->duration) {
+		test_animation->current_time=glWidget->animation_data->current_time;
+	}
+
 	// everything worked fine -> replace the current model
 	glWidget->animation_data = test_animation;
 
