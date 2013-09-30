@@ -95,10 +95,14 @@ struct Animation {
 		animation_filename(""),
 		current_time (0.f),
 		duration (0.f),
-		loop (false)
+		loop (false),
+		raw_values (std::vector<std::vector<float> >())
 	{}
 
 	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
+
+	KeyFrame getKeyFrameAtFrameIndex (int frame_index);
+	KeyFrame getKeyFrameAtTime (float time);
 
 	std::string animation_filename;
 
@@ -108,7 +112,7 @@ struct Animation {
 	FrameConfig configuration;
 
 	std::vector<ColumnInfo> column_infos;
-	std::vector<KeyFrame> keyframes;
+	std::vector<std::vector<float> > raw_values;
 };
 
 typedef boost::shared_ptr<Animation> AnimationPtr;

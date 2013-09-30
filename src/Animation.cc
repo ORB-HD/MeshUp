@@ -101,6 +101,7 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 	int force_fps_skipped_frame_count = 0;
 	bool last_line = false;
 	bool csv_mode = false;
+	raw_values.clear();
 
 	string filename_str (filename);
 
@@ -327,7 +328,6 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 			}
 
 			assert (columns.size() >= column_infos.size());
-			std::vector<float> column_values;
 
 			float column_time;
 			float value;
@@ -339,37 +339,22 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 			
 			column_time = value;
 
+			// convert the data to raw values
+			std::vector<float> column_values(columns.size(), 0.);
+			for (int ci = 0; ci < columns.size(); ci++) {
+				istringstream value_stream (columns[ci]);
+				if (!(value_stream >> value)) {
+					cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << "." << endl;
+					abort();
+				}
+				column_values[ci] = value;
+			}
+			raw_values.push_back(column_values);
+
 			force_fps_previous_frame = column_time;
 			force_fps_frame_count++;
 			// cout << "Reading frame at t = " << scientific << force_fps_previous_frame << endl;
 
-			KeyFrame keyframe;
-			keyframe.timestamp = column_time;
-
-			for (int ci = 1; ci < column_infos.size(); ci++) {
-				if (column_infos[ci].is_empty)
-					continue;
-
-				if (keyframe.transformations.find(column_infos[ci].frame_name) == keyframe.transformations.end())
-					keyframe.transformations[column_infos[ci].frame_name] = TransformInfo();
-
-				TransformInfo transform = keyframe.transformations[column_infos[ci].frame_name];
-
-				value_stream.clear();
-				value_stream.str(columns[ci]);
-
-				if (!(value_stream >> value)) {
-					cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << " column " << ci << "." << endl;
-					cout << value << endl;
-					abort();
-				}
-
-				transform.applyColumnValue (column_infos[ci], value, configuration);
-
-				keyframe.transformations[column_infos[ci].frame_name] = transform;
-			}
-
-			keyframes.push_back(keyframe);
 			if (column_time > duration)
 				duration = column_time;
 
@@ -398,62 +383,92 @@ void InterpolateModelFramePose (FramePtr frame, const TransformInfo &transform_p
 	frame->pose_scaling = transform_prev.scaling + fraction * (transform_next.scaling - transform_prev.scaling);
 }
 
-void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
-	// update and loop time if necessary
-	animation->current_time = time;
+KeyFrame Animation::getKeyFrameAtFrameIndex (int frame_index) {
+	KeyFrame keyframe;
 
-	if (animation->current_time > animation->duration) {
-		if (animation->loop) {
-			while (animation->current_time > animation->duration)
-				animation->current_time -= animation->duration;
-		} else {
-			animation->current_time = animation->duration;
-		}
+	if (raw_values.size() == 0)
+		return keyframe;
+
+	keyframe.timestamp = raw_values[frame_index][0];
+
+	for (int ci = 1; ci < column_infos.size(); ci++) {
+		if (column_infos[ci].is_empty)
+			continue;
+
+		if (keyframe.transformations.find(column_infos[ci].frame_name) == keyframe.transformations.end())
+			keyframe.transformations[column_infos[ci].frame_name] = TransformInfo();
+
+		TransformInfo transform = keyframe.transformations[column_infos[ci].frame_name];
+
+		transform.applyColumnValue (column_infos[ci], raw_values[frame_index][ci], configuration);
+
+		keyframe.transformations[column_infos[ci].frame_name] = transform;
 	}
 
-	if (animation->keyframes.size() == 0)
-		return;
+	return keyframe;
+}
 
-	// compute interpolating frames and the time fraction
+KeyFrame Animation::getKeyFrameAtTime (float time) {
+	// compute interpolating frame indices and the time fraction
 	int frame_prev = 0, frame_next = 0;
 	float time_fraction = 0.f;
 
-	if (animation->keyframes.size() > 1) {
-		while (animation->current_time > animation->keyframes[frame_next].timestamp) {
+	if (raw_values.size() > 1) {
+		while (time > raw_values[frame_next][0]) {
 			frame_prev = frame_next;
 			frame_next ++;
 
-			if (frame_next == animation->keyframes.size()) {
-				frame_prev = animation->keyframes.size() - 2;
-				frame_next = animation->keyframes.size() - 1;
+			if (frame_next == raw_values.size()) {
+				frame_prev = raw_values.size() - 2;
+				frame_next = raw_values.size() - 1;
 				time_fraction = 1.;
 				break;
 			}
 
-			time_fraction = (animation->current_time - animation->keyframes[frame_prev].timestamp) / (animation->keyframes[frame_next].timestamp - animation->keyframes[frame_prev].timestamp);
+			time_fraction = (time - raw_values[frame_prev][0]) / (raw_values[frame_next][0] - raw_values[frame_prev][0]);
 		}
 	}
 
 	// perform interpolation for all frames
-	std::map<std::string, TransformInfo>::iterator frame_iter = animation->keyframes[frame_prev].transformations.begin();
+	KeyFrame keyframe_prev = getKeyFrameAtFrameIndex (frame_prev);
+	KeyFrame keyframe_next = getKeyFrameAtFrameIndex (frame_next);
+	KeyFrame keyframe_interpolated = keyframe_prev;
 
-	while (frame_iter != animation->keyframes[frame_prev].transformations.end()) {
+	std::map<std::string, TransformInfo>::iterator frame_iter = keyframe_prev.transformations.begin();
+
+	while (frame_iter != keyframe_prev.transformations.end()) {
 		std::string frame_name = frame_iter->first;
 		
+		TransformInfo transform_prev = keyframe_prev.transformations[frame_name];
+		TransformInfo transform_next = keyframe_next.transformations[frame_name];
+
+		transform_prev.translation = transform_prev.translation + time_fraction * (transform_next.translation - transform_prev.translation);
+		transform_prev.rotation_quaternion = transform_prev.rotation_quaternion.slerp (time_fraction, transform_next.rotation_quaternion);
+		transform_prev.scaling = transform_prev.scaling + time_fraction * (transform_next.scaling - transform_prev.scaling);
+
+		keyframe_interpolated.transformations[frame_name] = transform_prev;
+
+		frame_iter++;
+	}
+
+	return keyframe_interpolated;
+}
+
+void ModelApplyKeyFrame (MeshupModelPtr model, KeyFrame &keyframe) {
+	std::map<std::string, TransformInfo>::iterator frame_iter = keyframe.transformations.begin();
+
+	while (frame_iter != keyframe.transformations.end()) {
+		std::string frame_name = frame_iter->first;
+
 		if (model->frameExists (frame_name.c_str())) {
 			FramePtr model_frame = model->findFrame(frame_name.c_str());
-
-			TransformInfo transform_prev = animation->keyframes[frame_prev].transformations[frame_name];
-			TransformInfo transform_next = animation->keyframes[frame_next].transformations[frame_name];
-
-			InterpolateModelFramePose (model_frame, transform_prev, transform_next, time_fraction);
+			model_frame->pose_translation = frame_iter->second.translation;
+			model_frame->pose_rotation_quaternion = frame_iter->second.rotation_quaternion;
+			model_frame->pose_scaling = frame_iter->second.scaling;
 		} else if (model->pointExists(frame_name.c_str())){
 			unsigned int point_index = model->getPointIndex (frame_name.c_str());
 
-			Vector3f pos_next = animation->keyframes[frame_next].transformations[frame_name].translation;
-			Vector3f pos_prev = animation->keyframes[frame_prev].transformations[frame_name].translation;
-
-			model->points[point_index].coordinates = pos_prev + time_fraction * (pos_next - pos_prev);
+			model->points[point_index].coordinates = frame_iter->second.translation;
 		}
 
 		frame_iter++;
@@ -500,7 +515,8 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 }
 
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
-	InterpolateModelFramesFromAnimation (model, animation, time);
+	KeyFrame keyframe = animation->getKeyFrameAtTime (time);
+	ModelApplyKeyFrame (model, keyframe);
 
 	model->updateFrames();
 
