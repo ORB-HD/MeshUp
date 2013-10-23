@@ -288,10 +288,8 @@ struct MeshupModel {
 	bool loadModelFromFile (const char* filename, bool strict = true);
 	void saveModelToFile (const char* filename);
 
-	bool loadModelFromJsonFile (const char* filename, bool strict = true);
 	bool loadModelFromLuaFile (const char* filename, bool strict = true);
 	
-	void saveModelToJsonFile (const char* filename);
 	void saveModelToLuaFile (const char* filename);
 };
 

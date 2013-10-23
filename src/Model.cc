@@ -14,8 +14,6 @@
 #include "SimpleMath/SimpleMathGL.h"
 #include "string_utils.h"
 
-#include "json/json.h"
-
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -543,158 +541,6 @@ void MeshupModel::drawPoints() {
 		glDisable (GL_NORMALIZE);
 }
 
-Json::Value vec3_to_json (const Vector3f &vec) {
-	Json::Value result;
-	result[0] = Json::Value(static_cast<float>(vec[0]));
-	result[1] = Json::Value(static_cast<float>(vec[1]));
-	result[2] = Json::Value(static_cast<float>(vec[2]));
-
-	return result;
-}
-
-Vector3f json_to_vec3 (const Json::Value &value, Vector3f default_value=Vector3f (0.f, 0.f, 0.f)) {
-	if (value.isNull())
-		return default_value;
-
-	Vector3f result (
-			value[0].asFloat(),
-			value[1].asFloat(),
-			value[2].asFloat()
-			);
-
-	return result;
-}
-
-Json::Value frame_configuration_to_json_value (const FrameConfig &config) {
-	using namespace Json;
-
-	Value result;
-	result["axis_front"] = vec3_to_json (config.axis_front);
-	result["axis_up"] = vec3_to_json (config.axis_up);
-	result["axis_right"] = vec3_to_json (config.axis_right);
-
-	result["rotation_order"][0] = config.rotation_order[0];
-	result["rotation_order"][1] = config.rotation_order[1];
-	result["rotation_order"][2] = config.rotation_order[2];
-
-	return result;
-}
-
-Json::Value frame_to_json_value (const FramePtr &frame, FrameConfig configuration) {
-	using namespace Json;
-
-	Value result;
-
-	result["name"] = frame->name;
-
-	Vector3f translation = configuration.axes_rotation * frame->getFrameTransformTranslation();
-	Matrix33f rotation = configuration.axes_rotation * frame->getFrameTransformRotation() * configuration.axes_rotation.transpose();
-
-	result["parent_translation"] = vec3_to_json(translation);
-
-	if (Matrix33f::Identity() != rotation) {
-		cerr << "Error: cannot convert non-zero parent_rotation to Json value." << endl;
-		abort();
-	}
-
-	return result;
-}
-
-Json::Value segment_to_json_value (const Segment &segment, FrameConfig frame_config) {
-	using namespace Json;
-
-	Value result;
-
-	result["name"] = segment.name;
-
-	if (Vector3f::Zero() != segment.dimensions)
-		result["dimensions"] = vec3_to_json (frame_config.axes_rotation * segment.dimensions);
-
-	if (Vector3f::Zero() != segment.color)
-		result["color"] = vec3_to_json (segment.color);
-
-	if (Vector3f::Zero() != segment.scale)
-		result["scale"] = vec3_to_json (segment.scale);
-
-	if (!isnan(segment.meshcenter[0])) {
-		result["mesh_center"] = vec3_to_json (frame_config.axes_rotation * segment.meshcenter);
-	} else {
-		result["translate"] = vec3_to_json (frame_config.axes_rotation * segment.translate);
-	}
-
-	result["mesh_filename"] = segment.mesh_filename;
-	result["frame"] = segment.frame->name;
-
-	return result;
-}
-
-void MeshupModel::saveModelToJsonFile (const char* filename) {
-	// we absoulutely have to set the locale to english for numbers.
-	// Otherwise we might wrongly formatted data.
-	std::setlocale(LC_NUMERIC, "POSIX");
-	Json::Value root_node;
-
-	root_node["configuration"] = frame_configuration_to_json_value (configuration);
-
-	int frame_index = 0;
-	// we have to write out the frames recursively
-	for (int bi = 0; bi < frames.size(); bi++) {
-		stack<FramePtr> frame_stack;
-		frame_stack.push (frames[bi]);
-
-		stack<int> child_index_stack;
-		if (frame_stack.top()->children.size() > 0) {
-			child_index_stack.push(0);
-		}
-
-		if (frame_stack.top()->name != "ROOT") {
-			root_node["frames"][frame_index] = frame_to_json_value(frame_stack.top(), configuration);
-			frame_index++;
-		}
-
-		while (frame_stack.size() > 0) {
-			FramePtr cur_frame = frame_stack.top();
-			int child_idx = child_index_stack.top();
-
-			if (child_idx < cur_frame->children.size()) {
-				FramePtr child_frame = cur_frame->children[child_idx];
-
-				root_node["frames"][frame_index] = frame_to_json_value(child_frame, configuration);
-				root_node["frames"][frame_index]["parent"] = cur_frame->name;
-				frame_index++;
-
-				child_index_stack.pop();
-				child_index_stack.push (child_idx + 1);
-
-				if (child_frame->children.size() > 0) {
-					frame_stack.push (child_frame);
-					child_index_stack.push(0);
-				}
-			} else {
-				frame_stack.pop();
-				child_index_stack.pop();
-			}
-
-//			frame_stack.pop();
-		}
-	}
-
-	// segments
-
-	int segment_index = 0;
-	SegmentList::iterator seg_iter = segments.begin();
-	while (seg_iter != segments.end()) {
-		root_node["segments"][segment_index] = segment_to_json_value (*seg_iter, configuration);
-
-		segment_index++;
-		seg_iter++;
-	}
-
-	ofstream file_out (filename, ios::trunc);
-	file_out << root_node << endl;
-	file_out.close();
-}
-
 string vec3_to_string_no_brackets (const Vector3f &vector) {
 	ostringstream out;
 	out << vector[0] << ", " << vector[1] << ", " << vector[2];
@@ -881,10 +727,8 @@ bool MeshupModel::loadModelFromFile (const char* filename, bool strict) {
 
 	if (tolower(filename_str.substr(filename_str.size() - 4, 4)) == ".lua")
 		return loadModelFromLuaFile (filename, strict);
-	else if (tolower(filename_str.substr(filename_str.size() - 5, 5)) == ".json")
-		return loadModelFromJsonFile (filename, strict);
-
-	cerr << "Error: Could not determine filetype for model " << filename << ". Must be either .lua or .json file." << endl;
+	else 
+		cerr << "Error: Could not determine filetype for model " << filename << ". Must be a .lua file." << endl;
 
 	if (strict)
 		abort();
@@ -902,136 +746,10 @@ void MeshupModel::saveModelToFile (const char* filename) {
 
 	if (tolower(filename_str.substr(filename_str.size() - 4, 4)) == ".lua")
 		saveModelToLuaFile (filename);
-	else if (tolower(filename_str.substr(filename_str.size() - 5, 5)) == ".json")
-		saveModelToJsonFile (filename);
-
 	else {
-		cerr << "Error: Could not determine filetype for model " << filename << ". Must be either .lua or .json file." << endl;
+		cerr << "Error: Could not determine filetype for model " << filename << ". Must be a .lua file." << endl;
 		abort();
 	}
-}
-
-bool MeshupModel::loadModelFromJsonFile (const char* filename, bool strict) {
-	// we absoulutely have to set the locale to english for numbers.
-	// Otherwise we might read false values due to the wrong conversion.
-	std::setlocale(LC_NUMERIC, "POSIX");
-
-	using namespace Json;
-	Value root;
-	Reader reader;
-
-	ifstream file_in (filename);
-
-	if (!file_in) {
-		cerr << "Error opening file " << filename << "!" << endl;
-
-		if (strict)
-			abort();
-
-		return false;
-	}
-
-	cout << "Loading model " << filename << endl;
-
-	stringstream buffer;
-	buffer << file_in.rdbuf();
-	file_in.close();
-
-	bool parsing_result = reader.parse (buffer.str(), root);
-	if (!parsing_result) {
-		cerr << "Error reading model: " << reader.getFormattedErrorMessages();
-
-		if (strict)
-			abort ();
-
-		return false;
-	}
-
-	// clear the model
-	clear();
-
-	// read the configuration, fill with default values if they do not exist
-	if (root["configuration"]["axis_front"].isNull())
-		root["configuration"]["axis_front"] = vec3_to_json (Vector3f (1.f, 0.f, 0.f));
-	if (root["configuration"]["axis_up"].isNull())
-		root["configuration"]["axis_up"] = vec3_to_json (Vector3f (0.f, 1.f, 0.f));
-	if (root["configuration"]["axis_right"].isNull())
-		root["configuration"]["axis_right"] = vec3_to_json (Vector3f (0.f, 0.f, 1.f));
-	if (root["configuration"]["rotation_order"][0].isNull())
-		root["configuration"]["rotation_order"][0] = 2;
-	if (root["configuration"]["rotation_order"][1].isNull())
-		root["configuration"]["rotation_order"][1] = 1;
-	if (root["configuration"]["rotation_order"][2].isNull())
-		root["configuration"]["rotation_order"][2] = 0;
-
-
-	configuration.axis_front = json_to_vec3(root["configuration"]["axis_front"]);
-	configuration.axis_up = json_to_vec3(root["configuration"]["axis_up"]);
-	configuration.axis_right = json_to_vec3(root["configuration"]["axis_right"]);
-	configuration.rotation_order[0] = root["configuration"]["rotation_order"][0].asInt();
-	configuration.rotation_order[1] = root["configuration"]["rotation_order"][1].asInt();
-	configuration.rotation_order[2] = root["configuration"]["rotation_order"][2].asInt();
-
-	configuration.init();
-
-//	cout << "front: " << configuration.axis_front.transpose() << endl;
-//	cout << "up   : " << configuration.axis_up.transpose() << endl;
-//	cout << "right: " << configuration.axis_right.transpose() << endl;
-//
-//	cout << "rot  : " << configuration.rotation_order[0]
-//		<< ", " << configuration.rotation_order[1]
-//		<< ", " << configuration.rotation_order[2] << endl;
-//
-//	cout << "axes: " << endl << configuration.axes_rotation << endl;
-
-	// read the frames:
-	ValueIterator node_iter = root["frames"].begin();
-
-	while (node_iter != root["frames"].end()) {
-		Value frame_node = *node_iter;
-
-		Vector3f parent_translation = configuration.axes_rotation.transpose() * json_to_vec3(frame_node["parent_translation"]);
-		Vector3f parent_rotation = json_to_vec3(frame_node["parent_rotation"]);
-
-		Matrix44f parent_transform = configuration.convertAnglesToMatrix (parent_rotation)
-			* SimpleMath::GL::TranslateMat44 (parent_translation[0], parent_translation[1], parent_translation[2]);
-
-		if (frame_node["parent"].asString() == "BASE") {
-			cerr << "Warning: global frame should be 'ROOT' instead of 'BASE'!" << endl;
-			frame_node["parent"] = "ROOT";
-		}
-
-		addFrame (
-				frame_node["parent"].asString(),
-				frame_node["name"].asString(),
-				parent_transform);
-
-		node_iter++;
-	}
-
-	node_iter = root["segments"].begin();
-	while (node_iter != root["segments"].end()) {
-		Value segment_node = *node_iter;
-
-		addSegment (
-				segment_node["frame"].asString(),
-				segment_node["name"].asString(),
-				json_to_vec3 (segment_node["dimensions"]),
-				json_to_vec3 (segment_node["scale"]),
-				json_to_vec3 (segment_node["color"]),
-				segment_node["mesh_filename"].asString(),
-				json_to_vec3 (segment_node["translate"]),
-				json_to_vec3 (segment_node["mesh_center"], Vector3f(1/0.0,1/0.0,1/0.0))
-				);
-
-		node_iter++;
-	}
-
-	initDefaultFrameTransform();
-
-	model_filename = filename;
-
-	return true;
 }
 
 Vector3f lua_get_vector3f (lua_State *L, const string &path, int index = -1) {
