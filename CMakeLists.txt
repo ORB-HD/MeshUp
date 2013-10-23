@@ -140,8 +140,11 @@ INSTALL ( FILES ${mesh_files} DESTINATION share/meshup/meshes )
 
 # Packaging
 SET(CPACK_GENERATOR "DEB")
+SET(CPACK_DEBIAN_PACKAGE_SECTION "science")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Martin Felis <martin.felis@iwr.uni-heidelberg.de>")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MeshUp")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt4-opengl (>= 4:4.8), libglu1-mesa (>=8.0), libboost-filesystem1.48.0 (>= 1.48.0-1)")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MeshUp - a visualization tool for
+multi-body systems based on skeletal animation and magic.")
 SET(CPACK_PACKAGE_VENDOR "Martin Felis")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
