@@ -446,9 +446,9 @@ void MeshupApp::action_reload_files() {
 		return;
 	}
 
+	emit (animation_loaded());
 	
 	// try to set old animation time.
-
 	if (glWidget->animation_data &&  glWidget->animation_data->current_time < test_animation->duration) {
 		test_animation->current_time=glWidget->animation_data->current_time;
 	}
@@ -485,7 +485,7 @@ void MeshupApp::initialize_curves() {
 	float old_time = glWidget->animation_data->current_time;
 	float current_time = 0.f;
 
-	// cout << "duration = " << scientific << duration << endl;
+	// qDebug() << "duration = " << scientific << duration << endl;
 	// cout << "time_step = " << scientific << time_step << endl;
 	// cout << "step_count = " << scientific << step_count << endl;
 
@@ -521,7 +521,7 @@ void MeshupApp::initialize_curves() {
 	}
 
 	glWidget->animation_data->current_time = old_time;
-//	qDebug() << "initializing curves done";
+	// qDebug() << "initializing curves done";
 }
 
 /** \brief Modifies the widgets to show the current time
