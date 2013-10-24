@@ -568,7 +568,7 @@ void MeshupApp::timeslider_value_changed (int frame_index) {
 	int num_milliseconds = static_cast<int>(round((current_time - num_seconds) * 1000.f));
 
 	stringstream time_string("");
-	time_string << num_seconds << "." << num_milliseconds;
+	time_string << num_seconds << "." << setw(3) << setfill('0') << num_milliseconds;
 	timeLabel->setText(time_string.str().c_str());
 
 	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
