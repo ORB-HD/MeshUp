@@ -443,8 +443,12 @@ KeyFrame Animation::getKeyFrameAtTime (float time) {
 		TransformInfo transform_next = keyframe_next.transformations[frame_name];
 
 		transform_prev.translation = transform_prev.translation + time_fraction * (transform_next.translation - transform_prev.translation);
+
 		transform_prev.rotation_quaternion = transform_prev.rotation_quaternion.slerp (time_fraction, transform_next.rotation_quaternion);
 		transform_prev.scaling = transform_prev.scaling + time_fraction * (transform_next.scaling - transform_prev.scaling);
+
+		// slerp can return non-normal Quaternion
+		transform_prev.rotation_quaternion.normalize();
 
 		keyframe_interpolated.transformations[frame_name] = transform_prev;
 
