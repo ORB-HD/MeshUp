@@ -127,6 +127,12 @@ TARGET_LINK_LIBRARIES ( meshup
 	MeshUp
 )
 
+# Installation
+INSTALL (TARGETS meshup
+RUNTIME DESTINATION bin
+LIBRARY DESTINATION lib
+)
+
 FILE ( GLOB model_files
 	models/*.lua
 	)
