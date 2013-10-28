@@ -148,6 +148,21 @@ struct MeshupModel {
 		frames.push_back (base_frame);
 		framemap["ROOT"] = base_frame;
 	}
+	MeshupModel (const MeshupModel& other) {
+		model_filename = other.model_filename;
+
+		segments = other.segments;
+		meshmap = other.meshmap;
+
+		frames = other.frames;
+		framemap = other.framemap;
+
+		curvemap = other.curvemap;
+		points = other.points;
+
+		configuration = other.configuration;
+		frames_initialized = other.frames_initialized;
+	}
 
 	MeshupModel& operator= (const MeshupModel& other) {
 		if (&other != this) {
@@ -159,10 +174,11 @@ struct MeshupModel {
 			frames = other.frames;
 			framemap = other.framemap;
 
+			curvemap = other.curvemap;
+			points = other.points;
+
 			configuration = other.configuration;
 			frames_initialized = other.frames_initialized;
-
-			points = other.points;
 		}
 		return *this;
 	}
