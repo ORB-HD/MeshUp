@@ -1,35 +1,36 @@
 /*
- * luatables
- * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
- * 
- * (zlib license)
- * 
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event will the authors be held liable for any damages
- * arising from the use of this software.
- * 
- * Permission is granted to anyone to use this software for any purpose,
- * including commercial applications, and to alter it and redistribute it
- * freely, subject to the following restrictions:
- * 
- *    1. The origin of this software must not be misrepresented; you must not
- *    claim that you wrote the original software. If you use this software
- *    in a product, an acknowledgment in the product documentation would be
- *    appreciated but is not required.
- * 
- *    2. Altered source versions must be plainly marked as such, and must not be
- *    misrepresented as being the original software.
- * 
- *    3. This notice may not be removed or altered from any source
- *    distribution.
+ * LuaTables++
+ * Copyright (c) 2013-2014 Martin Felis <martin@fyxs.org>.
+ * All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining
+ * a copy of this software and associated documentation files (the
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
+ * the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "luatables.h"
 
+#include <assert.h>
 #include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <sstream>
+#include <cmath>
 
 extern "C"
 {
@@ -38,330 +39,562 @@ extern "C"
    #include <lualib.h>
 }
 
+#include <stdio.h>  /* defines FILENAME_MAX */
+#ifdef WINDOWS
+    #include <direct.h>
+    #define get_current_dir _getcwd
+#else
+    #include <unistd.h>
+    #define get_current_dir getcwd
+ #endif
+
+#if defined(WIN32) || defined (_WIN32)
+#define DIRECTORY_SEPARATOR "\\"
+#elif defined(linux) || defined (__linux) || defined(__linux__) || defined(__APPLE__)
+#define DIRECTORY_SEPARATOR "/"
+#else
+#error Platform not supported!
+#endif
+
 using namespace std;
 
-/** \brief Extracts a single token from a path string */
-static std::string path_get_next_token (std::string &path) {
-	std::string token = path;
+std::string get_file_directory (const char* filename) {
+	string name (filename);
+	string result = name.substr(0, name.find_last_of (DIRECTORY_SEPARATOR) + 1);
 
-	bool is_index = false;
-	bool have_bracket = false;
+	if (result == "")
+		result = "./";
+#if defined (WIN32) || defined (_WIN32)
+#warning get_file_directory() not yet tested under Windows!
+	else if (result.substr(1,2) != ":\\")
+		result = string(".\\") + result;
+#else
+	else if (result.substr(0,string(DIRECTORY_SEPARATOR).size()) != DIRECTORY_SEPARATOR  && result[0] != '.')
+		result = string("./") + result;
+#endif
 
-	if (token.find(".") != std::string::npos) {
-		token = token.substr(0, token.find("."));
-	}
-
-	if (token.find("[") != std::string::npos) {
-		have_bracket = true;
-
-		if (token.find("[") == 0) {
-			token = token.substr (token.find("[") + 1, token.find("]") - 1);
-			path = path.substr (token.size() + 2, path.size());
-		} else {
-			token = token.substr (0, token.find("["));
-			path = path.substr (token.size(), path.size());
-		}
-	} else {
-		if (path.size() > token.size())
-			path = path.substr (token.size() + 1, path.size());
-		else
-			path = "";
-	}
-
-	if (path[0] == '.')
-		path = path.substr (1, path.size());
-
-	return token;
+	return result;
 }
 
-/** \brief Puts a lua value at a given path with optional index onto the stack.
- *
- * This function allows to navigate tables by specifying the path to an
- * element just as within lua, e.g. "model.bodies[2].inertia[2][3]". The
- * optional last parameter is used to ease iteration over multiple
- * elements.
- */
-bool get_table_from_path (lua_State *L, const string &path_str, int index) {
-	std::string path = path_str;
-	std::string token = path;
+const char* serialize_std = "function serialize (o, tabs)\n\
+  local result = \"\"\n\
+  \n\
+  if tabs == nil then\n\
+    tabs = \"\"\n\
+  end\n\
+\n\
+  if type(o) == \"number\" then\n\
+    result = result .. tostring(o)\n\
+  elseif type(o) == \"boolean\" then\n\
+    result = result .. tostring(o)\n\
+  elseif type(o) == \"string\" then\n\
+    result = result .. string.format(\"%q\", o)\n\
+  elseif type(o) == \"table\" then\n\
+    if o.dont_serialize_me then\n\
+      return \"{}\"\n\
+    end\n\
+    result = result .. \"{\\n\"\n\
+    for k,v in pairs(o) do\n\
+      if type(v) ~= \"function\" then\n\
+        -- make sure that numbered keys are properly are indexified\n\
+        if type(k) == \"number\" then\n\
+				  if type(v) == \"number\" then\n\
+	          result = result .. \" \" .. tostring(v) .. \",\"\n\
+					else\n\
+	          result = result .. tabs .. serialize(v, tabs .. \"  \") .. \",\\n\"\n\
+					end\n\
+        else\n\
+          result = result .. tabs .. \"  \" .. k .. \" = \" .. serialize(v, tabs .. \"  \") .. \",\\n\"\n\
+        end\n\
+      end\n\
+    end\n\
+    result = result .. tabs .. \"}\"\n\
+  else\n\
+    print (\"ignoring stuff\" .. type(o) )\n\
+  end\n\
+  return result\n\
+end\n\
+\n\
+return serialize";
 
-	// backup of the current stack
-	int stack_top = lua_gettop(L);
+//
+// Lua Helper Functions
+//
+void bail(lua_State *L, const char *msg){
+	std::cerr << msg << lua_tostring(L, -1) << endl;
+	abort();
+}
 
-	do {
-		token = path_get_next_token (path);
-
-		istringstream convert (token);
-		int token_int;
-		if (!(convert >> token_int)) 
-			lua_pushstring(L, token.c_str());
+void stack_print (const char *file, int line, lua_State *L) {
+	cout << file << ":" << line << ": stack size: " << lua_gettop(L) << endl;;
+	for (int i = 1; i < lua_gettop(L) + 1; i++) {
+		cout << file << ":" << line << ": ";
+		cout << i << ": ";
+		if (lua_istable (L, i))
+			cout << " table" << endl;
+		else if (lua_isnumber (L, i))
+			cout << " number: " << lua_tonumber (L, i) << endl;
+		else if (lua_isuserdata (L, i)) {
+			void* userdata = (void*) lua_touserdata (L, i);
+			cout << " userdata (" << userdata << ")" << endl;
+		} else if (lua_isstring (L, i))
+			cout << " string: " << lua_tostring(L, i) << endl;
+		else if (lua_isfunction (L, i))
+			cout << " function" << endl;
+		else if (lua_isnil (L, i))
+			cout << " nil" << endl;
 		else
-			lua_pushnumber (L, token_int);
+			cout << " unknown: " << lua_typename (L, lua_type (L, i)) << endl;
+	}
+}
+
+void l_push_LuaKey (lua_State *L, const LuaKey &key) {
+	if (key.type == LuaKey::Integer)
+		lua_pushnumber (L, key.int_value);
+	else
+		lua_pushstring(L, key.string_value.c_str());
+}
+
+bool query_key_stack (lua_State *L, std::vector<LuaKey> key_stack) {
+	for (int i = key_stack.size() - 1; i >= 0; i--) {
+		// get the global value when the result of a lua expression was not
+		// pushed onto the stack via the return statement.
+		if (lua_gettop(L) == 0) {
+			lua_getglobal (L, key_stack[key_stack.size() - 1].string_value.c_str());
+
+			if (lua_isnil(L, -1)) {
+				return false;
+			}
+
+			continue;
+		}
+
+		l_push_LuaKey (L, key_stack[i]);
 
 		lua_gettable (L, -2);
 
-		if (path.size() == 0 && index > 0) {
-			lua_pushnumber (L, index);
-			lua_gettable (L, -2);
-		}
-
+		// return if key is not found
 		if (lua_isnil(L, -1)) {
-			// clean up the stack
-			lua_pop (L, lua_gettop(L) - stack_top);
 			return false;
 		}
-
-	} while (path.size() > 0);
+	}
 
 	return true;
 }
 
-bool value_exists (lua_State *L, const std::string &path_str, int index) {
-	int stack_top = lua_gettop(L);
+void create_key_stack (lua_State *L, std::vector<LuaKey> key_stack) {
+	for (int i = key_stack.size() - 1; i > 0; i--) {
+		// get the global value when the result of a lua expression was not
+		// pushed onto the stack via the return statement.
+		if (lua_gettop(L) == 0) {
+			lua_getglobal (L, key_stack[key_stack.size() - 1].string_value.c_str());
 
-	if (!get_table_from_path(L, path_str, index)) {
-		return false;
+			if (lua_isnil(L, -1)) {
+				lua_pop(L, 1);
+				lua_newtable(L);
+				lua_pushvalue(L, -1);
+				lua_setglobal(L, key_stack[key_stack.size() - 1].string_value.c_str());
+			}
+
+			continue;
+		}
+
+		l_push_LuaKey (L, key_stack[i]);
+
+		lua_pushvalue (L, -1);
+		lua_gettable (L, -3);
+
+		if (lua_isnil(L, -1)) {
+			// parent, key, nil
+			lua_pop(L, 1);  // parent, key
+			lua_newtable(L); // parent, key, table
+			lua_insert(L, -2); // parent, table, key
+			lua_pushvalue(L, -2); // parent, table, key, table
+			lua_settable (L, -4); // parent, table
+		}
 	}
-
-	lua_pop (L, lua_gettop(L) - stack_top);
-	return true;
 }
 
-bool get_bool (lua_State *L, const string &path_str, int index) {
-	bool result = false;
+//
+// LuaTableNode
+//
+std::vector<LuaKey> LuaTableNode::getKeyStack() {
+	std::vector<LuaKey> result;
 
-	int stack_top = lua_gettop(L);
+	const LuaTableNode *node_ptr = this;
 
-	if (!get_table_from_path(L, path_str, index)) {
-		cout << "Error: could not find table '" << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << "'." << endl;
-		return result;
+	do {
+		result.push_back (node_ptr->key);
+		node_ptr = node_ptr->parent;
+	} while (node_ptr != NULL);
+
+	return result;	
+}
+
+std::string LuaTableNode::keyStackToString() {
+	std::vector<LuaKey> key_stack = getKeyStack();
+
+	ostringstream result_stream ("");
+	for (int i = key_stack.size() - 1; i >= 0; i--) {
+		if (key_stack[i].type == LuaKey::String)
+			result_stream << "[\"" << key_stack[i].string_value << "\"]";
+		else 
+			result_stream << "[" << key_stack[i].int_value << "]";
 	}
 
-	if (!lua_isboolean(L, -1)) {
-		cout << "Error: value at " << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << " is not a boolean!" << endl;
+	return result_stream.str();
+}
 
-		return result;
+bool LuaTableNode::stackQueryValue() {
+	lua_State *L = luaTable->L;
+	stackTop = lua_gettop(L);
+
+	std::vector<LuaKey> key_stack = getKeyStack();
+
+	return query_key_stack (L, key_stack);
+}
+
+void LuaTableNode::stackCreateValue() {
+	lua_State *L = luaTable->L;
+	stackTop = lua_gettop(L);
+
+	std::vector<LuaKey> key_stack = getKeyStack();
+
+	create_key_stack (L, key_stack);
+}
+
+LuaTable LuaTableNode::stackQueryTable() {
+	lua_State *L = luaTable->L;
+	stackTop = lua_gettop(L);
+
+	std::vector<LuaKey> key_stack = getKeyStack();
+
+	if (!query_key_stack (L, key_stack)) {
+		std::cerr << "Error: could not query table " << key << "." << std::endl;
+		abort();
 	}
 
-	result = lua_toboolean(L, -1);
+	return LuaTable::fromLuaState (L);
+}
 
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
+LuaTable LuaTableNode::stackCreateLuaTable() {
+	lua_State *L = luaTable->L;
+	stackTop = lua_gettop(L);
+
+	std::vector<LuaKey> key_stack = getKeyStack();
+
+	create_key_stack (L, key_stack);
+
+	// create new table for the CustomType
+	lua_newtable(luaTable->L);	// parent, CustomTable
+	// add table of CustomType to the parent
+	stackPushKey(); // parent, CustomTable, key
+	lua_pushvalue(luaTable->L, -2); // parent, CustomTable, key, CustomTable
+	lua_settable(luaTable->L, -4);
+
+	return LuaTable::fromLuaState (L);
+}
+
+void LuaTableNode::stackPushKey() {
+	l_push_LuaKey (luaTable->L, key);
+}
+
+void LuaTableNode::stackRestore() {
+	lua_pop (luaTable->L, lua_gettop(luaTable->L) - stackTop);
+}
+
+bool LuaTableNode::exists() {
+	bool result = true;
+
+	if (!stackQueryValue())
+		result = false;
+
+	stackRestore();
 
 	return result;
 }
 
-std::string get_string (lua_State *L, const string &path_str, int index) {
-	std::string result;
-	
-	int stack_top = lua_gettop(L);
+void LuaTableNode::remove() {
+	if (stackQueryValue()) {
+		lua_pop(luaTable->L, 1);
 
-	if (!get_table_from_path(L, path_str, index)) {
-		cout << "Error: could not find table '" << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << "'." << endl;
-		return result;
-	}
-
-	if (!lua_isstring(L, -1)) {
-		cout << "Error: value at " << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << " is not a string!" << endl;
-
-		return result;
-	}
-
-	result = lua_tostring(L, -1);
-
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
-
-	return result;
-}
-
-double get_number (lua_State *L, const string &path_str, int index) {
-	double result;
-	
-	int stack_top = lua_gettop(L);
-
-	if (!get_table_from_path(L, path_str, index)) {
-		cout << "Error: could not find table '" << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << "'." << endl;
-		return result;
-	}
-
-
-	if (!lua_isnumber(L, -1)) {
-		cout << "Error: value at " << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << " is not a number!" << endl;
-
-		return result;
-	}
-
-	result = lua_tonumber(L, -1);
-
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
-
-	return result;
-}
-
-const void* get_pointer (lua_State *L, const string &path_str, int index) {
-	int stack_top = lua_gettop(L);
-
-	if (!get_table_from_path(L, path_str, index)) 
-		return NULL;
-
-	if (lua_isnil(L, -1)) {
-		return NULL;
-	}
-
-	const void* result = lua_topointer(L, -1);
-
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
-
-	return result;
-}
-
-size_t get_length (lua_State *L, const string &path_str, int index) {
-	size_t result = 0;
-	
-	int stack_top = lua_gettop(L);
-
-	if (!get_table_from_path(L, path_str, index)) {
-		cout << "Error: could not find table '" << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << "'." << endl;
-		return result;
-	}
-
-	result = lua_objlen (L, -1);
-
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
-
-	return result;
-}
-
-std::vector<double> get_array (lua_State *L, const string &path_str, int index) {
-	std::vector<double> result;
-	
-	int stack_top = lua_gettop(L);
-
-	if (!get_table_from_path(L, path_str, index)) {
-		cout << "Error: could not find table '" << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << "'." << endl;
-		return result;
-	}
-
-	if (!lua_istable(L, -1)) {
-		cout << "Error: value at " << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << " is not a table!" << endl;
-
-		// clean up the stack
-		lua_pop (L, lua_gettop(L) - stack_top);
-		return result;
-	}
-
-	lua_pushnil(L);
-
-	int i = 1;
-	while (lua_next(L, -2)) {
-		if (lua_isnumber (L, -1)) {
-			result.push_back (lua_tonumber(L, -1));
+		if (lua_gettop(luaTable->L) != 0) {
+			l_push_LuaKey (luaTable->L, key);
+			lua_pushnil (luaTable->L);
+			lua_settable (luaTable->L, -3); 
 		} else {
-			cout << "Error: values at " << path_str;
-			if (index > 0)
-				cout << "[" << index << "]";
-			cout << " are not numbers only!" << endl;
-
-			// clean up the stack
-			lua_pop (L, lua_gettop(L) - stack_top);
-			return std::vector<double>();
+			lua_pushnil (luaTable->L);
+			lua_setglobal (luaTable->L, key.string_value.c_str());
 		}
-		lua_pop(L, 1);
-		i++;
 	}
 
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
+	stackRestore();
+}
+
+size_t LuaTableNode::length() {
+	size_t result = 0;
+
+	if (stackQueryValue()) {
+		result = lua_objlen(luaTable->L, -1);
+	}
+
+	stackRestore();
 
 	return result;
 }
 
-std::vector<string> get_keys (lua_State *L, const string &path_str, int index) {
-	std::vector<string> result;
+std::vector<LuaKey> LuaTableNode::keys() {
+	std::vector<LuaKey> result;
+
+	if (stackQueryValue()) {
+		// loop over all keys
+		lua_pushnil(luaTable->L);
+		while (lua_next(luaTable->L, -2) != 0) {
+			if (lua_isnumber(luaTable->L, -2)) {
+				double number = lua_tonumber (luaTable->L, -2);
+				double frac;
+				if (modf (number, &frac) == 0) {
+					LuaKey key (static_cast<int>(number));
+					result.push_back (key);
+				}
+			} else if (lua_isstring (luaTable->L, -2)) {
+				LuaKey key (lua_tostring(luaTable->L, -2));
+				result.push_back (key);
+			} else {
+				cerr << "Warning: invalid LuaKey type for key " << 				lua_typename(luaTable->L, lua_type(luaTable->L, -2)) << "!" << endl;
+			}
+
+			lua_pop(luaTable->L, 1);
+		}
+	}
+
+	stackRestore();
+
+	return result;
+}
+
+
+template<> bool LuaTableNode::getDefault<bool>(const bool &default_value) {
+	bool result = default_value;
+
+	if (stackQueryValue()) {
+		result = lua_toboolean (luaTable->L, -1);
+	}
+
+	stackRestore();
+
+	return result;
+}
+
+template<> float LuaTableNode::getDefault<float>(const float &default_value) {
+	float result = default_value;
+
+	if (stackQueryValue()) {
+		result = static_cast<float>(lua_tonumber (luaTable->L, -1));
+	}
+
+	stackRestore();
+
+	return result;
+}
+
+template<> double LuaTableNode::getDefault<double>(const double &default_value) {
+	double result = default_value;
+
+	if (stackQueryValue()) {
+		result = lua_tonumber (luaTable->L, -1);
+	}
+
+	stackRestore();
+
+	return result;
+}
+
+template<> std::string LuaTableNode::getDefault<std::string>(const std::string &default_value) {
+	std::string result = default_value;
+
+	if (stackQueryValue() && lua_isstring(luaTable->L, -1)) {
+		result = lua_tostring (luaTable->L, -1);
+	}
+
+	stackRestore();
+
+	return result;
+}
+
+template<> void LuaTableNode::set<bool>(const bool &value) {
+	stackCreateValue();
+
+	l_push_LuaKey (luaTable->L, key);
+	lua_pushboolean(luaTable->L, value);
+	// stack: parent, key, value
+	lua_settable (luaTable->L, -3);
+
+	stackRestore();
+}
+
+template<> void LuaTableNode::set<float>(const float &value) {
+	stackCreateValue();
+
+	l_push_LuaKey (luaTable->L, key);
+	lua_pushnumber(luaTable->L, static_cast<double>(value));
+	// stack: parent, key, value
+	lua_settable (luaTable->L, -3);
+
+	stackRestore();
+}
+
+template<> void LuaTableNode::set<double>(const double &value) {
+	stackCreateValue();
+
+	l_push_LuaKey (luaTable->L, key);
+	lua_pushnumber(luaTable->L, value);
+	// stack: parent, key, value
+	lua_settable (luaTable->L, -3);
+
+	stackRestore();
+}
+
+template<> void LuaTableNode::set<std::string>(const std::string &value) {
+	stackCreateValue();
+
+	l_push_LuaKey (luaTable->L, key);
+	lua_pushstring(luaTable->L, value.c_str());
+	// stack: parent, key, value
+	lua_settable (luaTable->L, -3);
+
+	stackRestore();
+}
+
+//
+// LuaTable
+//
+LuaTable::~LuaTable() {
+	if (deleteLuaState) {
+		lua_close(L);
+		L = NULL;
+	}
+}
+
+int LuaTable::length() {
+	if ((lua_gettop(L) == 0) || (lua_type (L, -1) != LUA_TTABLE)) {
+		cerr << "Error: cannot query table length. No table on stack!" << endl;
+		abort();
+	}
+	size_t result = 0;
+
+	result = lua_objlen(L, -1);
+
+	return result;
+}
+
+LuaTable& LuaTable::operator= (const LuaTable &luatable) {
+	if (this != &luatable) {
+		if (deleteLuaState && L != luatable.L) {
+			lua_close (luatable.L);
+		}
+		filename = luatable.filename;
+		L = luatable.L;
+		deleteLuaState = luatable.deleteLuaState;
+	}
+
+	return *this;
+}
+
+LuaTable LuaTable::fromFile (const char* _filename) {
+	LuaTable result;
 	
-	int stack_top = lua_gettop(L);
+	result.filename = _filename;
+	result.L = luaL_newstate();
+	result.deleteLuaState = true;
+	luaL_openlibs(result.L);
 
-	if (!get_table_from_path(L, path_str, index)) {
-		cout << "Error: could not find table '" << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << "'." << endl;
-		return result;
+	// Add the directory of _filename to package.path
+	result.addSearchPath(get_file_directory (_filename).c_str());
+
+	// run the file we 
+	if (luaL_dofile (result.L, _filename)) {
+		bail (result.L, "Error running file: ");
 	}
 
-	if (!lua_istable(L, -1)) {
-		cout << "Error: value at " << path_str;
-		if (index > 0)
-			cout << "[" << index << "]";
-		cout << " is not a table!" << endl;
+	return result;
+}
 
-		// clean up the stack
-		lua_pop (L, lua_gettop(L) - stack_top);
-		return result;
+LuaTable LuaTable::fromLuaExpression (const char* lua_expr) {
+	LuaTable result;
+	
+	result.L = luaL_newstate();
+	result.deleteLuaState = true;
+	luaL_openlibs(result.L);
+
+	if (luaL_loadstring (result.L, lua_expr)) {
+		bail (result.L, "Error compiling expression!");
 	}
 
-	lua_pushnil(L);
+	if (lua_pcall (result.L, 0, LUA_MULTRET, 0)) {
+		bail (result.L, "Error running expression!");
+	}
 
-	int i = 1;
-	while (lua_next(L, -2) != 0) {
-		if (lua_isnumber(L, -2)) {
-			// if top value is a number we convert it to a string using lua
-			// facilities. Note: lua_tostring modifies the value and can thus
-			// confuse the call of lua_next()!
-			lua_pushvalue(L, -2);
-			result.push_back(lua_tostring(L, -1));
-			lua_pop(L, 1);
-		} else if (lua_isstring(L, -2)) {
-			result.push_back (lua_tostring(L, -2));
+	return result;
+}
+
+LuaTable LuaTable::fromLuaState (lua_State* L) {
+	LuaTable result;
+	
+	result.L = L;
+	result.deleteLuaState = false;
+
+	return result;
+}
+
+void LuaTable::addSearchPath(const char* path) {
+	if (L == NULL) {
+		cerr << "Error: Cannot add search path: Lua state is not initialized!" << endl;
+		abort();
+	}
+
+	lua_getglobal(L, "package");
+	lua_getfield (L, -1, "path");
+	if (lua_type(L, -1) != LUA_TSTRING) {
+		cerr << "Error: could not get package.path!" << endl;
+		abort();
+	}
+
+	string package_path = lua_tostring (L, -1);
+	package_path = package_path + string(path) + "?.lua;";
+
+	lua_pushstring(L, package_path.c_str());
+	lua_setfield (L, -3, "path");
+
+	lua_pop(L, 2);
+}
+
+std::string LuaTable::serialize() {
+	std::string result;
+
+	int current_top = lua_gettop(L);
+	if (lua_gettop(L) != 0) {
+		if (luaL_loadstring(L, serialize_std)) {
+			bail (L, "Error loading serialization function: ");
 		}
-		else {
-			cout << "Error: values at " << path_str;
-			if (index > 0)
-				cout << "[" << index << "]";
-			cout << " is not a string!" << endl;
 
-			// clean up the stack
-			lua_pop (L, lua_gettop(L) - stack_top);
-			return std::vector<std::string>();
+		if (lua_pcall(L, 0, 0, 0)) {
+			bail (L, "Error compiling serialization function: " );
 		}
 
-		lua_pop(L, 1);
-		i++;
+		lua_getglobal (L, "serialize");
+		assert (lua_isfunction (L, -1));
+		lua_pushvalue (L, -2);
+		if (lua_pcall (L, 1, 1, 0)) {
+			bail (L, "Error while serializing: ");
+		}
+		result = string("return ") + lua_tostring (L, -1);
+	} else {
+		cerr << "Cannot serialize global Lua state!" << endl;
+		abort();
 	}
 
-	// clean up the stack
-	lua_pop (L, lua_gettop(L) - stack_top);
+	lua_pop (L, lua_gettop(L) - current_top);
 
 	return result;
 }

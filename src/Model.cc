@@ -39,11 +39,6 @@ extern "C"
 
 using namespace std;
 
-void bail(lua_State *L, const char *msg){
-	std::cerr << msg << lua_tostring(L, -1) << endl;
-	abort();
-}
-
 std::string find_model_file_by_name (const std::string &model_name) {
 	std::string result;
 
@@ -752,94 +747,64 @@ void MeshupModel::saveModelToFile (const char* filename) {
 	}
 }
 
-Vector3f lua_get_vector3f (lua_State *L, const string &path, int index = -1) {
-	Vector3f result;
+template<> Vector3f LuaTableNode::getDefault<Vector3f>(const Vector3f &default_value) { 
+	Vector3f result = default_value;
 
-	std::vector<double> array = get_array (L, path, index);
-	if (array.size() != 3) {
-		cerr << "Invalid array size for 3d vector variable '" << path << "'." << endl;
-		abort();
+	if (stackQueryValue()) {
+		LuaTable vector_table = LuaTable::fromLuaState (luaTable->L);
+
+		if (vector_table.length() != 3) {
+			std::cerr << "LuaModel Error at " << keyStackToString() << " : invalid 3d vector!" << std::endl;
+			abort();
+		}
+		
+		result[0] = vector_table[1];
+		result[1] = vector_table[2];
+		result[2] = vector_table[3];
 	}
 
-	for (unsigned int i = 0; i < 3; i++) {
-		result[i] = static_cast<float>(array[i]);
-	}
+	stackRestore();
 
 	return result;
 }
 
-Matrix33f lua_get_matrix3f (lua_State *L, const string &path) {
-	Matrix33f result;
+template<> Matrix33f LuaTableNode::getDefault<Matrix33f>(const Matrix33f &default_value) {
+	Matrix33f result = default_value;
 
-	// two ways either as flat array or as a lua table with three columns
-	if (get_length (L, path, -1) == 3) {
-		Vector3f row = lua_get_vector3f (L, path, 1);
-		result(0,0) = row[0];
-		result(0,1) = row[1];
-		result(0,2) = row[2];
+	if (stackQueryValue()) {
+		LuaTable vector_table = LuaTable::fromLuaState (luaTable->L);
+		
+		if (vector_table.length() != 3) {
+			std::cerr << "LuaModel Error at " << keyStackToString() << " : invalid 3d matrix!" << std::endl;
+			abort();
+		}
 
-		row = lua_get_vector3f (L, path, 2);
-		result(1,0) = row[0];
-		result(1,1) = row[1];
-		result(1,2) = row[2];
+		if (vector_table[1].length() != 3
+				|| vector_table[2].length() != 3
+				|| vector_table[3].length() != 3) {
+			std::cerr << "LuaModel Error at " << keyStackToString() << " : invalid 3d matrix!" << std::endl;
+			abort();
+		}
 
-		row = lua_get_vector3f (L, path, 3);
-		result(2,0) = row[0];
-		result(2,1) = row[1];
-		result(2,2) = row[2];
+		result(0,0) = vector_table[1][1];
+		result(0,1) = vector_table[1][2];
+		result(0,2) = vector_table[1][3];
 
-		return result;
+		result(1,0) = vector_table[2][1];
+		result(1,1) = vector_table[2][2];
+		result(1,2) = vector_table[2][3];
+
+		result(2,0) = vector_table[3][1];
+		result(2,1) = vector_table[3][2];
+		result(2,2) = vector_table[3][3];
 	}
 
-	std::vector<double> array = get_array (L, path, -1);
-	if (array.size() != 9) {
-		cerr << "Invalid array size for 3d matrix variable '" << path << "'. Expected 9 but was " << array.size() << endl;
-		abort();
-	}
-
-	for (unsigned int i = 0; i < 9; i++) {
-		result.data()[i] = static_cast<float>(array[i]);
-	}
+	stackRestore();
 
 	return result;
 }
 
-bool lua_read_frame (
-		lua_State *L,
-		const string &frame_path,
-		string &frame_name,
-		string &parent_name,
-		Vector3f &parent_translation,
-		Matrix33f &parent_rotation ) {
-	string path;
-
-	if (!value_exists (L, frame_path + ".name")) {
-		cerr << "Error: required value .name does not exist for frame '" << frame_path << "'!" << endl;
-		return false;
-	}
-	frame_name = get_string (L, frame_path + ".name");
-
-	if (!value_exists (L, frame_path + ".parent")) {
-		cerr << "Error: required value .parent does not exist for frame '" << frame_name << "'!" << endl;
-		return false;
-	}
-	parent_name = get_string (L, frame_path + ".parent");
-
-	parent_translation = Vector3f::Zero();
-	parent_rotation = Matrix33f::Identity();
-	if (value_exists (L, frame_path + ".joint_frame")) {
-		if (value_exists (L, frame_path + ".joint_frame.r")) {
-			parent_translation = lua_get_vector3f (L, frame_path + ".joint_frame.r");
-		}
-
-		if (value_exists (L, frame_path + ".joint_frame.E")) {
-			parent_rotation = lua_get_matrix3f (L, frame_path + ".joint_frame.E");
-		}
-	}
-
-	return true;
-}
-
+/*
 bool lua_read_visual_info (
 		lua_State *L,
 		const string &visual_path,
@@ -874,145 +839,60 @@ bool lua_read_visual_info (
 
 	return true;
 }
+*/
 
 bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
-	lua_State *L;
-	L = luaL_newstate();
-	luaL_openlibs(L);
-
-	if (luaL_loadfile(L, filename) || lua_pcall (L, 0, 1, 0)) {
-		cerr <<  "Error running file: ";
-		std::cerr << lua_tostring(L, -1) << endl;
-		if (strict)
-			abort();
-
-		return false;
-	}
+	LuaTable model_table = LuaTable::fromFile (filename);
 
 	clear();
 
-	// configuration
-	if (value_exists (L, "configuration.axis_front")) {
-		configuration.axis_front = lua_get_vector3f (L, "configuration.axis_front");
-	}
-	if (value_exists (L, "configuration.axis_up")) {
-		configuration.axis_up = lua_get_vector3f (L, "configuration.axis_up");
-	}
-	if (value_exists (L, "configuration.axis_right")) {
-		configuration.axis_right = lua_get_vector3f (L, "configuration.axis_right");
-	}
-	if (value_exists (L, "configuration.rotation_order")) {
-		Vector3f rotation_order = lua_get_vector3f (L, "configuration.rotation_order");
-		configuration.rotation_order[0] = static_cast<int>(rotation_order[0]);
-		configuration.rotation_order[1] = static_cast<int>(rotation_order[1]);
-		configuration.rotation_order[2] = static_cast<int>(rotation_order[2]);
-	}
+	configuration.axis_front = model_table["configuration"]["axis_front"].getDefault(Vector3f (1.f, 0.f, 0.f));
+	configuration.axis_up = model_table["configuration"]["axis_up"].getDefault(Vector3f (0.f, 1.f, 0.f));
+	configuration.axis_right = model_table["configuration"]["axis_right"].getDefault(Vector3f (0.f, 0.f, 1.f));
 
 	configuration.init();
-	// cout << "configuration.axes_rotation = " << endl << configuration.axes_rotation << endl;
 
 	// frames
-	vector<string> frame_keys = get_keys (L, "frames");
+	int frame_count = model_table["frames"].length();
 
-	for (unsigned int i = 0; i < frame_keys.size(); i++) {
-		string parent_frame;
-		string frame_name;
-		Vector3f parent_translation;
-		Matrix33f parent_rotation;
-
-		ostringstream frame_path;
-		frame_path << "frames." << frame_keys[i];
-
-		if (!lua_read_frame (
-					L,
-					frame_path.str(),
-					frame_name,
-					parent_frame,
-					parent_translation,
-					parent_rotation)) {
-			cerr << "Error reading frame " << frame_keys[i] << "." << endl;
-			if (strict)
-				abort();
-
-			return false;
-		}
+	for (int i = 1; i <= frame_count; i++) {
+		string parent_frame = model_table["frames"][i]["parent"].get<std::string>();
+		string frame_name = model_table["frames"][i]["name"].get<std::string>();
+;
+		Vector3f parent_translation = model_table["frames"][i]["joint_frame"]["r"].getDefault<Vector3f>(Vector3f (0.f, 0.f, 0.f));
+		Matrix33f parent_rotation = model_table["frames"][i]["joint_frame"]["E"].getDefault<Matrix33f>(Matrix33f::Identity());
 
 		Matrix44f parent_transform = Matrix44f::Identity();
 		parent_transform.block<3,3>(0,0) = configuration.axes_rotation.transpose() *parent_rotation.transpose() * configuration.axes_rotation;
 		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 		addFrame (parent_frame, frame_name, parent_transform);
 
-		string points_path = frame_path.str() + ".points";
-		if (value_exists (L, points_path)) {
-			vector<string> points_keys = get_keys (L, points_path);
+		// Read points
+		vector<LuaKey> point_keys = model_table["frames"][i]["points"].keys();
 
-			for (unsigned int j = 0; j < points_keys.size(); j++) {
-				string point_path = points_path + string (".") + string (points_keys[j]);
-				string coordinates_path = point_path + string (".") + string ("coordinates");
-				string color_path = point_path + string (".") + string ("color");
-				string line_path = point_path + string (".") + string ("draw_line");
+		for (vector<LuaKey>::iterator point_iter = point_keys.begin(); point_iter != point_keys.end(); point_iter++) {
+			Vector3f coordinates = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["coordinates"];
+			Vector3f color = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["color"].getDefault(Vector3f (1.f, 1.f, 1.f));
+			bool draw_line = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["draw_line"].getDefault(false);
 
-				if (!value_exists (L, coordinates_path)) {
-					std::cerr << "Error: field 'coordinates' for point '" << points_keys[j] << "' is not defined!" << std::endl;
-					abort();
-				}
-				Vector3f coordinates = lua_get_vector3f (L, coordinates_path);
-
-				Vector3f color (1.f, 1.f, 1.f);
-				if (value_exists (L, color_path)) {
-					color = lua_get_vector3f (L, color_path);
-				}
-
-				bool draw_line = false;
-				if (value_exists (L, line_path)) {
-					draw_line = get_bool (L, line_path);
-				}
-				addPoint (points_keys[j],
-						frame_name,
-						coordinates,
-						color,
-						draw_line);
-			}
+			addPoint (point_iter->string_value, frame_name, coordinates, color, draw_line);
 		}
 
-		string visuals_path = frame_path.str() + ".visuals";
-		if (!value_exists (L, visuals_path)) {
-			continue;
-		} else {
-			vector<string> visuals_keys = get_keys (L, visuals_path);
+		// Read visuals
+		int visual_count = model_table["frames"][i]["visuals"].length();
 
-			for (unsigned int j = 0; j < visuals_keys.size(); j++) {
-				string visual_path = visuals_path + string (".") + string(visuals_keys[j]);
+		for (int vi = 1; vi <= visual_count; vi++) {
+			string segment_name = model_table["frames"][i]["visuals"][vi]["name"].get<std::string>();
+			Vector3f dimensions = model_table["frames"][i]["visuals"][vi]["dimensions"].getDefault (Vector3f (0.f, 0.f, 0.f));
+;
+			Vector3f scale = model_table["frames"][i]["visuals"][vi]["scale"].getDefault (Vector3f (1.f, 1.f, 1.f));
+			Vector3f color = model_table["frames"][i]["visuals"][vi]["color"].getDefault (Vector3f (1.f, 1.f, 1.f));
+			
+			string mesh_filename = model_table["frames"][i]["visuals"][vi]["src"].get<std::string>();
+			Vector3f translate = model_table["frames"][i]["visuals"][vi]["translate"].getDefault (Vector3f (0.f, 0.f, 0.f));
+			Vector3f mesh_center = model_table["frames"][i]["visuals"][vi]["mesh_center"].getDefault (Vector3f (0.f, 0.f, 0.f));
 
-				string segment_name;
-				Vector3f dimensions (0.f, 0.f, 0.f);
-				Vector3f scale (0.f, 0.f, 0.f);
-				Vector3f color (1.f, 1.f, 1.f);
-				string mesh_filename;
-				Vector3f translate (0.f, 0.f, 0.f);
-				Vector3f mesh_center (1.f/0.f, 1.f/0.f, 1.f/0.f);
-
-				if (!lua_read_visual_info (
-							L,
-							visual_path,
-							segment_name,
-							dimensions,
-							scale,
-							color,
-							mesh_filename,
-							translate,
-							mesh_center)) {
-					cerr << "Error reading mesh information " << visual_path << "." << endl;
-
-					if (strict)
-						abort();
-
-					return false;
-				}
-
-				addSegment (frame_name, segment_name, dimensions,
-						scale, color, mesh_filename, translate, mesh_center);
-			}
+			addSegment (frame_name, segment_name, dimensions, scale, color, mesh_filename, translate, mesh_center);
 		}
 	}
 

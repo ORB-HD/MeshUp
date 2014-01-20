@@ -151,19 +151,20 @@ The Mesh Information Table can use the following attributes:
 >	will draw the mesh twice as big as its default size. Note that dimensions
 >	takes precedence over scale.
 	
-*dimensions* (3-d vector, default:  {1., 1., 1.})
+*dimensions* (3-d vector, default:  {0., 0., 0.})
 >	Scales the mesh so that its absolute size (more precisely its bounding
 >	box) is that of dimensions. Note that dimensions takes precedence over
->	scale.
+>	scale. Once it is unequal to {0., 0., 0.} it will be used instead of the
+>	definition of scale.
 
 *color* (3-d vector, default:  {1., 1., 1.})
 > The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
 >	and white is (1., 1., 1.).
 
-*translate* (3-d vector, default:  {1., 1., 1.})
+*translate* (3-d vector, default:  {0., 0., 0.})
 > Shifts the whole mesh by a given vector.
 
-*mesh_center* (3-d vector, default:  {1., 1., 1.})
+*mesh_center* (3-d vector, default:  {0., 0., 0.})
 >	Shifts the whole mesh so that the center of its bounding box is at the
 >	position defined by mesh_center.	
 
