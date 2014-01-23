@@ -199,6 +199,10 @@ The Point Information Table has the following attributes:
 >	Specifies whether a line from the frame origin to the point should be
 >	drawn.
 
+*line_width* (number, default:  1.)
+>	Specifies the width of the line in pixels. Note that the width range
+>	may be limited by the graphics hardware and/or driver. (Added in v0.3.14)
+
 <a id="animation-files"></a>
 # Animation Files
 

@@ -124,7 +124,8 @@ struct Point {
 		frame (FramePtr()),
 		coordinates (0.f, 0.f, 0.f),
 		color (1.f, 0.f, 0.f),
-		draw_line (false)
+		draw_line (false),
+		line_width (1.f)
 	{}
 
 	std::string name;
@@ -132,6 +133,7 @@ struct Point {
 	Vector3f coordinates;
 	Vector3f color;
 	bool draw_line;
+	float line_width;
 };
 
 struct MeshupModel {
@@ -234,7 +236,8 @@ struct MeshupModel {
 			const std::string &frame_name,
 			const Vector3f &coords,
 			const Vector3f &color,
-			const bool draw_line
+			const bool draw_line,
+			const float line_width = 1.f
 			);
 
 	void resetPoses();

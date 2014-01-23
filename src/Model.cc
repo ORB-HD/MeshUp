@@ -309,7 +309,8 @@ void MeshupModel::addPoint (
 		const std::string &frame_name,
 		const Vector3f &coords,
 		const Vector3f &color,
-		const bool draw_line
+		const bool draw_line,
+		const float line_width
 		) {
 	Point point;
 	point.name = name;
@@ -317,6 +318,7 @@ void MeshupModel::addPoint (
 	point.coordinates = configuration.axes_rotation.transpose() * coords;
 	point.color = color;
 	point.draw_line = draw_line;
+	point.line_width = line_width;
 
 	for (unsigned int i = 0; i < points.size(); i++) {
 		if (points[i].name == name) {
@@ -516,6 +518,12 @@ void MeshupModel::drawPoints() {
 		glColor3fv (points[i].color.data());
 
 		if (points[i].draw_line) {
+			float line_range[2];
+			glGetFloatv (GL_ALIASED_LINE_WIDTH_RANGE, line_range);
+			if (points[i].line_width < line_range[0] || points[i].line_width > line_range[1]) {
+				cerr << "Warning: Only line widths within range [" << line_range[0] << ", " << line_range[1] << "] are supported by the graphics driver! (Point '" << points[i].name << "' has line_width = " << points[i].line_width << endl;
+			}
+			glLineWidth (points[i].line_width);
 			glBegin (GL_LINES);
 			glVertex3fv (frame_origin.data());
 			glVertex3fv (point_location.data());
@@ -874,8 +882,9 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			Vector3f coordinates = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["coordinates"];
 			Vector3f color = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["color"].getDefault(Vector3f (1.f, 1.f, 1.f));
 			bool draw_line = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["draw_line"].getDefault(false);
+			float line_width = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["line_width"].getDefault(1.f);
 
-			addPoint (point_iter->string_value, frame_name, coordinates, color, draw_line);
+			addPoint (point_iter->string_value, frame_name, coordinates, color, draw_line, line_width);
 		}
 
 		// Read visuals
