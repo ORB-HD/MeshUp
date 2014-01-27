@@ -217,7 +217,6 @@ void MeshupModel::addFrame (
 
 void MeshupModel::addSegment (
 		const std::string &frame_name,
-		const std::string &segment_name,
 		const Vector3f &dimensions,
 		const Vector3f &scale,
 		const Vector3f &color,
@@ -227,7 +226,6 @@ void MeshupModel::addSegment (
 	Segment segment;
 
 	// cout << "addSegment( " << frame_name << "," << endl
-	// 	<< "  " << segment_name << "," << endl
 	// 	<< "  " << dimensions.transpose() << "," << endl
 	// 	<< "  " << scale.transpose() << "," << endl
 	// 	<< "  " << color.transpose() << "," << endl
@@ -235,9 +233,6 @@ void MeshupModel::addSegment (
 	// 	<< "  " << translate.transpose() << "," << endl
 	// 	<< "  " << mesh_center.transpose() << ")" << endl << endl;
 
-	string sanitized_segment_name = sanitize_name(segment_name);
-
-	segment.name = sanitized_segment_name;
 	segment.dimensions = configuration.axes_rotation.transpose() * dimensions;
 
 	//~ // make sure that the dimensions are all positive
@@ -812,43 +807,6 @@ template<> Matrix33f LuaTableNode::getDefault<Matrix33f>(const Matrix33f &defaul
 	return result;
 }
 
-/*
-bool lua_read_visual_info (
-		lua_State *L,
-		const string &visual_path,
-		std::string &segment_name,
-		Vector3f &dimensions,
-		Vector3f &scale,
-		Vector3f &color,
-		std::string &mesh_filename,
-		Vector3f &translate,
-		Vector3f &mesh_center) {
-
-	if (value_exists (L, visual_path + ".name"))
-		segment_name = get_string (L, visual_path + ".name");
-
-	if (value_exists (L, visual_path + ".dimensions"))
-		dimensions = lua_get_vector3f (L, visual_path + ".dimensions");
-
-	if (value_exists (L, visual_path + ".scale"))
-		scale = lua_get_vector3f (L, visual_path + ".scale");
-
-	if (value_exists (L, visual_path + ".color"))
-		color = lua_get_vector3f (L, visual_path + ".color");
-
-	if (value_exists (L, visual_path + ".translate"))
-		translate = lua_get_vector3f (L, visual_path + ".translate");
-
-	if (value_exists (L, visual_path + ".mesh_center"))
-		mesh_center = lua_get_vector3f (L, visual_path + ".mesh_center");
-
-	if (value_exists (L, visual_path + ".src"))
-		mesh_filename = get_string (L, visual_path + ".src");
-
-	return true;
-}
-*/
-
 bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 	LuaTable model_table = LuaTable::fromFile (filename);
 
@@ -891,7 +849,6 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 		int visual_count = model_table["frames"][i]["visuals"].length();
 
 		for (int vi = 1; vi <= visual_count; vi++) {
-			string segment_name = model_table["frames"][i]["visuals"][vi]["name"].get<std::string>();
 			Vector3f dimensions = model_table["frames"][i]["visuals"][vi]["dimensions"].getDefault (Vector3f (0.f, 0.f, 0.f));
 ;
 			Vector3f scale = model_table["frames"][i]["visuals"][vi]["scale"].getDefault (Vector3f (1.f, 1.f, 1.f));
@@ -901,7 +858,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			Vector3f translate = model_table["frames"][i]["visuals"][vi]["translate"].getDefault (Vector3f (0.f, 0.f, 0.f));
 			Vector3f mesh_center = model_table["frames"][i]["visuals"][vi]["mesh_center"].getDefault (Vector3f (0.f, 0.f, 0.f));
 
-			addSegment (frame_name, segment_name, dimensions, scale, color, mesh_filename, translate, mesh_center);
+			addSegment (frame_name, dimensions, scale, color, mesh_filename, translate, mesh_center);
 		}
 	}
 

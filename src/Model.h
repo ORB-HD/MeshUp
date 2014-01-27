@@ -217,7 +217,6 @@ struct MeshupModel {
 
 	void addSegment (
 			const std::string &frame_name,
-			const std::string &segment_name,
 			const Vector3f &dimensions,
 			const Vector3f &scale,
 			const Vector3f &color,
