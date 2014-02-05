@@ -73,7 +73,6 @@ Example:
         axis_front = { 1, 0, 0 },
         axis_up    = { 0, 0, 1 },
         axis_right = { 0, -1, 0 },
-        rotation_order = { 2, 1, 0},
       },
     
       frames = {
