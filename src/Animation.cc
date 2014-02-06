@@ -78,7 +78,7 @@ void TransformInfo::applyColumnValue (const ColumnInfo &column_info, float value
 			default: cerr << "Error: invalid axis type!"; abort();	
 		}
 	} else if (column_info.type == ColumnInfo::TransformTypeRotation) {
-		rotation_quaternion *= SimpleMath::GL::Quaternion::fromGLRotate(value, axis[0], axis[1], axis[2]);
+		rotation_quaternion = SimpleMath::GL::Quaternion::fromGLRotate(value, axis[0], axis[1], axis[2]) * rotation_quaternion; 
 	}
 }
 

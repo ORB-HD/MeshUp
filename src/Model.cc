@@ -412,7 +412,6 @@ void MeshupModel::drawFrameAxes() {
 		}
 		glPushMatrix();
 
-
 		Matrix44f transform_matrix = axes_rotation_matrix * frame_iter->second->pose_transform;
 		glMultMatrixf (transform_matrix.data());
 
