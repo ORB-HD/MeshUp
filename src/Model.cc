@@ -855,7 +855,7 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			
 			string mesh_filename = model_table["frames"][i]["visuals"][vi]["src"].get<std::string>();
 			Vector3f translate = model_table["frames"][i]["visuals"][vi]["translate"].getDefault (Vector3f (0.f, 0.f, 0.f));
-			Vector3f mesh_center = model_table["frames"][i]["visuals"][vi]["mesh_center"].getDefault (Vector3f (0.f, 0.f, 0.f));
+			Vector3f mesh_center = model_table["frames"][i]["visuals"][vi]["mesh_center"].getDefault (Vector3f (1./0.f, 1./0.f, 1./0.f));
 
 			addSegment (frame_name, dimensions, scale, color, mesh_filename, translate, mesh_center);
 		}
