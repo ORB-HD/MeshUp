@@ -98,7 +98,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawPoints->setChecked (glWidget->draw_points);
 
 	// camera controls
-	QRegExp	coord_expr ("^\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*,\\s*-?\\d+(\\.|\\.\\d+)?\\s*$");
+	QRegExp	coord_expr ("^\\s*-?\\d?(\\.|\\.\\d+)?\\s*,\\s*-?\\d?(\\.|\\.\\d+)?\\s*,\\s*-?\\d?(\\.|\\.\\d+)?\\s*$");
 	QRegExpValidator *coord_validator_eye = new QRegExpValidator (coord_expr, lineEditCameraEye);
 	QRegExpValidator *coord_validator_center = new QRegExpValidator (coord_expr, lineEditCameraCenter);
 	lineEditCameraEye->setValidator (coord_validator_eye);
@@ -154,6 +154,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
 	connect (glWidget, SIGNAL (camera_changed()), this, SLOT (camera_changed()));
+	connect (lineEditCameraEye, SIGNAL (editingFinished()), this, SLOT (update_camera()));
+	connect (lineEditCameraCenter, SIGNAL (editingFinished()), this, SLOT (update_camera()));
 
 	connect (pushButtonUpdateCamera, SIGNAL (clicked()), this, SLOT (update_camera()));
 
@@ -367,6 +369,7 @@ void MeshupApp::update_camera() {
 
 	glWidget->setCameraPoi(poi);
 	glWidget->setCameraEye(eye);
+	glWidget->updateSphericalCoordinates();
 }
 
 void MeshupApp::toggle_play_animation (bool status) {
