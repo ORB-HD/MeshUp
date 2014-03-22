@@ -38,20 +38,10 @@ class GLWidget : public QGLWidget
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		Vector3f getCameraPoi() {
-			return poi;
-		}
-		Vector3f getCameraEye() {
-			return eye;
-		}
-
-		void setCameraPoi (const Vector3f values) {
-			poi = values;
-		}
-
-		void setCameraEye (const Vector3f values) {
-			eye = values;
-		}
+		Vector3f getCameraPoi();
+		Vector3f getCameraEye();
+		void setCameraPoi (const Vector3f values);
+		void setCameraEye (const Vector3f values);
 
 		void updateSphericalCoordinates();
 

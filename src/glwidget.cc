@@ -182,6 +182,34 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 	return result;
 }
 
+Vector3f GLWidget::getCameraPoi() {
+	if (model_data)
+		return model_data->configuration.axes_rotation * poi;
+
+	return poi;
+}
+
+Vector3f GLWidget::getCameraEye() {
+	if (model_data)
+		return model_data->configuration.axes_rotation * eye;
+
+	return eye;
+}
+
+void GLWidget::setCameraPoi (const Vector3f values) {
+	if (model_data)
+		poi = model_data->configuration.axes_rotation.transpose() * values;
+	else
+		poi = values;
+}
+
+void GLWidget::setCameraEye (const Vector3f values) {
+	if (model_data)
+		eye = model_data->configuration.axes_rotation.transpose() * values;
+	else
+		eye = values;
+}
+
 /****************
  * Slots
  ****************/
