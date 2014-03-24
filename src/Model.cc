@@ -13,6 +13,7 @@
 
 #include "SimpleMath/SimpleMathGL.h"
 #include "string_utils.h"
+#include "meshup_config.h"
 
 #include <cstdlib>
 #include <cstdio>
@@ -43,8 +44,7 @@ std::string find_model_file_by_name (const std::string &model_name) {
 	std::string result;
 
 	std::vector<std::string> paths;
-	paths.push_back("./");
-	paths.push_back("/");
+	paths.push_back("");
 	paths.push_back("./models/");
 
 	if (getenv ("MESHUP_PATH")) {
@@ -62,13 +62,13 @@ std::string find_model_file_by_name (const std::string &model_name) {
 
 	paths.push_back("/usr/local/share/meshup/models/");
 	paths.push_back("/usr/share/meshup/models/");
+	paths.push_back(std::string(MESHUP_INSTALL_PREFIX) + "/meshup/");
 
 	std::vector<std::string>::iterator iter = paths.begin();
 	string model_filename;
 	for (iter; iter != paths.end(); iter++) {
 		model_filename = *iter + model_name;
 
-//		cout << "checking " << model_filename << endl;
 		if (boost::filesystem::is_regular_file(model_filename))
 			break;
 
@@ -94,8 +94,7 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 	std::string result;
 
 	std::vector<std::string> paths;
-	paths.push_back("./");
-	paths.push_back("/");
+	paths.push_back("");
 
 	if (getenv ("MESHUP_PATH")) {
 		std::string env_meshup_dir (getenv("MESHUP_PATH"));
@@ -109,17 +108,16 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 		}
 	}
 
-	paths.push_back("/usr/local/share/meshup/meshes/");
-	paths.push_back("/usr/share/meshup/meshes/");
+	paths.push_back("/usr/local/share/meshup/");
+	paths.push_back("/usr/share/meshup/");
+	paths.push_back(std::string(MESHUP_INSTALL_PREFIX) + "/meshup/");
 
 	std::vector<std::string>::iterator iter = paths.begin();
 	for (iter; iter != paths.end(); iter++) {
 		std::string test_path = *iter;
 
-		if (!boost::filesystem::is_regular_file(test_path + filename))
-			continue;
-
-		break;
+		if (boost::filesystem::is_regular_file(test_path + filename))
+			break;
 	}
 
 	if (iter != paths.end())
@@ -127,7 +125,7 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 
 	cerr << "Could not find mesh file " << filename << ". Search path: " << endl;
 	for (iter = paths.begin(); iter != paths.end(); iter++) {
-		cout << "  " << *iter << endl;
+		cout << "  \"" << *iter << "\"" << endl;
 	}
 	abort();
 
