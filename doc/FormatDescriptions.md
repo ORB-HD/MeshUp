@@ -168,7 +168,20 @@ The Mesh Information Table can use the following attributes:
 >	position defined by mesh_center.	
 
 *src* (string)
->  The path to the mesh file, i.e. a path to an OBJ file.
+>  The path to the mesh file, i.e. a path to an OBJ file. If the src string
+>  is "mymesh.obj" it will search in the following paths from top to
+>  bottom:
+>
+> * ```./mymesh.obj```
+> * ```/mymesh.obj```
+> * ```${MESHUP_PATH}/mymesh.obj```
+> * ```${INSTALL_PREFIX}/mymesh.obj```
+> * ```${INSTALL_PREFIX}/meshes/mymesh.obj```
+> * ```/usr/local/share/meshup/meshes/mymesh.obj```
+> * ```/usr/share/meshup/meshes/mymesh.obj```
+>
+> ```${INSTALL_PREFIX}``` is the install prefix specified via the CMake
+> variables ```CMAKE_INSTALL_PREFIX```.
 
 ## Point Information Table
 
@@ -243,15 +256,24 @@ COLUMN section.
 
 ## DATA section
 
-The DATA section has to be specified as multi-column data of the raw values
+The ```DATA``` section has to be specified as multi-column data of the raw values
 for which each column is separated by a "," (comma) and at least one
 whitespace (space or tab).
 
-The section either starts with "DATA:" and directly after it the data or
-alternatively, one can use "DATA_FROM: <some_path_to_filename>" to load the
+### DATA_FROM
+
+The section either starts with ```DATA:``` and directly after it the data or
+alternatively, one can use ```DATA_FROM: <some/path/to/filename.cs>``` to load the
 actual data from another data file. This can be useful when wanting to keep
 the actual data as a clear .csv file or if one wants to re-use the header
 of a file.
+
+By default DATA_FROM will load the data file from the same
+directory as the original file. However if the file should be loaded from
+n absolute path you must start the path with a "/", e.g. ```DATA_FROM:
+/some/absolute/path/data.csv```.
+
+## Examples
 
 Meshup comes with a set of example files, e.g. see sampleanimation.txt for
 an example.
