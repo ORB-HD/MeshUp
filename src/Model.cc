@@ -8,6 +8,7 @@
  */
 
 #include "GL/glew.h"
+#include "meshup_config.h"
 
 #include "Model.h"
 
@@ -60,6 +61,7 @@ std::string find_model_file_by_name (const std::string &model_name) {
 		}
 	}
 
+	paths.push_back(string(MESHUP_INSTALL_PREFIX) + "/share/meshup/models/");
 	paths.push_back("/usr/local/share/meshup/models/");
 	paths.push_back("/usr/share/meshup/models/");
 
@@ -109,6 +111,8 @@ std::string find_mesh_file_by_name (const std::string &filename) {
 		}
 	}
 
+	paths.push_back(string(MESHUP_INSTALL_PREFIX) + "/share/meshup/");
+	paths.push_back(string(MESHUP_INSTALL_PREFIX) + "/share/meshup/meshes/");
 	paths.push_back("/usr/local/share/meshup/meshes/");
 	paths.push_back("/usr/share/meshup/meshes/");
 
