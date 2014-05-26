@@ -11,6 +11,13 @@ SET ( TESTS_SRCS
 	FrameTests.cc
 	QuaternionTests.cc
 	StringUtilsTests.cc
+
+	../src/Animation.cc
+	../src/Model.cc
+	../src/MeshVBO.cc
+	../src/objloader.cc
+	../src/Curve.cc
+	../src/luatables/luatables.cc
 	)
 
 FIND_PACKAGE (UnitTest++)
@@ -34,7 +41,10 @@ IF ( UNITTEST++_FOUND )
 
 	TARGET_LINK_LIBRARIES ( meshuptests
 			${UNITTEST++_LIBRARY}
-			MeshUp
+			${OPENGL_LIBRARIES}
+			${Boost_LIBRARIES}
+			lua-static
+			glew
 		)
 		
 	OPTION (RUN_AUTOMATIC_TESTS "Perform automatic tests after compilation?" OFF)
