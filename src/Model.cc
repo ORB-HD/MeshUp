@@ -827,12 +827,12 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 	for (int i = 1; i <= frame_count; i++) {
 		string parent_frame = model_table["frames"][i]["parent"].get<std::string>();
 		string frame_name = model_table["frames"][i]["name"].get<std::string>();
-;
+
 		Vector3f parent_translation = model_table["frames"][i]["joint_frame"]["r"].getDefault<Vector3f>(Vector3f (0.f, 0.f, 0.f));
 		Matrix33f parent_rotation = model_table["frames"][i]["joint_frame"]["E"].getDefault<Matrix33f>(Matrix33f::Identity());
 
 		Matrix44f parent_transform = Matrix44f::Identity();
-		parent_transform.block<3,3>(0,0) = configuration.axes_rotation.transpose() *parent_rotation.transpose() * configuration.axes_rotation;
+		parent_transform.block<3,3>(0,0) = configuration.axes_rotation.transpose() * parent_rotation * configuration.axes_rotation;
 		parent_transform.block<1,3>(3,0) = (configuration.axes_rotation.transpose() * parent_translation).transpose();
 		addFrame (parent_frame, frame_name, parent_transform);
 

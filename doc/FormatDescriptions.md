@@ -118,7 +118,7 @@ hierarchy. The following fields are used by MeshUp (everything else is ignored):
 >      r (3-d vector, default: (0., 0., 0.))
 >      E (3x3 matrix, default: identity matrix)
 >   
->  for which r is the translation and E the rotation of the joint frame
+>  for which r is the translation and E the rotation of the joint frame.
 
 *visuals* (optional, type: array of Mesh Information Tables):
 >   Specification of all meshes that are attached to the current frame.
