@@ -256,7 +256,6 @@ void MeshupModel::addSegment (
 		Vector3f rotation_axis = Vector3f (rotate[0], rotate[1], rotate[2]) / sinf (rotation_angle) * 2.;
 		rotation_axis = (configuration.axes_rotation.transpose() * rotation_axis).normalize();
 		segment.rotate = Quaternion::fromGLRotate (rotation_angle * 180. / M_PI, rotation_axis[0], rotation_axis[1], rotation_axis[2]);
-		cout << segment.rotate.toGLMatrix() << endl;
 	}
 
 	// check whether we have the mesh, if not try to load it
