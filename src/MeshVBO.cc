@@ -1,8 +1,7 @@
 /*
- * MeshUp - A visualization tool for multi-body systems based on skeletal
- * animation and magic.
+ * QtGLAppBase - Simple Qt Application to get started with OpenGL stuff.
  *
- * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -30,11 +29,9 @@ MeshVBO::MeshVBO (const MeshVBO& mesh)
 	vbo_id = 0;
 	started = mesh.started;
 	smooth_shading = mesh.smooth_shading;
-	have_normals = mesh.have_normals;
-	have_colors = have_colors;
-	buffer_size = 0;
-	normal_offset = 0;
-	color_offset = 0;
+	buffer_size = mesh.buffer_size;
+	normal_offset = mesh.normal_offset;
+	color_offset = mesh.color_offset;
 	bbox_min = mesh.bbox_min;
 	bbox_max = mesh.bbox_max;
 
@@ -53,8 +50,6 @@ MeshVBO& MeshVBO::operator=(const MeshVBO& mesh)
 		vbo_id = 0;
 		started = mesh.started;
 		smooth_shading = mesh.smooth_shading;
-		have_normals = mesh.have_normals;
-		have_colors = have_colors;
 		buffer_size = 0;
 		normal_offset = 0;
 		color_offset = 0;
@@ -93,14 +88,13 @@ void MeshVBO::end() {
 }
 
 unsigned int MeshVBO::generate_vbo() {
-	if (normals.size() == 0)
-		have_normals = false;
-	else
+	bool have_normals = false;
+	bool have_colors = false;
+		
+	if (normals.size() != 0)
 		have_normals = true;
 
-	if (colors.size() == 0)
-		have_colors = false;
-	else
+	if (colors.size() != 0)
 		have_colors = true;
 
 	assert (vbo_id == 0);
@@ -115,7 +109,7 @@ unsigned int MeshVBO::generate_vbo() {
 	// initialize the buffer object
 	glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
-	buffer_size = sizeof(float) * 3 * vertices.size();
+	buffer_size = sizeof(float) * 4 * vertices.size();
 	normal_offset = 0;
 	color_offset = 0;
 	
@@ -125,7 +119,7 @@ unsigned int MeshVBO::generate_vbo() {
 	}
 	if (have_colors) {
 		color_offset = buffer_size;
-		buffer_size += sizeof(float) * 3 * colors.size();
+		buffer_size += sizeof(float) * 4 * colors.size();
 	}
 
 	glBufferData (GL_ARRAY_BUFFER, buffer_size, NULL, GL_STATIC_DRAW);
@@ -133,13 +127,13 @@ unsigned int MeshVBO::generate_vbo() {
 	// fill the data
 	
 	float *raw_buffer = (float*) glMapBuffer (GL_ARRAY_BUFFER, GL_READ_WRITE);
-	memcpy (&(raw_buffer[0]), &vertices[0], sizeof(float) * 3 * vertices.size());
+	memcpy (&(raw_buffer[0]), &vertices[0], sizeof(float) * 4 * vertices.size());
 
 	if (have_normals)
-		memcpy (&(raw_buffer[3 * vertices.size()]), &normals[0], sizeof(float) * 3 * normals.size());
+		memcpy (&(raw_buffer[4 * vertices.size()]), &normals[0], sizeof(float) * 3 * normals.size());
 
 	if (have_colors)
-		memcpy (&(raw_buffer[3 * (vertices.size() + normals.size())]), &colors[0], sizeof(float) * 3 * colors.size());
+		memcpy (&(raw_buffer[(4 * vertices.size() + 3 * normals.size())]), &colors[0], sizeof(float) * 4 * colors.size());
 
 	glUnmapBuffer (GL_ARRAY_BUFFER);
 
@@ -164,7 +158,7 @@ void MeshVBO::debug_vbo () {
 	float *raw_buffer =(float*) glMapBuffer (GL_ARRAY_BUFFER, GL_READ_ONLY);
 	cout << "vertices = " << endl;
 	for (unsigned int i=0; i < vertices.size(); i++) {
-		cout << "  [" << i << "] = " << raw_buffer[i*3] << ", " << raw_buffer[i*3 + 1] << ", " << raw_buffer[i*3+2] << endl;
+		cout << "  [" << i << "] = " << raw_buffer[i*4] << ", " << raw_buffer[i*4 + 1] << ", " << raw_buffer[i*4+2] << endl;
 	}
 
 	cout << "normals = " << endl;
@@ -174,7 +168,7 @@ void MeshVBO::debug_vbo () {
 
 	cout << "colors = " << endl;
 	for (unsigned int i=vertices.size() + normals.size(); i < vertices.size() + normals.size() + colors.size(); i++) {
-		cout << "  [" << i << "] = " << raw_buffer[i*3] << ", " << raw_buffer[i*3 + 1] << ", " << raw_buffer[i*3+2] << endl;
+		cout << "  [" << i << "] = " << raw_buffer[i*4] << ", " << raw_buffer[i*4 + 1] << ", " << raw_buffer[i*4+2] << endl;
 	}
 
 	glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -182,11 +176,12 @@ void MeshVBO::debug_vbo () {
 	glBindBuffer (GL_ARRAY_BUFFER, 0);
 }
 
-void MeshVBO::addVertice (float x, float y, float z) {
-	Vector3f vertex;
+void MeshVBO::addVertex4f (float x, float y, float z, float w) {
+	Vector4f vertex;
 	vertex[0] = x;
 	vertex[1] = y;
 	vertex[2] = z;
+	vertex[3] = w;
 	vertices.push_back(vertex);
 
 	bbox_max[0] = max (vertex[0], bbox_max[0]);
@@ -198,8 +193,16 @@ void MeshVBO::addVertice (float x, float y, float z) {
 	bbox_min[2] = min (vertex[2], bbox_min[2]);
 }
 
-void MeshVBO::addVerticefv (float vert[3]) {
-	addVertice (vert[0], vert[1], vert[2]);
+void MeshVBO::addVertex4fv (const float vert[4]) {
+	addVertex4f (vert[0], vert[1], vert[2], vert[3]);
+}
+
+void MeshVBO::addVertex3fv (const float vert[3]) {
+	addVertex4f (vert[0], vert[1], vert[2], 1.f);
+}
+
+void MeshVBO::addVertex3f (float x, float y, float z) {
+	addVertex4f (x, y, z, 1.0f);
 }
 
 void MeshVBO::addNormal (float x, float y, float z) {
@@ -210,22 +213,30 @@ void MeshVBO::addNormal (float x, float y, float z) {
 	normals.push_back (normal);
 }
 
-void MeshVBO::addNormalfv (float normal[3]) {
+void MeshVBO::addNormalfv (const float normal[3]) {
 	addNormal (normal[0], normal[1], normal[2]);
 }
 
-void MeshVBO::addColor (float r, float g, float b) {
-	Vector3f color;
+void MeshVBO::addColor4f (float r, float g, float b, float a) {
+	Vector4f color;
 	color[0] = r;
 	color[1] = g;
 	color[2] = b;
+	color[3] = a;
 	colors.push_back (color);
 }
 
-void MeshVBO::addColorfv (float color[3]) {
-	addColor (color[0], color[1], color[2]);
+void MeshVBO::addColor4fv (const float color[4]) {
+	addColor4f (color[0], color[1], color[2], color[3]);
 }
 
+void MeshVBO::addColor3f (float r, float g, float b) {
+	addColor4f (r, g, b, 1.0f);
+}
+
+void MeshVBO::addColor3fv (const float color[3]) {
+	addColor4f (color[0], color[1], color[2], 1.f);
+}
 void MeshVBO::draw(unsigned int mode) {
 	if (vbo_id == 0)
 		generate_vbo();
@@ -238,25 +249,25 @@ void MeshVBO::draw(unsigned int mode) {
 	if (use_vbo) {
 		glBindBuffer (GL_ARRAY_BUFFER, vbo_id);
 
-		glVertexPointer (3, GL_FLOAT, 0, NULL);
+		glVertexPointer (4, GL_FLOAT, 0, NULL);
 
-		if (have_normals) {
+		if (normals.size() != 0) {
 			glNormalPointer (GL_FLOAT, 0, (const GLvoid *) normal_offset);
 		}
 
-		if (have_colors) {
-			glColorPointer (3, GL_FLOAT, 0, (const GLvoid *) (color_offset));
+		if (colors.size() != 0) {
+			glColorPointer (4, GL_FLOAT, 0, (const GLvoid *) (color_offset));
 		}
 		
 		glEnableClientState (GL_VERTEX_ARRAY);
 
-		if (have_normals) {
+		if (normals.size() != 0) {
 			glEnableClientState (GL_NORMAL_ARRAY);
 		} else {
 			glDisableClientState (GL_NORMAL_ARRAY);
 		}
 
-		if (have_colors) {
+		if (colors.size() != 0) {
 			glEnableClientState (GL_COLOR_ARRAY);
 		} else {
 			glDisableClientState (GL_COLOR_ARRAY);
@@ -266,16 +277,345 @@ void MeshVBO::draw(unsigned int mode) {
 		glBindBuffer (GL_ARRAY_BUFFER, 0);
 	} else {
 		glBegin (mode);
-		for (int vi = 0; vi < vertices.size(); vi++) {
-			if (have_colors)
+		for (size_t vi = 0; vi < vertices.size(); vi++) {
+			if (colors.size() != 0)
 				glColor3fv (colors[vi].data());
-			if (have_normals)
+			if (normals.size() != 0)
 				glNormal3fv (normals[vi].data());
 			glVertex3fv (vertices[vi].data());
 
 		}
 		glEnd();
 	}
+}
+
+void MeshVBO::join (const Matrix44f &transformation, const MeshVBO &other) {
+	if (&other == this) {
+		cerr << "Cannot join meshes not supported!" << endl;
+		// To fix this create a temporary copy and use that for copying
+		abort();
+	}
+	bool have_normals = false;
+	bool have_colors = false;
+	bool other_have_normals = false;
+	bool other_have_colors = false;
+
+	if (normals.size() != 0)
+		have_normals = true;
+	if (colors.size() != 0)
+		have_colors = true;
+
+	if (other.normals.size() != 0)
+		other_have_normals = true;
+	if (other.colors.size() != 0)
+		other_have_colors = true;
+
+	if (vertices.size() == 0) {
+		have_normals = other_have_normals;
+		have_colors = other_have_colors;
+	}
+
+	if (have_normals != other_have_normals) {
+		cerr << "Error: cannot merge meshes as one has normals defined and the other hasn't!" << endl;
+		abort();
+	}
+
+	if (have_colors != other_have_colors) {
+		cerr << "Error: cannot merge meshes as one has colors defined and the other hasn't!" << endl;
+		abort();
+	}
+
+	Matrix33f rotation = transformation.block<3,3>(0,0);
+
+	for (unsigned int i = 0; i < other.vertices.size(); i++) {
+		addVertex4fv ((other.vertices[i].transpose() * transformation).data());
+		if (have_normals)
+			addNormalfv ((other.normals[i].transpose() * rotation).data());
+		if (have_colors)
+			addColor4fv (other.colors[i].data());
+	}
+}
+
+void MeshVBO::center() {
+	Vector3f displacement = - bbox_min - (bbox_max - bbox_min) * 0.5;
+	for (size_t i = 0; i < vertices.size(); i++) {
+		vertices[i] = vertices[i] + Vector4f (displacement[0], displacement[1], displacement[2], 0.);
+	}
+	bbox_max += displacement;
+	bbox_min += displacement;
+}
+
+//
+// OBJ loader
+//
+const string invalid_id_characters = "{}[],;: \r\n\t";
+
+struct FaceInfo {
+	FaceInfo () {
+		vertex_index[0] = -1;
+		vertex_index[1] = -1;
+		vertex_index[2] = -1;
+
+		texcoord_index[0] = -1;
+		texcoord_index[1] = -1;
+		texcoord_index[2] = -1;
+
+		normal_index[0] = -1;
+		normal_index[1] = -1;
+		normal_index[2] = -1;
+	}
+
+	int vertex_index[3];
+	int texcoord_index[3];
+	int normal_index[3];
+};
+
+bool MeshVBO::loadOBJ (const char* filename, const char* object_name, bool strict) {
+	string line, original_line;
+	ifstream file_stream (filename);
+
+	if (!file_stream) {
+		cerr << "Error: Could not open OBJ file '" << filename << "'!" << endl;
+
+		if (strict)
+			exit (1);
+
+		return false;
+	}
+
+	string current_object_name = "";
+	string material_library = "";
+	string material_name = "";
+	bool smooth_shading = false;
+	bool object_found = false;
+
+	std::vector<Vector4f> vertices;
+	std::vector<Vector3f> normals;
+	std::vector<Vector3f> texture_coordinates;
+	std::vector<FaceInfo> face_infos;
+	int line_index = 0;
+
+	while (!file_stream.eof()) {
+		getline (file_stream, line);
+		line_index ++;
+
+//		cout << "reading line " << line_index << endl;
+
+		original_line = line;
+		line = trim_line (line);
+		if (line.size() == 0)
+			continue;
+
+//		cout << "inp: '" << line << "'" << endl;
+
+		if (line.substr (0, 6) == "mtllib") {
+			material_library = line.substr (8, line.size());
+
+			continue;
+		}
+
+		if (line.substr (0, 6) == "usemtl") {
+			if (line.size() > 9) {
+				material_name = line.substr (8, line.size());
+			}
+
+			continue;
+		}
+
+		if (line.substr (0, 2) == "s ") {
+			if (line.substr (2, 3) == "off"
+					|| line.substr (2, 1) == "0")
+				smooth_shading = false;
+			else if (line.substr (2, 2) == "on"
+					|| line.substr (2, 1) == "1")
+				smooth_shading = true;
+
+			continue;
+		}
+
+		if (line[0] == 'o') {
+			// If we have found our object already we can skip all following
+			// objects.
+			if (object_found)
+				break;
+
+			// we need a copy of the line that still contains the original case
+			// as line contains the line transformed to lowercase.
+			string object_line = strip_whitespaces(strip_comments(original_line));
+
+			current_object_name = object_line.substr (2, object_line.size());
+//			cout << "current_object_name = " << current_object_name << endl;
+			if (object_name != NULL && current_object_name == object_name)
+				object_found = true;
+			
+			continue;
+		}
+
+		if (line.substr (0,2) == "v ") {
+			float v1, v2, v3, v4 = 1.f;
+			istringstream values (line.substr (2, line.size()));
+			values >> v1;
+			values >> v2;
+			values >> v3;
+
+			if (!(values >> v4))
+				v4 = 1.f;
+
+			vertices.push_back (Vector4f (v1, v2, v3, v4));
+
+//			cerr << "line " << line << " ended up as vertice: " << vertices[vertices.size() -1].transpose() << endl;
+			
+			continue;
+		}
+
+		if (line.substr (0,3) == "vn ") {
+			float v1, v2, v3;
+			istringstream values (line.substr (3, line.size()));
+			values >> v1;
+			values >> v2;
+			values >> v3;
+
+			normals.push_back (Vector3f (v1, v2, v3));
+
+			continue;
+		}	
+
+		if (line.substr (0,3) == "vt ") {
+			float v1, v2, v3;
+			istringstream values (line.substr (3, line.size()));
+			values >> v1;
+			values >> v2;
+			values >> v3;
+
+			texture_coordinates.push_back (Vector3f (v1, v2, v3));
+
+			continue;
+		}	
+
+		if (line.substr (0,2) == "f "
+				&& (object_name == NULL || current_object_name == object_name)
+				) {
+			std::vector<string> tokens = tokenize (line.substr (2, line.size()));
+			if (tokens.size() != 3) {
+				cerr << "Error: Faces must be triangles! (" << filename << ": " << line_index << ")" << endl;
+				cerr << tokens.size() << endl;
+
+				if (strict)
+					exit (1);
+
+				return false;
+			}
+
+			FaceInfo face_info;
+
+			// read faces
+			//
+			// the following are valid face definitions:
+			//   f v1 v2 v3
+			//   f v1/n1 v2/n2 v3/n3
+			//   f v1/t1/t1 v2/t2/t2 v3/t3/t3
+			//   f v1//t1 v2//t2 v3//t3
+			for (int vi = 0; vi < 3; vi++) {
+				// first data
+				std::vector<string> vertex_tokens = tokenize (tokens[vi], "/");
+
+				if (vertex_tokens.size() == 1) {
+					if (vertex_tokens[0].size() > 0) {
+						istringstream values (vertex_tokens[0]);
+						values >> face_info.vertex_index[vi];
+					}
+				}
+
+				else if (vertex_tokens.size() == 2) {
+					// two possible cases:
+					//   v1/t1  or v1//n1
+					
+					// first one is always the vertex index
+					if (vertex_tokens[0].size() > 0) {
+						istringstream values (vertex_tokens[0]);
+						values >> face_info.vertex_index[vi];
+					}
+
+					if (count_char (tokens[vi], "/") == 1) {
+						// v1/t1
+						if (vertex_tokens[1].size() > 0) {
+							istringstream values (vertex_tokens[1]);
+							values >> face_info.texcoord_index[vi];
+						}
+					} else {
+						// v1/n1
+						if (vertex_tokens[1].size() > 0) {
+							istringstream values (vertex_tokens[1]);
+							values >> face_info.normal_index[vi];
+						}
+					}
+				}
+
+				else if (vertex_tokens.size() == 3) {
+					// two possible cases:
+					//   v1/t1/n1
+
+//					cout << "t1 = " << vertex_tokens[0] << " t2 = " << vertex_tokens[1] << " t3 = " << vertex_tokens[2];
+					if (vertex_tokens[0].size() > 0) {
+						istringstream values (vertex_tokens[0]);
+						values >> face_info.vertex_index[vi];
+					}
+					if (vertex_tokens[1].size() > 0) {
+						istringstream values (vertex_tokens[1]);
+						values >> face_info.texcoord_index[vi];
+					}
+					if (vertex_tokens[2].size() > 0) {
+						istringstream values (vertex_tokens[2]);
+						values >> face_info.normal_index[vi];
+					}
+				}
+
+//				cout << " parsed line '" << line << "' into: " 
+//					<< face_info.vertex_index[vi] << ","
+//					<< face_info.texcoord_index[vi] << ","
+//					<< face_info.normal_index[vi] << endl;
+			}
+			face_infos.push_back (face_info);
+
+			continue;
+		}
+	}
+
+	if (object_name != NULL && object_found == false) {
+		cerr << "Warning: could not find object '" << object_name << "' in OBJ file '" << filename << "'" << endl;
+
+		if (strict)
+			exit(1);
+
+		return false;
+	}
+
+//	cout << "found " << vertices.size() << " vertices" << endl;
+//	cout << "found " << normals.size() << " normals" << endl;
+//	cout << "found " << face_infos.size() << " faces" << endl;
+
+	this->begin();
+	// add all vertices to the MeshVBO
+	for (size_t fi = 0; fi < face_infos.size(); fi++) {
+		for (int vi = 0; vi < 3; vi ++) {
+			Vector4f vertex = vertices.at(face_infos[fi].vertex_index[vi] - 1);
+			this->addVertex3f(vertex[0], vertex[1], vertex[2]);
+	//		cout << "added vertice " << vertex.transpose() << endl;
+
+			if (face_infos[fi].normal_index[vi] != -1) {
+				Vector3f normal = normals.at(face_infos[fi].normal_index[vi] - 1);
+				this->addNormal(normal[0], normal[1], normal[2]);
+			}
+		}
+	}
+
+	this->end();
+
+	smooth_shading = smooth_shading;
+
+	file_stream.close();
+
+	return true;
 }
 
 MeshVBO CreateUVSphere (unsigned int rows, unsigned int segments) {
@@ -305,22 +645,22 @@ MeshVBO CreateUVSphere (unsigned int rows, unsigned int segments) {
 	    v2 = Vector3f (r0 * cos(a1), h0, r0 * sin (a1));
 	    v3 = Vector3f (r0 * cos(a0), h0, r0 * sin (a0));
 
-			result.addVertice (v0[0], v0[1], v0[2]);
+			result.addVertex3f (v0[0], v0[1], v0[2]);
 			result.addNormalfv ((v0 * 1.f/ v0.norm()).data());
 
-			result.addVertice (v2[0], v2[1], v2[2]);
+			result.addVertex3f (v2[0], v2[1], v2[2]);
 			result.addNormalfv ((v2 * 1.f/ v2.norm()).data());
 
-			result.addVertice (v1[0], v1[1], v1[2]);
+			result.addVertex3f (v1[0], v1[1], v1[2]);
 			result.addNormalfv ((v1 * 1.f/ v1.norm()).data());
 
-			result.addVertice (v0[0], v0[1], v0[2]);
+			result.addVertex3f (v0[0], v0[1], v0[2]);
 			result.addNormalfv ((v0 * 1.f/ v0.norm()).data());
 
-			result.addVertice (v3[0], v3[1], v3[2]);
+			result.addVertex3f (v3[0], v3[1], v3[2]);
 			result.addNormalfv ((v3 * 1.f/ v3.norm()).data());
 
-			result.addVertice (v2[0], v2[1], v2[2]);
+			result.addVertex3f (v2[0], v2[1], v2[2]);
 			result.addNormalfv ((v2 * 1.f/ v2.norm()).data());
 		}
 	}
@@ -347,98 +687,98 @@ MeshVBO CreateCuboid (float width, float height, float depth) {
 	Vector3f normal;
 	// +x
 	normal = Vector3f (1., 0., 0.);
-	result.addVerticefv (v0.data());
+	result.addVertex3fv (v0.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v1.data());
+	result.addVertex3fv (v1.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v2.data());
+	result.addVertex3fv (v2.data());
 	result.addNormalfv (normal.data());
 
-	result.addVerticefv (v2.data());
+	result.addVertex3fv (v2.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v3.data());
+	result.addVertex3fv (v3.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v0.data());
+	result.addVertex3fv (v0.data());
 	result.addNormalfv (normal.data());
 
 	// +y
 	normal = Vector3f (0., 1., 0.);
-	result.addVerticefv (v3.data());
+	result.addVertex3fv (v3.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v2.data());
+	result.addVertex3fv (v2.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v6.data());
+	result.addVertex3fv (v6.data());
 	result.addNormalfv (normal.data());
 
-	result.addVerticefv (v6.data());
+	result.addVertex3fv (v6.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v7.data());
+	result.addVertex3fv (v7.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v3.data());
+	result.addVertex3fv (v3.data());
 	result.addNormalfv (normal.data());
 
 	// +z
 	normal = Vector3f (0., 0., 1.);
-	result.addVerticefv (v4.data());
+	result.addVertex3fv (v4.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v0.data());
+	result.addVertex3fv (v0.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v3.data());
+	result.addVertex3fv (v3.data());
 	result.addNormalfv (normal.data());
 
-	result.addVerticefv (v3.data());
+	result.addVertex3fv (v3.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v7.data());
+	result.addVertex3fv (v7.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v4.data());
+	result.addVertex3fv (v4.data());
 	result.addNormalfv (normal.data());
 
 	// -x
 	normal = Vector3f (-1., 0., 0.);
-	result.addVerticefv (v5.data());
+	result.addVertex3fv (v5.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v4.data());
+	result.addVertex3fv (v4.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v7.data());
+	result.addVertex3fv (v7.data());
 	result.addNormalfv (normal.data());
 
-	result.addVerticefv (v7.data());
+	result.addVertex3fv (v7.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v6.data());
+	result.addVertex3fv (v6.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v5.data());
+	result.addVertex3fv (v5.data());
 	result.addNormalfv (normal.data());
 
 	// -y
 	normal = Vector3f (0., -1., 0.);
-	result.addVerticefv (v0.data());
+	result.addVertex3fv (v0.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v4.data());
+	result.addVertex3fv (v4.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v5.data());
+	result.addVertex3fv (v5.data());
 	result.addNormalfv (normal.data());
 
-	result.addVerticefv (v5.data());
+	result.addVertex3fv (v5.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v1.data());
+	result.addVertex3fv (v1.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v0.data());
+	result.addVertex3fv (v0.data());
 	result.addNormalfv (normal.data());
 
 	// -z
 	normal = Vector3f (0., 0., -1.);
-	result.addVerticefv (v1.data());
+	result.addVertex3fv (v1.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v5.data());
+	result.addVertex3fv (v5.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v6.data());
+	result.addVertex3fv (v6.data());
 	result.addNormalfv (normal.data());
 
-	result.addVerticefv (v6.data());
+	result.addVertex3fv (v6.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v2.data());
+	result.addVertex3fv (v2.data());
 	result.addNormalfv (normal.data());
-	result.addVerticefv (v1.data());
+	result.addVertex3fv (v1.data());
 	result.addNormalfv (normal.data());
 
 	result.end();
@@ -446,17 +786,22 @@ MeshVBO CreateCuboid (float width, float height, float depth) {
 	return result;
 }
 
-MeshVBO CreateGrid (unsigned int cells_x, unsigned int cells_z, Vector3f color1, Vector3f color2) {
-	assert (cells_x > 0);
-	assert (cells_z > 0);
+MeshVBO CreateGrid (unsigned int cells_u, unsigned int cells_v, const Vector3f &normal, Vector3f color1, Vector3f color2) {
+	assert (cells_u > 0);
+	assert (cells_v > 0);
 
 	MeshVBO result;
 
 	result.begin();
-	Vector3f normal (0.f, 1.f, 0.f);
+	Vector3f u_vec_temp (1.f, 0.f, 0.f);
+	if (u_vec_temp.dot(normal.normalized()) > 0.8) {
+		u_vec_temp = Vector3f (0.f, 1.f, 0.f);
+	}
+	Vector3f v_vec = normal.cross (u_vec_temp);
+	Vector3f u_vec = v_vec.cross (normal);	
 
-	for (unsigned int i = 0; i < cells_x; i++) {
-		for (unsigned int j = 0; j < cells_z; j++) {
+	for (unsigned int i = 0; i < cells_u; i++) {
+		for (unsigned int j = 0; j < cells_v; j++) {
 			Vector3f color;
 
 			if ((i + j) % 2 == 0) {
@@ -465,31 +810,33 @@ MeshVBO CreateGrid (unsigned int cells_x, unsigned int cells_z, Vector3f color1,
 				color = color2;
 			}
 
-			Vector3f center ((i + 0.5f) - cells_x * 0.5f, 0.f, (j + 0.5f) - cells_z * 0.5f);
+			Vector3f center =
+				  u_vec * (i + 0.5f) - u_vec * cells_u * 0.5f
+				+ v_vec * (j + 0.5f) - v_vec * cells_v * 0.5f;
 
-			result.addVerticefv ((center + Vector3f (0.5f, 0.f, 0.5f)).data());
+			result.addVertex3fv ((center + (u_vec + v_vec) * 0.5f).data());
 			result.addNormalfv (normal.data());
-			result.addColorfv (color.data());
+			result.addColor3fv (color.data());
 
-			result.addVerticefv ((center + Vector3f (-0.5f, 0.f, 0.5f)).data());
+			result.addVertex3fv ((center + (-u_vec + v_vec) * 0.5f).data());
 			result.addNormalfv (normal.data());
-			result.addColorfv (color.data());
+			result.addColor3fv (color.data());
 
-			result.addVerticefv ((center + Vector3f (-0.5f, 0.f, -0.5f)).data());
+			result.addVertex3fv ((center + (-u_vec - v_vec) * 0.5f).data());
 			result.addNormalfv (normal.data());
-			result.addColorfv (color.data());
+			result.addColor3fv (color.data());
 
-			result.addVerticefv ((center + Vector3f (-0.5f, 0.f, -0.5f)).data());
+			result.addVertex3fv ((center + (-u_vec - v_vec) * 0.5f).data());
 			result.addNormalfv (normal.data());
-			result.addColorfv (color.data());
+			result.addColor3fv (color.data());
 
-			result.addVerticefv ((center + Vector3f (0.5f, 0.f, -0.5f)).data());
+			result.addVertex3fv ((center + (u_vec - v_vec) * 0.5f).data());
 			result.addNormalfv (normal.data());
-			result.addColorfv (color.data());
+			result.addColor3fv (color.data());
 
-			result.addVerticefv ((center + Vector3f (0.5f, 0.f, 0.5f)).data());
+			result.addVertex3fv ((center + (u_vec + v_vec) * 0.5f).data());
 			result.addNormalfv (normal.data());
-			result.addColorfv (color.data());
+			result.addColor3fv (color.data());
 		}
 	}
 
@@ -497,3 +844,86 @@ MeshVBO CreateGrid (unsigned int cells_x, unsigned int cells_z, Vector3f color1,
 
 	return result;
 }
+
+MeshVBO CreateCylinder (unsigned int segments) {
+	MeshVBO result;
+	
+	result.begin();
+
+	float delta = 2. * M_PI / static_cast<float>(segments);
+	for (unsigned int i = 0; i < segments; i++) {
+		float r0 = (i - 0.5) * delta;
+		float r1 = (i + 0.5) * delta;
+
+		float c0 = cos (r0); 
+		float s0 = sin (r0); 
+
+		float c1 = cos (r1); 
+		float s1 = sin (r1); 
+
+		Vector3f normal0 (c0, s0, 0.f);
+		Vector3f normal1 (c1, s1, 0.f);
+
+		Vector3f p0 = normal0 - Vector3f (0., 0.,  0.5f);
+		Vector3f p1 = normal0 - Vector3f (0., 0., -0.5f);
+		Vector3f p2 = normal1 - Vector3f (0., 0.,  0.5f);
+		Vector3f p3 = normal1 - Vector3f (0., 0., -0.5f);
+
+		result.addVertex3fv (p0.data());
+		result.addNormalfv (normal0.data());
+
+		result.addVertex3fv (p1.data());
+		result.addNormalfv (normal0.data());
+
+		result.addVertex3fv (p2.data());
+		result.addNormalfv (normal1.data());
+
+		result.addVertex3fv (p2.data());
+		result.addNormalfv (normal1.data());
+
+		result.addVertex3fv (p1.data());
+		result.addNormalfv (normal0.data());
+
+		result.addVertex3fv (p3.data());
+		result.addNormalfv (normal1.data());
+	}
+
+	result.end();
+
+	return result;
+}
+
+MeshVBO CreateCapsule (unsigned int rows, unsigned int segments, float length_z, float radius) {
+
+	float cylinder_length = length_z - 2.f * radius;
+
+	MeshVBO result;
+	MeshVBO cylinder = CreateCylinder (segments);
+
+	result.join (SimpleMath::GL::ScaleMat44 (radius, radius, cylinder_length), cylinder);
+
+	MeshVBO sphere = CreateUVSphere (rows, segments);
+	MeshVBO half_sphere;
+
+	for (unsigned int i = 0; i < sphere.vertices.size() * 0.5; i++) {
+		half_sphere.addVertex4fv (sphere.vertices[i].data());
+		half_sphere.addNormalfv (sphere.normals[i].data());
+	}
+
+	result.join (
+			SimpleMath::GL::RotateMat44 (90, 1.f, 0.f, 0.f)
+			* SimpleMath::GL::ScaleMat44 (radius, radius, radius)
+		  * SimpleMath::GL::TranslateMat44(0.f, 0.f, cylinder_length * 0.5)
+			, half_sphere
+			);
+			 
+	result.join (
+			SimpleMath::GL::RotateMat44 (-90, 1.f, 0.f, 0.f)
+			* SimpleMath::GL::ScaleMat44 (radius, radius, radius)
+		  * SimpleMath::GL::TranslateMat44(0.f, 0.f, -cylinder_length * 0.5)
+			, half_sphere
+			);
+	
+	return result;
+}
+

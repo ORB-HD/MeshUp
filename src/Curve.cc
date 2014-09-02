@@ -30,8 +30,8 @@ void Curve::generate_vbo() {
 	meshVBO.begin();	
 
 	for (unsigned int i = 0; i < points.size() - 1; i++) {
-		meshVBO.addVerticefv (points[i].data());
-		meshVBO.addColorfv (colors[i].data());
+		meshVBO.addVertex3fv (points[i].data());
+		meshVBO.addColor3fv (colors[i].data());
 	}
 
 	meshVBO.end();

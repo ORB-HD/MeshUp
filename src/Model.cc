@@ -35,7 +35,6 @@ extern "C"
 }
 #include "luatables.h"
 
-#include "objloader.h"
 #include "Curve.h"
 #include "Animation.h"
 
@@ -271,11 +270,11 @@ void MeshupModel::addSegment (
 			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
 			string mesh_file_location = find_mesh_file_by_name (mesh_filename);
 			cout << "Loading sub object " << submesh_name << " from file " << mesh_file_location << endl;
-			load_obj (*new_mesh, mesh_file_location.c_str(), submesh_name.c_str());
+			new_mesh->loadOBJ(mesh_file_location.c_str(), submesh_name.c_str());
 		} else {
 			string mesh_file_location = find_mesh_file_by_name (mesh_name);
 			cout << "Loading mesh " << mesh_file_location << endl;
-			load_obj (*new_mesh, mesh_file_location.c_str());
+			new_mesh->loadOBJ(mesh_file_location.c_str());
 		}
 
 		if (!skip_vbo_generation)
