@@ -164,8 +164,10 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 			boost::filesystem::path data_path (strip_whitespaces(line.substr(string("DATA_FROM:").size(), line.size())));
 
 			// search for the file in the same directory as the original file,
-			// unless we have an absolutue path
-			if (!data_path.string()[0] == '/') {
+			// unless we have an absolutue path or by starting the file
+			// with "./" or ".." to expicilty want the file loaded relative to
+			// the current work directory.
+			if (data_path.string()[0] != '/' && data_path.string()[0] != '.') {
 				boost::filesystem::path file_path (filename);
 				boost::filesystem::path data_directory = file_path.parent_path();
 				data_path = data_directory /= data_path;

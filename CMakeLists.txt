@@ -13,7 +13,7 @@ SET (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 SET (MESHUP_VERSION_MAJOR 0)
 SET (MESHUP_VERSION_MINOR 3)
-SET (MESHUP_VERSION_PATCH 19)
+SET (MESHUP_VERSION_PATCH 20)
 SET (MESHUP_VERSION_STRING "${MESHUP_VERSION_MAJOR}.${MESHUP_VERSION_MINOR}.${MESHUP_VERSION_PATCH}")
 SET (MESHUP_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
@@ -50,15 +50,6 @@ SUBDIRS (
 	vendor/lua-5.1/
 	)
 
-ADD_LIBRARY ( MeshUp
-	src/Model.cc
-	src/Animation.cc
-	src/MeshVBO.cc
-	src/Curve.cc
-	src/objloader.cc
-	src/luatables/luatables.cc
-	)
-
 ADD_LIBRARY ( glew
 	vendor/glew/src/glew.c
 	vendor/glew/src/glewinfo.c
@@ -91,6 +82,13 @@ QT4_WRAP_CPP ( MeshupApp_MOC_SRCS
 	)
 
 ADD_EXECUTABLE ( meshup
+	src/Model.cc
+	src/Animation.cc
+	src/MeshVBO.cc
+	src/Curve.cc
+	src/objloader.cc
+	src/luatables/luatables.cc
+
 	${MeshupApp_SRCS}
 	${MeshupApp_MOC_SRCS}
 	${MainWindow_UIS_H}
@@ -114,19 +112,13 @@ SET_TARGET_PROPERTIES ( ${PROJECT_EXECUTABLES} PROPERTIES
 	INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib" 
 )
 
-TARGET_LINK_LIBRARIES ( MeshUp
+TARGET_LINK_LIBRARIES ( meshup
+	${QT_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${Boost_LIBRARIES}
 	lua-static
 	glew
 	json
-	)
-
-TARGET_LINK_LIBRARIES ( meshup
-	${QT_LIBRARIES}
-	${OPENGL_LIBRARIES}
-	glew
-	MeshUp
 )
 
 # Installation
