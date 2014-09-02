@@ -40,6 +40,7 @@ extern "C"
 #include "Animation.h"
 
 using namespace std;
+using namespace SimpleMath::GL;
 
 std::string find_model_file_by_name (const std::string &model_name) {
 	std::string result;
@@ -221,10 +222,11 @@ void MeshupModel::addFrame (
 void MeshupModel::addSegment (
 		const std::string &frame_name,
 		const Vector3f &dimensions,
-		const Vector3f &scale,
 		const Vector3f &color,
 		const std::string &mesh_name,
 		const Vector3f &translate,
+		const Quaternion &rotate,
+		const Vector3f &scale,
 		const Vector3f &mesh_center) {
 	Segment segment;
 
@@ -248,6 +250,14 @@ void MeshupModel::addSegment (
 	segment.scale = scale;
 	// cout << "configuration = " << endl << configuration.axes_rotation << endl;
 	segment.translate = configuration.axes_rotation.transpose() * translate;
+
+	float rotation_angle = 2. * acosf (rotate[3]);
+	if (fabs (rotation_angle) > 0.001) {
+		Vector3f rotation_axis = Vector3f (rotate[0], rotate[1], rotate[2]) / sinf (rotation_angle) * 2.;
+		rotation_axis = (configuration.axes_rotation.transpose() * rotation_axis).normalize();
+		segment.rotate = Quaternion::fromGLRotate (rotation_angle * 180. / M_PI, rotation_axis[0], rotation_axis[1], rotation_axis[2]);
+		cout << segment.rotate.toGLMatrix() << endl;
+	}
 
 	// check whether we have the mesh, if not try to load it
 	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
@@ -279,7 +289,7 @@ void MeshupModel::addSegment (
 
 	segment.mesh = mesh_iter->second;
 	segment.meshcenter = configuration.axes_rotation.transpose() * mesh_center;
-	segment.frame = findFrame (sanitize_name(frame_name).c_str());
+	segment.frame = findFrame ((frame_name).c_str());
 	segment.mesh_filename = mesh_name;
 	assert (segment.frame != NULL);
 	segments.push_back (segment);
@@ -860,7 +870,14 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			Vector3f translate = model_table["frames"][i]["visuals"][vi]["translate"].getDefault (Vector3f (0.f, 0.f, 0.f));
 			Vector3f mesh_center = model_table["frames"][i]["visuals"][vi]["mesh_center"].getDefault (Vector3f (1./0.f, 1./0.f, 1./0.f));
 
-			addSegment (frame_name, dimensions, scale, color, mesh_filename, translate, mesh_center);
+			Quaternion rotate = Quaternion::fromGLRotate (0., 1., 0., 0.);
+			if (model_table["frames"][i]["visuals"][vi]["rotate"].exists()) {
+				Vector3f axis = model_table["frames"][i]["visuals"][vi]["rotate"]["axis"].getDefault (Vector3f (1., 0., 0.));
+				float angle = model_table["frames"][i]["visuals"][vi]["rotate"]["angle"].getDefault (0.f);
+				rotate = Quaternion::fromGLRotate (angle, axis[0], axis[1], axis[2]);
+			}
+
+			addSegment (frame_name, dimensions, color, mesh_filename, translate, rotate, scale, mesh_center);
 		}
 	}
 

@@ -167,6 +167,9 @@ The Mesh Information Table can use the following attributes:
 >	Shifts the whole mesh so that the center of its bounding box is at the
 >	position defined by mesh_center.	
 
+*rotate* (table, default: { axis = {1., 0., 0.}, angle = 0.})
+> Rotates the visual around the specified axis by the given angle.
+
 *src* (string)
 >  The path to the mesh file, i.e. a path to an OBJ file. If the src string
 >  is "mymesh.obj" it will search in the following paths from top to
@@ -182,6 +185,8 @@ The Mesh Information Table can use the following attributes:
 >
 > ```${INSTALL_PREFIX}``` is the install prefix specified via the CMake
 > variables ```CMAKE_INSTALL_PREFIX```.
+>
+> Please note that the attributes *geometry* and *src* are exclusive!
 
 ## Point Information Table
 
