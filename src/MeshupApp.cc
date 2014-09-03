@@ -728,7 +728,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 void MeshupApp::SIGUSR1Handler(int)
  {
      char a = 1;
-     ::write(sigusr1Fd[0], &a, sizeof(a));
+     size_t length = ::write(sigusr1Fd[0], &a, sizeof(a));
  }
 
 int setup_unix_signal_handlers()
@@ -747,14 +747,14 @@ int setup_unix_signal_handlers()
      return 0;
  }
 
- void MeshupApp::handleSIGUSR1()
- {
-     snUSR1->setEnabled(false);
-     char tmp;
-     ::read(sigusr1Fd[1], &tmp, sizeof(tmp));
+ void MeshupApp::handleSIGUSR1() {
+	snUSR1->setEnabled(false);
+	char tmp;
+
+	size_t length = ::read(sigusr1Fd[1], &tmp, sizeof(tmp));
 
 	action_reload_files();
 
-     snUSR1->setEnabled(true);
- }
+	snUSR1->setEnabled(true);
+}
 int MeshupApp::sigusr1Fd[2];

@@ -45,19 +45,19 @@ for more information about those).
 
 A valid file could look like this:
 
-    model = {
-      configuration = { ... }
-      frames = {
-        {
-          <frame 1 information table>
-        },
-        {
-          <frame 2 information table>
-        }
-      }
+  model = {
+    configuration = { ... }
+    frames = {
+    {
+      <frame 1 information table>
+    },
+    {
+      <frame 2 information table>
     }
+    }
+  }
 
-    return model
+  return model
 
 ## Configuration
 
@@ -68,17 +68,17 @@ coordinate system:
 
 Example:
 
-    model = {
-    	configuration = {
-        axis_front = { 1, 0, 0 },
-        axis_up    = { 0, 0, 1 },
-        axis_right = { 0, -1, 0 },
-      },
-    
-      frames = {
-      ...
-      }
+  model = {
+    configuration = {
+    axis_front = { 1, 0, 0 },
+    axis_up  = { 0, 0, 1 },
+    axis_right = { 0, -1, 0 },
+    },
+  
+    frames = {
+    ...
     }
+  }
 
 This defines a right-handed coordinate system for which X poits forward, Y
 to the left and Z up (as seen from the model).
@@ -86,14 +86,14 @@ to the left and Z up (as seen from the model).
 **Note:** The table frames must contain all Frame Information Tables as a list
 and individual tables must *not* be specified with a key, i.e.
 
-    frames = {
-      some_frame = {
-        ...
-      },
-      {
-        ..
-      }
+  frames = {
+    some_frame = {
+    ...
+    },
+    {
+    ..
     }
+  }
 
 is not possible as Lua does not retain the order of the individual
 frames when an explicit key is specified.
@@ -115,8 +115,8 @@ hierarchy. The following fields are used by MeshUp (everything else is ignored):
 >  Specifies the origin of the joint in the frame of the parent. It uses
 >  the values (if existing):
 >
->      r (3-d vector, default: (0., 0., 0.))
->      E (3x3 matrix, default: identity matrix)
+>    r (3-d vector, default: (0., 0., 0.))
+>    E (3x3 matrix, default: identity matrix)
 >   
 >  for which r is the translation and E the rotation of the joint frame.
 
@@ -125,7 +125,7 @@ hierarchy. The following fields are used by MeshUp (everything else is ignored):
 
 *points* (optional, type: array of Point Information Tables):
 >   Additional points that are specified relative to the frame and move with
->	 it.
+>   it.
 
 ## Mesh Information Table
 
@@ -135,37 +135,37 @@ placed in the current frame.
 
 An example Mesh Information Table looks like this:
 
-    HipMesh1 = {
-  		name = "HipMesh1",
-  		dimensions = { 0.25, 0.4, 0.25 },
-  		color = { 0.8, 0.8, 0.2},
-  		mesh_center = { 0, 0, 0.125 },
-  		src = "meshes/unit_cube.obj",
-  	},
+  HipMesh1 = {
+      name = "HipMesh1",
+      dimensions = { 0.25, 0.4, 0.25 },
+      color = { 0.8, 0.8, 0.2},
+      mesh_center = { 0, 0, 0.125 },
+      src = "meshes/unit_cube.obj",
+    },
 
 The Mesh Information Table can use the following attributes:
 
 *scale* (3-d vector, default:  {1., 1., 1.})
->	Scales the model relative to its default size. A scale of {2., 2., 2. }
->	will draw the mesh twice as big as its default size. Note that dimensions
->	takes precedence over scale.
-	
+>  Scales the model relative to its default size. A scale of {2., 2., 2. }
+>  will draw the mesh twice as big as its default size. Note that dimensions
+>  takes precedence over scale.
+  
 *dimensions* (3-d vector, default:  {0., 0., 0.})
->	Scales the mesh so that its absolute size (more precisely its bounding
->	box) is that of dimensions. Note that dimensions takes precedence over
->	scale. Once it is unequal to {0., 0., 0.} it will be used instead of the
->	definition of scale.
+>  Scales the mesh so that its absolute size (more precisely its bounding
+>  box) is that of dimensions. Note that dimensions takes precedence over
+>  scale. Once it is unequal to {0., 0., 0.} it will be used instead of the
+>  definition of scale.
 
 *color* (3-d vector, default:  {1., 1., 1.})
 > The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
->	and white is (1., 1., 1.).
+>  and white is (1., 1., 1.).
 
 *translate* (3-d vector, default:  {0., 0., 0.})
 > Shifts the whole mesh by a given vector.
 
 *mesh_center* (3-d vector, default:  {0., 0., 0.})
->	Shifts the whole mesh so that the center of its bounding box is at the
->	position defined by mesh_center.	
+>  Shifts the whole mesh so that the center of its bounding box is at the
+>  position defined by mesh_center.  
 
 *rotate* (table, default: { axis = {1., 0., 0.}, angle = 0.})
 > Rotates the visual around the specified axis by the given angle.
@@ -177,29 +177,29 @@ The Mesh Information Table can use the following attributes:
 >
 > * Box Geometry:
 >
->         geometry = {
->           box = { dimensions = {1., 1., 1.} }
->         }
+>     geometry = {
+>       box = { dimensions = {1., 1., 1.} }
+>     }
 >
 > * Sphere Geometry:
 >
->  	  geometry = {
->           sphere = { radius=1., rows=16, segments=32 }
->         }
+>      geometry = {
+>       sphere = { radius=1., rows=16, segments=32 }
+>     }
 >
 > * Capsule Geometry:
 >
->  	  geometry = {
->           capsule = { radius=1., length=2., rows=16, segments=32 }
->         }
+>      geometry = {
+>       capsule = { radius=1., length=2., rows=16, segments=32 }
+>     }
 >   The capsule geometry is aligned along the Z-axis. ```length```
 >   specifies the total length of the capsule including the rounded caps.
 >
 > * Cylinder Geometry:
 >
->  	  geometry = {
->           capsule = { radius=1., length=2., rows=16, segments=32 }
->         }
+>      geometry = {
+>       capsule = { radius=1., length=2., rows=16, segments=32 }
+>     }
 >   The cylinder geometry is aligned along the Z-axis.
 >
 > Please note that the attributes *geometry* and *src* are exclusive!
@@ -233,29 +233,29 @@ drawn with a line from the frame's origin to the location of the point.
 
 An example Point Information Table looks like this:
 
-    ToolCenterPoint = {
-  		coordinates = { 0.25, 0.1, 0.5 },
-  		color = { 0.8, 0.8, 0.2},
-  		draw_line = true,
-  	},
+  ToolCenterPoint = {
+      coordinates = { 0.25, 0.1, 0.5 },
+      color = { 0.8, 0.8, 0.2},
+      draw_line = true,
+    },
 
 The Point Information Table has the following attributes:
 
 *coordinates* (3-d vector)
->	These are the coordinates of the point in the frame in which the point is
->	defined.
-	
+>  These are the coordinates of the point in the frame in which the point is
+>  defined.
+  
 *color* (3-d vector, default:  {1., 1., 1.})
 > The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
->	and white is (1., 1., 1.).
+>  and white is (1., 1., 1.).
 
 *draw_line* (boolean, default:  false)
->	Specifies whether a line from the frame origin to the point should be
->	drawn.
+>  Specifies whether a line from the frame origin to the point should be
+>  drawn.
 
 *line_width* (number, default:  1.)
->	Specifies the width of the line in pixels. Note that the width range
->	may be limited by the graphics hardware and/or driver. (Added in v0.3.14)
+>  Specifies the width of the line in pixels. Note that the width range
+>  may be limited by the graphics hardware and/or driver. (Added in v0.3.14)
 
 <a id="animation-files"></a>
 # Animation Files
@@ -279,19 +279,19 @@ ignored by MeshUp set the entry to "empty".
 
 The mapping for joints is specified in the following syntax:
 
-    <frame name>:<joint type>:<axis>[:<unit>]
+  <frame name>:<joint type>:<axis>[:<unit>]
 
 where
 
-    <frame name> is the name of the frame used in the model.
-    <joint type> can be 
-      t,translation for translational motions
-      r,rotation    for rotational motions
-      s,scale       for scaling motions
-    <axis> can be either of x,y,z for the respective axes. Negative axes can
-      be specified by prepending a '-' to the axis name.
-    <unit> (optional) can be r,rad, or radian to specify that the columns
-      should be interpreted as radians instead of the default degrees.
+  <frame name> is the name of the frame used in the model.
+  <joint type> can be 
+    t,translation for translational motions
+    r,rotation for rotational motions
+    s,scale for scaling motions
+  <axis> can be either of x,y,z for the respective axes. Negative axes can
+    be specified by prepending a '-' to the axis name.
+  <unit> (optional) can be r,rad, or radian to specify that the columns
+    should be interpreted as radians instead of the default degrees.
 
 For a single frame all column specifications must be consecutive in the
 COLUMN section.

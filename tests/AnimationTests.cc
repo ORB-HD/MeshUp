@@ -18,9 +18,9 @@ struct ModelFixture {
 		model->meshmap.insert (make_pair<std::string, MeshPtr>("M1", MeshPtr (new MeshVBO())));
 		model->addFrame("ROOT", "UPPERARM", SimpleMath::GL::TranslateMat44 (0.f, 1.f, 0.f));
 		model->addSegment("UPPERARM",
+			MeshPtr(new MeshVBO),
 			Vector3f (1.1, 1.2, 1.3), // dimensions
 			Vector3f (1.f, 1.f, 1.f), // color
-			"M1", // mesh_name
 			Vector3f (3.1, 3.2, 3.3), // translate
 			Quaternion (0.f, 1.f, 0.f, 0.f), // rotate
 			Vector3f (2.1, 2.2, 2.3), // scale

@@ -219,7 +219,7 @@ struct MeshupModel {
 
 	void addSegment (
 			const std::string &frame_name,
-            const MeshPtr mesh,
+	   	const MeshPtr mesh,
 			const Vector3f &dimensions,
 			const Vector3f &color,
 			const Vector3f &translate,
