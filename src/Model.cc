@@ -220,9 +220,9 @@ void MeshupModel::addFrame (
 
 void MeshupModel::addSegment (
 		const std::string &frame_name,
+        const MeshPtr mesh,
 		const Vector3f &dimensions,
 		const Vector3f &color,
-		const std::string &mesh_name,
 		const Vector3f &translate,
 		const Quaternion &rotate,
 		const Vector3f &scale,
@@ -257,38 +257,9 @@ void MeshupModel::addSegment (
 		segment.rotate = Quaternion::fromGLRotate (rotation_angle * 180. / M_PI, rotation_axis[0], rotation_axis[1], rotation_axis[2]);
 	}
 
-	// check whether we have the mesh, if not try to load it
-	MeshMap::iterator mesh_iter = meshmap.find (mesh_name);
-	if (mesh_iter == meshmap.end()) {
-		MeshPtr new_mesh (new MeshVBO);
-
-		// check whether we want to extract a sub object within the obj file
-		string mesh_filename = mesh_name;
-		string submesh_name = "";
-		if (mesh_name.find (':') != string::npos) {
-			submesh_name = mesh_name.substr (mesh_name.find(':') + 1, mesh_name.size());
-			mesh_filename = mesh_name.substr (0, mesh_name.find(':'));
-			string mesh_file_location = find_mesh_file_by_name (mesh_filename);
-			cout << "Loading sub object " << submesh_name << " from file " << mesh_file_location << endl;
-			new_mesh->loadOBJ(mesh_file_location.c_str(), submesh_name.c_str());
-		} else {
-			string mesh_file_location = find_mesh_file_by_name (mesh_name);
-			cout << "Loading mesh " << mesh_file_location << endl;
-			new_mesh->loadOBJ(mesh_file_location.c_str());
-		}
-
-		if (!skip_vbo_generation)
-			new_mesh->generate_vbo();
-
-		meshmap[mesh_name] = new_mesh;
-
-		mesh_iter = meshmap.find (mesh_name);
-	}
-
-	segment.mesh = mesh_iter->second;
+	segment.mesh = mesh;
 	segment.meshcenter = configuration.axes_rotation.transpose() * mesh_center;
 	segment.frame = findFrame ((frame_name).c_str());
-	segment.mesh_filename = mesh_name;
 	assert (segment.frame != NULL);
 	segments.push_back (segment);
 }
@@ -864,7 +835,6 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			Vector3f scale = model_table["frames"][i]["visuals"][vi]["scale"].getDefault (Vector3f (1.f, 1.f, 1.f));
 			Vector3f color = model_table["frames"][i]["visuals"][vi]["color"].getDefault (Vector3f (1.f, 1.f, 1.f));
 			
-			string mesh_filename = model_table["frames"][i]["visuals"][vi]["src"].get<std::string>();
 			Vector3f translate = model_table["frames"][i]["visuals"][vi]["translate"].getDefault (Vector3f (0.f, 0.f, 0.f));
 			Vector3f mesh_center = model_table["frames"][i]["visuals"][vi]["mesh_center"].getDefault (Vector3f (1./0.f, 1./0.f, 1./0.f));
 
@@ -875,7 +845,79 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 				rotate = Quaternion::fromGLRotate (angle, axis[0], axis[1], axis[2]);
 			}
 
-			addSegment (frame_name, dimensions, color, mesh_filename, translate, rotate, scale, mesh_center);
+            // load the mesh or geometry
+            MeshPtr mesh (new MeshVBO);
+
+            string mesh_filename = model_table["frames"][i]["visuals"][vi]["src"].getDefault<std::string>("");
+            bool have_geometry = model_table["frames"][i]["visuals"][vi]["geometry"].exists();
+
+            if (have_geometry && mesh_filename != "") {
+                cerr << "Error reading model " << model_filename << ": visual " << vi << " in frame " << i << ": attributes 'src' and 'geometry' are exclusive!" << endl;
+                abort();
+            } else if (have_geometry) {
+                if (model_table["frames"][i]["visuals"][vi]["geometry"]["box"].exists()) {
+                    Vector3f dimensions = model_table["frames"][i]["visuals"][vi]["geometry"]["box"]["dimensions"].getDefault (Vector3f (1.f, 1.f, 1.f));
+                    (*mesh) = CreateCuboid(dimensions[0], dimensions[1], dimensions[2]);
+                } else if (model_table["frames"][i]["visuals"][vi]["geometry"]["sphere"].exists()) {
+                    float radius = model_table["frames"][i]["visuals"][vi]["geometry"]["sphere"]["radius"].getDefault (1.f);
+                    unsigned int rows = static_cast<unsigned int>(model_table["frames"][i]["visuals"][vi]["geometry"]["sphere"]["rows"].getDefault (16.));
+                    unsigned int segments = static_cast<unsigned int>(model_table["frames"][i]["visuals"][vi]["geometry"]["sphere"]["segments"].getDefault (16.));
+                    mesh->join (SimpleMath::GL::ScaleMat44(radius, radius, radius), CreateUVSphere(rows, segments));
+                } else if (model_table["frames"][i]["visuals"][vi]["geometry"]["capsule"].exists()) {
+                    float radius = model_table["frames"][i]["visuals"][vi]["geometry"]["capsule"]["radius"].getDefault (1.f);
+                    float length = model_table["frames"][i]["visuals"][vi]["geometry"]["capsule"]["length"].getDefault (2.f);
+                    unsigned int rows = static_cast<unsigned int>(model_table["frames"][i]["visuals"][vi]["geometry"]["capsule"]["rows"].getDefault (16.));
+                    unsigned int segments = static_cast<unsigned int>(model_table["frames"][i]["visuals"][vi]["geometry"]["capsule"]["segments"].getDefault (16.));
+                    mesh->join (SimpleMath::GL::RotateMat44(90.f, 1.f, 0.f, 0.f), CreateCapsule(rows, segments, length, radius));
+                } else if (model_table["frames"][i]["visuals"][vi]["geometry"]["cylinder"].exists()) {
+                    float radius = model_table["frames"][i]["visuals"][vi]["geometry"]["cylinder"]["radius"].getDefault (1.f);
+                    float length = model_table["frames"][i]["visuals"][vi]["geometry"]["cylinder"]["length"].getDefault (2.f);
+                    unsigned int rows = static_cast<unsigned int>(model_table["frames"][i]["visuals"][vi]["geometry"]["cylinder"]["rows"].getDefault (16.));
+                    unsigned int segments = static_cast<unsigned int>(model_table["frames"][i]["visuals"][vi]["geometry"]["cylinder"]["segments"].getDefault (16.));
+                    mesh->join (SimpleMath::GL::ScaleMat44(radius, radius, length) * SimpleMath::GL::RotateMat44(90.f, 1.f, 0.f, 0.f) , CreateCylinder(segments));
+                } else {
+                    vector<LuaKey> keys = model_table["frames"][i]["visuals"][vi]["geometry"].keys();
+                    if (keys.size() == 1) {
+                        cerr << "Error reading model " << model_filename << ": visual " << vi << " in frame " << i << ": unknown geometry type '" << keys[0] << "'" << endl;
+                        abort();
+                    } else {
+                        cerr << "Error reading model " << model_filename << ": visual " << vi << " in frame " << i << ": invalid geometry description." << endl;
+                        abort();
+                    }
+                }
+            } else if (mesh_filename != "") {
+                // check whether we have the mesh, if not try to load it
+                MeshMap::iterator mesh_iter = meshmap.find (mesh_filename);
+                if (mesh_iter == meshmap.end()) {
+                    // check whether we want to extract a sub object within the obj file
+                    string submesh_name = "";
+                    if (mesh_filename.find (':') != string::npos) {
+                        submesh_name = mesh_filename.substr (mesh_filename.find(':') + 1, mesh_filename.size());
+                        mesh_filename = mesh_filename.substr (0, mesh_filename.find(':'));
+                        string mesh_file_location = find_mesh_file_by_name (mesh_filename);
+                        cout << "Loading sub object " << submesh_name << " from file " << mesh_file_location << endl;
+                        mesh->loadOBJ(mesh_file_location.c_str(), submesh_name.c_str());
+                    } else {
+                        string mesh_file_location = find_mesh_file_by_name (mesh_filename);
+                        cout << "Loading mesh " << mesh_file_location << endl;
+                        mesh->loadOBJ(mesh_file_location.c_str());
+                    }
+
+                    if (!skip_vbo_generation)
+                        mesh->generate_vbo();
+
+                    meshmap[mesh_filename] = mesh;
+
+                    mesh_iter = meshmap.find (mesh_filename);
+                }
+
+                mesh = mesh_iter->second;
+            } else {
+                cerr << "Error reading model " << model_filename << ": visual " << vi << " in frame " << i << ": neither 'src' nor 'geometry' found!" << endl;
+                abort();
+            }
+
+			addSegment (frame_name, mesh, dimensions, color, translate, rotate, scale, mesh_center);
 		}
 	}
 

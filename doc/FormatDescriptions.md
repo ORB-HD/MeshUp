@@ -170,6 +170,43 @@ The Mesh Information Table can use the following attributes:
 *rotate* (table, default: { axis = {1., 0., 0.}, angle = 0.})
 > Rotates the visual around the specified axis by the given angle.
 
+*geometry* (table, default: none)
+> A geometric object which can be specified instead of a mesh file (see
+> src/). Here are examples for all supported objects along with their
+> default properties:
+>
+> * Box Geometry:
+>
+>  	      geometry = {
+>           box = { dimensions = {1., 1., 1.} }
+>         }
+>
+> * Sphere Geometry:
+>
+>  	      geometry = {
+>           sphere = { radius=1., rows=16, segments=32 }
+>         }
+>
+> * Capsule Geometry:
+>
+>  	      geometry = {
+>           capsule = { radius=1., length=2., rows=16, segments=32 }
+>         }
+>   The capsule geometry is aligned along the Z-axis. ```length```
+>   specifies the total length of the capsule including the rounded caps.
+>
+> * Cylinder Geometry:
+>
+>  	      geometry = {
+>           capsule = { radius=1., length=2., rows=16, segments=32 }
+>         }
+>   The cylinder geometry is aligned along the Z-axis.
+>
+> Please note that the attributes *geometry* and *src* are exclusive!
+> Furthermore the sizes and radii specified in the geometry table will be
+> overridden when ```scale``` or ```dimensions``` are present in the Mesh
+> Information Table.
+
 *src* (string)
 >  The path to the mesh file, i.e. a path to an OBJ file. If the src string
 >  is "mymesh.obj" it will search in the following paths from top to

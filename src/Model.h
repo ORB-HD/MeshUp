@@ -219,9 +219,9 @@ struct MeshupModel {
 
 	void addSegment (
 			const std::string &frame_name,
+            const MeshPtr mesh,
 			const Vector3f &dimensions,
 			const Vector3f &color,
-			const std::string &mesh_name,
 			const Vector3f &translate,
 			const SimpleMath::GL::Quaternion &rotate,
 			const Vector3f &scale,
