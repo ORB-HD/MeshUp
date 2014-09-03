@@ -177,19 +177,19 @@ The Mesh Information Table can use the following attributes:
 >
 > * Box Geometry:
 >
->  	      geometry = {
+>         geometry = {
 >           box = { dimensions = {1., 1., 1.} }
 >         }
 >
 > * Sphere Geometry:
 >
->  	      geometry = {
+>  	  geometry = {
 >           sphere = { radius=1., rows=16, segments=32 }
 >         }
 >
 > * Capsule Geometry:
 >
->  	      geometry = {
+>  	  geometry = {
 >           capsule = { radius=1., length=2., rows=16, segments=32 }
 >         }
 >   The capsule geometry is aligned along the Z-axis. ```length```
@@ -197,7 +197,7 @@ The Mesh Information Table can use the following attributes:
 >
 > * Cylinder Geometry:
 >
->  	      geometry = {
+>  	  geometry = {
 >           capsule = { radius=1., length=2., rows=16, segments=32 }
 >         }
 >   The cylinder geometry is aligned along the Z-axis.
