@@ -15,7 +15,6 @@ SET ( TESTS_SRCS
 	../src/Animation.cc
 	../src/Model.cc
 	../src/MeshVBO.cc
-	../src/objloader.cc
 	../src/Curve.cc
 	../src/luatables/luatables.cc
 	)

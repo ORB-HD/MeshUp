@@ -100,6 +100,7 @@ struct Segment {
 		scale (-1.f, -1.f, -1.f),
 		meshcenter (1/0.0, 0.f, 0.f),
 		translate (0.f, 0.f, 0.f),
+		rotate (SimpleMath::GL::Quaternion::fromGLRotate (0.f, 1.f, 0.f, 0.f)),
 		gl_matrix (Matrix44f::Identity(4,4)),
 		frame (FramePtr()),
 		mesh_filename("")
@@ -113,6 +114,7 @@ struct Segment {
 	MeshPtr mesh;
 	Vector3f meshcenter;
 	Vector3f translate;
+	SimpleMath::GL::Quaternion rotate;
 	Matrix44f gl_matrix;
 	FramePtr frame;
 	std::string mesh_filename;
@@ -217,11 +219,12 @@ struct MeshupModel {
 
 	void addSegment (
 			const std::string &frame_name,
+	   	const MeshPtr mesh,
 			const Vector3f &dimensions,
-			const Vector3f &scale,
 			const Vector3f &color,
-			const std::string &mesh_name,
 			const Vector3f &translate,
+			const SimpleMath::GL::Quaternion &rotate,
+			const Vector3f &scale,
 			const Vector3f &mesh_center);
 
 	void addCurvePoint (

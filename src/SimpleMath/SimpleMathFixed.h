@@ -488,7 +488,7 @@ class Matrix {
 			zero();
 		}
 
-		val_type norm() {
+		val_type norm() const {
 			return sqrt(this->squaredNorm());
 		}
 
@@ -501,7 +501,11 @@ class Matrix {
 			return *this;
 		}
 
-		Matrix<val_type, 3, 1> cross(const Matrix<val_type, 3, 1> &other_vector) {
+		matrix_type normalized() const {
+			return matrix_type (*this) / this->norm();
+		}
+
+		Matrix<val_type, 3, 1> cross(const Matrix<val_type, 3, 1> &other_vector) const {
 			COMPILE_ASSERT (nrows * ncols == 3);
 
 			Matrix<val_type, 3, 1> result;
@@ -695,6 +699,10 @@ class Matrix {
 			return mData;
 		}
 
+		const val_type *data() const{
+			return mData;
+		}
+
 		// regular transpose of a 6 dimensional matrix
 		Matrix<val_type, ncols, nrows> transpose() const {
 			Matrix<val_type, ncols, nrows> result;
@@ -719,10 +727,10 @@ class Matrix {
 			return *this * -1.;
 		}
 
-		const HouseholderQR<matrix_type> householderQR() const {
+		const HouseholderQR<matrix_type> householderQr() const {
 			return HouseholderQR<matrix_type>(*this);
 		}
-		const ColPivHouseholderQR<matrix_type> colPivHouseholderQR() const {
+		const ColPivHouseholderQR<matrix_type> colPivHouseholderQr() const {
 			return ColPivHouseholderQR<matrix_type>(*this);
 		}
 

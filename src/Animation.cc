@@ -513,6 +513,7 @@ void UpdateModelSegmentTransformations (MeshupModelPtr model) {
 		// we also have to apply the scaling after the transform:
 		seg_iter->gl_matrix = 
 			SimpleMath::GL::ScaleMat44 (scale[0], scale[1], scale[2])
+			* seg_iter->rotate.toGLMatrix()
 			* SimpleMath::GL::TranslateMat44 (translate[0], translate[1], translate[2])
 			* seg_iter->frame->pose_transform;
 
