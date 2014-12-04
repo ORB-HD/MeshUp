@@ -14,7 +14,6 @@
 #include <list>
 #include <iostream>
 #include <map>
-#include <boost/shared_ptr.hpp>
 #include <limits>
 
 #include "SimpleMath/SimpleMath.h"
@@ -115,13 +114,13 @@ struct Animation {
 	std::vector<std::vector<float> > raw_values;
 };
 
-typedef boost::shared_ptr<Animation> AnimationPtr;
+typedef Animation* AnimationPtr;
 
 struct MeshupModel;
-typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;
+typedef MeshupModel* MeshupModelPtr;
 
 struct Frame;
-typedef boost::shared_ptr<Frame> FramePtr;
+typedef Frame* FramePtr;
 
 /** \brief Updates the transformations within the model for drawing */
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);

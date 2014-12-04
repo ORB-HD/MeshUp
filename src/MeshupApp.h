@@ -17,6 +17,8 @@
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
 
+struct Scene;
+
 class MeshupApp : public QMainWindow, public Ui::MainWindow
 {
     Q_OBJECT
@@ -24,7 +26,15 @@ class MeshupApp : public QMainWindow, public Ui::MainWindow
 public:
     MeshupApp(QWidget *parent = 0);
 
+		std::vector<std::string> model_files_queue;
+		std::vector<std::string> animation_files_queue;
+
 		void parseArguments (int argc, char* argv[]);
+		void loadModel (const char *filename);
+		void loadAnimation (const char *filename);
+		void setAnimationFraction (float fraction);
+
+		Scene* scene;
 
 		// unix signal handler
 		static void SIGUSR1Handler(int unused);
@@ -46,6 +56,8 @@ public slots:
 		virtual void focusInEvent (QFocusEvent *event);
 
 		void handleSIGUSR1();
+
+		void opengl_initialized();
 
 		void saveSettings ();
 		void loadSettings ();
@@ -73,6 +85,7 @@ public slots:
 
 		void actionRenderAndSaveToFile ();
 		void actionRenderSeriesAndSaveToFile ();
+
 	private:
 		static int sigusr1Fd[2];
 		QSocketNotifier *snUSR1;

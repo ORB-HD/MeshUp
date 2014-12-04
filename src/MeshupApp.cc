@@ -14,12 +14,14 @@
 #include <QProgressDialog>
 #include <QRegExp>
 #include <QRegExpValidator>
+#include <algorithm>
 
 #include "meshup_config.h"
 
 #include "glwidget.h" 
 #include "MeshupApp.h"
 #include "Animation.h"
+#include "Scene.h"
 
 #include <assert.h>
 #include <iostream>
@@ -29,9 +31,13 @@
 #include <fstream>
 #include <signal.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "json/json.h"
 #include "colorscale.h"
+
+#include "Model.h"
+#include "Animation.h"
 
 using namespace std;
 
@@ -44,12 +50,13 @@ MeshupApp::MeshupApp(QWidget *parent)
 	timer = new QTimer (this);
 	setupUi(this); // this sets up GUI
 
+	scene = new Scene;
+
 	//setting up the socket pair for signal handling
 	if (!::socketpair(AF_UNIX, SOCK_STREAM,0,sigusr1Fd)) {
 		snUSR1 = new QSocketNotifier(sigusr1Fd[1], QSocketNotifier::Read, this);
 		connect(snUSR1, SIGNAL(activated(int)), this, SLOT(handleSIGUSR1()));
 	}
-	
 
 	// version label
 	string version_str = string("v") + MESHUP_VERSION_STRING;
@@ -152,17 +159,70 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
-	connect (glWidget, SIGNAL (animation_loaded()), this, SLOT (animation_loaded()));
-	connect (glWidget, SIGNAL (model_loaded()), this, SLOT (camera_changed()));
 	connect (glWidget, SIGNAL (camera_changed()), this, SLOT (camera_changed()));
 	connect (lineEditCameraEye, SIGNAL (editingFinished()), this, SLOT (update_camera()));
 	connect (lineEditCameraCenter, SIGNAL (editingFinished()), this, SLOT (update_camera()));
 
 	connect (pushButtonUpdateCamera, SIGNAL (clicked()), this, SLOT (update_camera()));
 
+	connect (glWidget, SIGNAL (opengl_initialized()), this, SLOT (opengl_initialized()));
+
 	loadSettings();
 	
 	timer->start(glRefreshTime);
+}
+
+void MeshupApp::opengl_initialized () {
+	glWidget->scene = scene;
+
+	for (unsigned int i=0; i < model_files_queue.size(); i++) {
+		loadModel (model_files_queue[i].c_str());
+	}
+
+	for (unsigned int i=0; i < animation_files_queue.size(); i++) {
+		loadAnimation (animation_files_queue[i].c_str());
+	}
+}
+
+void MeshupApp::loadModel(const char* filename) {
+	if (glWidget->scene == NULL) {
+		model_files_queue.push_back (filename);
+		return;
+	}
+
+	MeshupModel* model = new MeshupModel;
+	// TODO: gracefully ignore erroneous files
+	model->loadModelFromFile (filename);
+	model->resetPoses();
+	model->updateSegments();
+	
+	scene->models.push_back (model);
+}
+
+void MeshupApp::loadAnimation(const char* filename) {
+	if (glWidget->scene == NULL) {
+		animation_files_queue.push_back (filename);
+		return;
+	}
+
+	if (scene->models.size() == 0) {
+		std::cerr << "Error: could not load Animation without a model!" << std::endl;
+		abort();
+	}
+
+	Animation* animation = new Animation();
+	// TODO: gracefully ignore erroneous files
+	animation->loadFromFile (filename, scene->models[scene->models.size() - 1]->configuration);
+	scene->animations.push_back (animation);
+
+	scene->longest_animation = std::max (scene->longest_animation, animation->duration);
+
+	unsigned int i = scene->animations.size() - 1;
+//	UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
+}
+
+void MeshupApp::setAnimationFraction (float fraction) {
+	scene->setCurrentTime(fraction * scene->longest_animation);
 }
 
 void print_usage() {
@@ -173,8 +233,6 @@ void print_usage() {
 }
 
 void MeshupApp::parseArguments (int argc, char* argv[]) {
-	bool model_loaded = false;
-	bool animation_loaded = false;
 	for (int i = 1; i < argc; i++) {
 		if (string(argv[i]) == "--help"
 				|| string(argv[i]) == "-h") {
@@ -182,18 +240,14 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 			exit(1);
 		}
 
-		if (!model_loaded) {
-			string model_filename = find_model_file_by_name (argv[i]);
+		string arg = argv[i];
+		if (arg.substr (arg.size() - 3) == "lua") {
+			string model_filename = find_model_file_by_name (arg.c_str());
 			if (model_filename.size() != 0) {
-				glWidget->loadModel(model_filename.c_str());
-				model_loaded = true;
-			} else {
-				cerr << "Model '" << argv[i] << "' not found! First parameter must be a model!" << endl;
-				exit(1);
+				loadModel(model_filename.c_str());
 			}
-		} else if (!animation_loaded) {
-			glWidget->loadAnimation(argv[i]);
-			animation_loaded = true;
+		} else if (arg.substr (arg.size() - 3) == "csv") {
+			loadAnimation (arg.c_str());
 		}
 	}
 }
@@ -404,7 +458,7 @@ void MeshupApp::action_load_model() {
 	file_dialog.setFileMode(QFileDialog::ExistingFile);
 
 	if (file_dialog.exec()) {
-		glWidget->loadModel (file_dialog.selectedFiles().at(0).toStdString().c_str());
+		loadModel (file_dialog.selectedFiles().at(0).toStdString().c_str());
 	}	
 }
 
@@ -415,50 +469,53 @@ void MeshupApp::action_load_animation() {
 	file_dialog.setFileMode(QFileDialog::ExistingFile);
 
 	if (file_dialog.exec()) {
-		glWidget->loadAnimation (file_dialog.selectedFiles().at(0).toStdString().c_str());
+		loadAnimation (file_dialog.selectedFiles().at(0).toStdString().c_str());
 	}	
 }
 
 void MeshupApp::action_reload_files() {
-	MeshupModelPtr test_model (new MeshupModel());
-	AnimationPtr test_animation (new Animation());
+	cerr << "Fix reloading!" << endl;
+	abort();
 
-	string model_filename = glWidget->model_data->model_filename;
-	string animation_filename = glWidget->animation_data->animation_filename;
-
-	// no model to reload
-	if (model_filename.size() == 0) 
-		return;
-
-	bool status;
-	status = test_model->loadModelFromFile(model_filename.c_str(), false);
-
-	if (!status) {
-		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
-		return;
-	}
-
-	glWidget->model_data = test_model;
-
-	// no animation to reload
-	if (animation_filename.size() == 0)
-		return;
-
-	status = test_animation->loadFromFile(animation_filename.c_str(), glWidget->model_data->configuration, false);
-	if (!status) {
-		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
-		return;
-	}
-
-	// try to set old animation time.
-	if (glWidget->animation_data &&  glWidget->animation_data->current_time < test_animation->duration) {
-		test_animation->current_time=glWidget->animation_data->current_time;
-	}
-
-	// everything worked fine -> replace the current model
-	glWidget->animation_data = test_animation;
-
-	emit (animation_loaded());
+//	MeshupModelPtr test_model (new MeshupModel());
+//	AnimationPtr test_animation (new Animation());
+//
+//	string model_filename = glWidget->model_data->model_filename;
+//	string animation_filename = glWidget->animation_data->animation_filename;
+//
+//	// no model to reload
+//	if (model_filename.size() == 0) 
+//		return;
+//
+//	bool status;
+//	status = test_model->loadModelFromFile(model_filename.c_str(), false);
+//
+//	if (!status) {
+//		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
+//		return;
+//	}
+//
+//	glWidget->model_data = test_model;
+//
+//	// no animation to reload
+//	if (animation_filename.size() == 0)
+//		return;
+//
+//	status = test_animation->loadFromFile(animation_filename.c_str(), glWidget->model_data->configuration, false);
+//	if (!status) {
+//		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
+//		return;
+//	}
+//
+//	// try to set old animation time.
+//	if (glWidget->animation_data &&  scene->current_time < test_animation->duration) {
+//		test_animation->current_time=scene->current_time;
+//	}
+//
+//	// everything worked fine -> replace the current model
+//	glWidget->animation_data = test_animation;
+//
+//	emit (animation_loaded());
 	
 	return;
 }
@@ -471,9 +528,14 @@ void MeshupApp::action_quit () {
 void MeshupApp::animation_loaded() {
 	qDebug() << __func__;
 
-	glWidget->model_data->resetPoses();
+	for (unsigned int i = 0; i < scene->models.size(); i++) {
+		scene->models[i]->resetPoses();
+		scene->models[i]->updateFrames();
+	}
 
-	UpdateModelFromAnimation (glWidget->model_data, glWidget->animation_data, glWidget->animation_data->current_time);
+	for (unsigned int i = 0; i < scene->animations.size(); i++) {
+		UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
+	}
 
 	initialize_curves();
 }
@@ -482,18 +544,20 @@ void MeshupApp::initialize_curves() {
 	// qDebug() << "initializing curves";
 
 	float curve_frame_rate = 60.f;
-	float duration = glWidget->animation_data->duration;
+	float duration = scene->longest_animation;
 	
 	float time_step = duration / curve_frame_rate;
 	unsigned int step_count = duration * curve_frame_rate;
-	float old_time = glWidget->animation_data->current_time;
+	float old_time = scene->current_time;
 	float current_time = 0.f;
 
 	// qDebug() << "duration = " << scientific << duration << endl;
 	// cout << "time_step = " << scientific << time_step << endl;
 	// cout << "step_count = " << scientific << step_count << endl;
 
-	glWidget->model_data->clearCurves();
+	for (unsigned int i = 0; i < scene->models.size(); i++) {
+		scene->models[i]->clearCurves();
+	}
 		
 	while (current_time < duration) {
 		current_time += time_step;
@@ -502,29 +566,32 @@ void MeshupApp::initialize_curves() {
 
 		float fraction = current_time / duration * 2.f - 1.f;
 
-		UpdateModelFromAnimation (glWidget->model_data, glWidget->animation_data, current_time);
+		for (unsigned int i = 0; i < scene->animations.size(); i++) {
+			UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
 
-		MeshupModel::FrameMap::iterator frame_iter = glWidget->model_data->framemap.begin();
+			MeshupModel::FrameMap::iterator frame_iter = scene->models[i]->framemap.begin();
 
-		for (frame_iter; frame_iter != glWidget->model_data->framemap.end(); frame_iter++) {
-			Matrix44f pose_matrix = frame_iter->second->pose_transform;
-			Vector3f pose_translation (
-					pose_matrix (3,0),
-					pose_matrix (3,1),
-					pose_matrix (3,2)
-					);
+			for (frame_iter; frame_iter != scene->models[i]->framemap.end(); frame_iter++) {
+				Matrix44f pose_matrix = frame_iter->second->pose_transform;
+				Vector3f pose_translation (
+						pose_matrix (3,0),
+						pose_matrix (3,1),
+						pose_matrix (3,2)
+						);
 
-			glWidget->model_data->addCurvePoint (frame_iter->first,
-					pose_translation,
-					Vector3f (
-						colorscale::red(fraction),
-						colorscale::green(fraction),
-						colorscale::blue(fraction))
-					);
+				scene->models[i]->addCurvePoint (frame_iter->first,
+						pose_translation,
+						Vector3f (
+							colorscale::red(fraction),
+							colorscale::green(fraction),
+							colorscale::blue(fraction))
+						);
+			}
 		}
+
 	}
 
-	glWidget->animation_data->current_time = old_time;
+	scene->current_time = old_time;
 	// qDebug() << "initializing curves done";
 }
 
@@ -538,7 +605,7 @@ void MeshupApp::timeline_frame_changed (int frame_index) {
 	if (!repeat_gate) {
 		repeat_gate = true;
 
-		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+		setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
 		
 		update_time_widgets();
 
@@ -558,15 +625,15 @@ void MeshupApp::timeline_set_frame (int frame_index) {
 
 		// this automatically calls timeline_frame_changed and thus updates
 		// the horizontal slider
-		timeLine->setCurrentTime (frame_index * glWidget->getAnimationDuration());
+		timeLine->setCurrentTime (frame_index * scene->longest_animation);
 
 		repeat_gate = false;
 	}
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
 }
 
 void MeshupApp::timeslider_value_changed (int frame_index) {
-	float current_time = static_cast<float>(frame_index) / TimeLineDuration * glWidget->getAnimationDuration();
+	float current_time = static_cast<float>(frame_index) / TimeLineDuration * scene->longest_animation;
 	
 	int num_seconds = static_cast<int>(floor(current_time));
 	int num_milliseconds = static_cast<int>(round((current_time - num_seconds) * 1000.f));
@@ -575,18 +642,18 @@ void MeshupApp::timeslider_value_changed (int frame_index) {
 	time_string << num_seconds << "." << setw(3) << setfill('0') << num_milliseconds;
 	timeLabel->setText(time_string.str().c_str());
 
-	glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
 }
 
 void MeshupApp::update_time_widgets () {
 //	qDebug() << __func__;
-	if (glWidget->animation_data && glWidget->animation_data->duration > 0.) {
-		double time_fraction = glWidget->animation_data->current_time / glWidget->animation_data->duration;
+	if (scene->animations.size() > 0 && scene->longest_animation > 0.) {
+		double time_fraction = scene->current_time / scene->longest_animation;
 		int frame_index = static_cast<int>(round(time_fraction * TimeLineDuration));
 
 		horizontalSliderTime->setValue (frame_index);
-		timeLine->setDuration (glWidget->getAnimationDuration() * TimeLineDuration / (spinBoxSpeed->value() / 100.0));
-		glWidget->setAnimationTime (static_cast<float>(frame_index) / TimeLineDuration);
+		timeLine->setDuration (scene->longest_animation * TimeLineDuration / (spinBoxSpeed->value() / 100.0));
+		setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
 	}
 }
 
@@ -661,7 +728,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		series_nr++;
 	}
 
-	float duration = glWidget->animation_data->duration;
+	float duration = scene->longest_animation;
 	float speedup = 100.f / static_cast<float>(spinBoxSpeed->value());
 	float timestep;
 	int image_count;
@@ -688,7 +755,7 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 
 		filename_stream.str("");
 		filename_stream << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-" << setw(4) << setfill('0') << i << ".png";
-		glWidget->animation_data->current_time = current_time;
+		scene->setCurrentTime (current_time);
 		QImage image = glWidget->renderContentOffscreen (width, height, render_transparent);
 		image.save (filename_stream.str().c_str(), 0, -1);
 

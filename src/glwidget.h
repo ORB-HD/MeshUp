@@ -14,11 +14,9 @@
 #include <QImage>
 
 #include <iostream>
+#include "SimpleMath/SimpleMath.h"
 
-#include "Model.h"
-
-struct Animation;
-typedef boost::shared_ptr<Animation> AnimationPtr;
+struct Scene;
 
 class GLWidget : public QGLWidget
 {
@@ -31,10 +29,7 @@ class GLWidget : public QGLWidget
 		QSize minimumSizeHint() const;
 		QSize sizeHint() const;
 
-		void loadModel (const char *filename);
-		void loadAnimation (const char *filename);
-
-		float getAnimationDuration();
+		Scene *scene;
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
@@ -44,9 +39,6 @@ class GLWidget : public QGLWidget
 		void setCameraEye (const Vector3f values);
 
 		void updateSphericalCoordinates();
-
-		MeshupModelPtr model_data;
-		AnimationPtr animation_data;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;
@@ -104,8 +96,6 @@ class GLWidget : public QGLWidget
 		float windowWidth;
 		float windowHeight;
 
-		bool opengl_initialized;
-
 	public slots:
 		void toggle_draw_grid(bool status);
 		void toggle_draw_base_axes(bool status);
@@ -125,12 +115,9 @@ class GLWidget : public QGLWidget
 		void actionRenderImage();
 		void actionRenderSeriesImage();
 
-		void setAnimationTime (float fraction);
-	
 	signals:
-		void animation_loaded();
-		void model_loaded();
 		void camera_changed();
+		void opengl_initialized();
 };
 
 #endif

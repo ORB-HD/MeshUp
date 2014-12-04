@@ -481,51 +481,10 @@ void ModelApplyKeyFrame (MeshupModelPtr model, KeyFrame &keyframe) {
 	}
 }
 
-void UpdateModelSegmentTransformations (MeshupModelPtr model) {
-	MeshupModel::SegmentList::iterator seg_iter = model->segments.begin();
-
-	while (seg_iter != model->segments.end()) {
-		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
-
-		Vector3f scale(1.0f,1.0f,1.0f) ;
-
-		//only scale, if the dimensions are valid, i.e. are set in json-File
-		if (seg_iter->dimensions.squaredNorm() > 1.0e-4) {
-			scale = Vector3f(
-					fabs(seg_iter->dimensions[0]) / bbox_size[0],
-					fabs(seg_iter->dimensions[1]) / bbox_size[1],
-					fabs(seg_iter->dimensions[2]) / bbox_size[2]
-					);
-		} else if (seg_iter->scale[0] > 0.f) {
-			scale=seg_iter->scale;
-		}
-		
-		Vector3f translate(0.0f,0.0f,0.0f);
-		//only translate with meshcenter if it is defined in json file
-		if (!isnan(seg_iter->meshcenter[0])) {
-				Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
-				translate[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
-				translate[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
-				translate[2] = -center[2] * scale[2] + seg_iter->meshcenter[2];
-		}
-		translate+=seg_iter->translate;
-		
-		// we also have to apply the scaling after the transform:
-		seg_iter->gl_matrix = 
-			SimpleMath::GL::ScaleMat44 (scale[0], scale[1], scale[2])
-			* seg_iter->rotate.toGLMatrix()
-			* SimpleMath::GL::TranslateMat44 (translate[0], translate[1], translate[2])
-			* seg_iter->frame->pose_transform;
-
-		seg_iter++;
-	}
-}
-
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
 	KeyFrame keyframe = animation->getKeyFrameAtTime (time);
 	ModelApplyKeyFrame (model, keyframe);
 
 	model->updateFrames();
-
-	UpdateModelSegmentTransformations(model);
+	model->updateSegments();
 }

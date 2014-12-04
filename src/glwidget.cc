@@ -38,6 +38,7 @@
 
 #include "timer.h"
 #include "Animation.h"
+#include "Scene.h"
 
 using namespace std;
 
@@ -61,7 +62,7 @@ Vector4f light_position (0.f, 0.f, 0.f, 1.f);
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent),
-		opengl_initialized (false),
+		scene (NULL),
 		draw_base_axes (false),
 		draw_frame_axes (false),
 		draw_grid (false),
@@ -87,9 +88,6 @@ GLWidget::GLWidget(QWidget *parent)
 
 	setFocusPolicy(Qt::StrongFocus);
 	setMouseTracking(true);
-
-	model_data = MeshupModelPtr (new MeshupModel());
-	animation_data = AnimationPtr (new Animation());
 }
 
 GLWidget::~GLWidget() {
@@ -98,50 +96,10 @@ GLWidget::~GLWidget() {
 	makeCurrent();
 }
 
-void GLWidget::loadModel(const char* filename) {
-	if (opengl_initialized) {
-		model_data->loadModelFromFile (filename);
-		emit model_loaded();
-	} else {
-		// mark file for later loading
-		model_filename = filename;
-	}
-}
-
-void GLWidget::loadAnimation(const char* filename) {
-	if (opengl_initialized) {
-		if (!model_data) {
-			std::cerr << "Error: could not load Animation without a model!" << std::endl;
-			abort();
-		}
-		AnimationPtr new_animation (new Animation());
-		if (new_animation->loadFromFile (filename, model_data->configuration)) {
-			if (animation_data->current_time <= new_animation->duration) {
-				new_animation->current_time = animation_data->current_time;
-			}
-			animation_data = new_animation;
-			emit animation_loaded();
-		} else {
-			std::cerr << "Error: could not load Animation!" << std::endl;
-		}
-	} else {
-		// mark file for later loading
-		animation_filename = filename;
-	}
-}
-
-void GLWidget::setAnimationTime (float fraction) {
-	animation_data->current_time = fraction * animation_data->duration;
-}
-
 void GLWidget::actionRenderImage () {
 }
 
 void GLWidget::actionRenderSeriesImage () {
-}
-
-float GLWidget::getAnimationDuration() {
-	return animation_data->duration;
 }
 
 QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool use_alpha) {
@@ -183,31 +141,19 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 }
 
 Vector3f GLWidget::getCameraPoi() {
-	if (model_data)
-		return model_data->configuration.axes_rotation * poi;
-
 	return poi;
 }
 
 Vector3f GLWidget::getCameraEye() {
-	if (model_data)
-		return model_data->configuration.axes_rotation * eye;
-
 	return eye;
 }
 
 void GLWidget::setCameraPoi (const Vector3f values) {
-	if (model_data)
-		poi = model_data->configuration.axes_rotation.transpose() * values;
-	else
-		poi = values;
+	poi = values;
 }
 
 void GLWidget::setCameraEye (const Vector3f values) {
-	if (model_data)
-		eye = model_data->configuration.axes_rotation.transpose() * values;
-	else
-		eye = values;
+	eye = values;
 }
 
 /****************
@@ -389,9 +335,7 @@ void GLWidget::initializeGL()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	opengl_initialized = true;
-
-	animation_data->loop = true;
+	emit opengl_initialized();
 }
 
 void GLWidget::updateSphericalCoordinates() {
@@ -576,47 +520,34 @@ void GLWidget::drawGrid() {
 }
 
 void GLWidget::drawScene() {
+	if (!scene)
+		return;
+
 	if (draw_grid)
 		drawGrid();
 
 	if (draw_floor)
 		draw_checkers_board_shaded();
 
-	/*
-	glColor3f (1.f, 1.f, 1.f);
-	glBegin (GL_QUADS);
-	glNormal3f (0.f, 1.f, 0.f);
-	glVertex3f (-20.f, 0.f, -20.f);
-	glVertex3f (-20.f, 0.f, 20.f);
-	glVertex3f (20.f, 0.f, 20.f);
-	glVertex3f (20.f, 0.f, -20.f);
-	glEnd();
-	*/
-
-	timer_start (&timer_info);
-
 	if (draw_meshes)
-		model_data->draw();
-
-	draw_time += timer_stop(&timer_info);
-	draw_count++;
+		scene->drawMeshes();
 
 	if (draw_base_axes)
-		model_data->drawBaseFrameAxes();
+		scene->drawBaseFrameAxes();
 	if (draw_frame_axes)
-		model_data->drawFrameAxes();
+		scene->drawFrameAxes();
 
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
 	if (depth_test_enabled)
 		glDisable (GL_DEPTH_TEST);
 
 	if (draw_points)
-		model_data->drawPoints();
+		scene->drawPoints();
 
 	glDisable (GL_LIGHTING);
 
 	if (draw_curves)
-		model_data->drawCurves();
+		scene->drawCurves();
 
 	glEnable (GL_LIGHTING);
 
@@ -778,24 +709,6 @@ void GLWidget::shadowMapCleanup() {
 }
 
 void GLWidget::paintGL() {
-	// check whether we should reload our model
-	if (model_filename.size() != 0) {
-		loadModel (model_filename.c_str());
-
-		// clear the variable to mark that we do not have to load a model
-		// anymore
-		model_filename = "";
-	}
-
-	// or the animation
-	if (animation_filename.size() != 0) {
-		loadAnimation (animation_filename.c_str());
-
-		// clear the variable to mark that we do not have to load the animation 
-		// anymore.
-		animation_filename = "";
-	}
-
 	update_timer();
 
 	glMatrixMode (GL_MODELVIEW);
@@ -804,8 +717,6 @@ void GLWidget::paintGL() {
 	updateCamera();
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	UpdateModelFromAnimation (model_data, animation_data, animation_data->current_time);
 
 	if (draw_shadows) {
 		// start the shadow mapping magic!
