@@ -19,6 +19,7 @@
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
+#include "StateDescriptor.h"
 #include "FrameConfig.h"
 #include "MeshVBO.h"
 #include "Curve.h"
@@ -165,6 +166,8 @@ struct MeshupModel {
 
 		configuration = other.configuration;
 		frames_initialized = other.frames_initialized;
+
+		state_descriptor = other.state_descriptor;
 	}
 
 	MeshupModel& operator= (const MeshupModel& other) {
@@ -182,6 +185,8 @@ struct MeshupModel {
 
 			configuration = other.configuration;
 			frames_initialized = other.frames_initialized;
+	
+			state_descriptor = other.state_descriptor;
 		}
 		return *this;
 	}
@@ -203,6 +208,8 @@ struct MeshupModel {
 
 	/// Configuration how transformations are defined
 	FrameConfig configuration;
+	/// Maps individual dofs to transformations
+	StateDescriptor state_descriptor;
 
 	/// Marks whether the frame transformations have to be initialized
 	bool frames_initialized;
@@ -296,6 +303,7 @@ struct MeshupModel {
 		framemap.clear();
 		meshmap.clear();
 		clearCurves();
+		state_descriptor.clear();
 	
 		*this = MeshupModel();
 	}

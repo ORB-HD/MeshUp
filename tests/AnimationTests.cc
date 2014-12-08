@@ -36,31 +36,31 @@ struct ModelFixture {
 };
 
 TEST_FIXTURE (ModelFixture, TestLongEulerInterpolation) {
-	std::vector<ColumnInfo> columns;
+	std::vector<StateInfo> states;
 	std::vector<std::vector<float> > values;
 
-	ColumnInfo time_column;
+	StateInfo time_column;
 	time_column.is_time_column = true;
 
-	ColumnInfo upperarm_r_z;
+	StateInfo upperarm_r_z;
 	upperarm_r_z.frame_name = "UPPERARM";
-	upperarm_r_z.axis = ColumnInfo::AxisTypeZ;
-	upperarm_r_z.type = ColumnInfo::TransformTypeRotation;;
+	upperarm_r_z.axis = StateInfo::AxisTypeZ;
+	upperarm_r_z.type = StateInfo::TransformTypeRotation;;
 
-	ColumnInfo upperarm_r_y;
+	StateInfo upperarm_r_y;
 	upperarm_r_y.frame_name = "UPPERARM";
-	upperarm_r_y.axis = ColumnInfo::AxisTypeY;
-	upperarm_r_y.type = ColumnInfo::TransformTypeRotation;;
+	upperarm_r_y.axis = StateInfo::AxisTypeY;
+	upperarm_r_y.type = StateInfo::TransformTypeRotation;;
 
-	ColumnInfo upperarm_r_x;
+	StateInfo upperarm_r_x;
 	upperarm_r_x.frame_name = "UPPERARM";
-	upperarm_r_x.axis = ColumnInfo::AxisTypeX;
-	upperarm_r_x.type = ColumnInfo::TransformTypeRotation;;
+	upperarm_r_x.axis = StateInfo::AxisTypeX;
+	upperarm_r_x.type = StateInfo::TransformTypeRotation;;
 
-	columns.push_back (time_column);
-	columns.push_back (upperarm_r_z);
-	columns.push_back (upperarm_r_y);
-	columns.push_back (upperarm_r_x);
+	states.push_back (time_column);
+	states.push_back (upperarm_r_z);
+	states.push_back (upperarm_r_y);
+	states.push_back (upperarm_r_x);
 
 	std::vector<float> value_row (4, 0.f);
 	values.push_back(value_row);
@@ -71,7 +71,7 @@ TEST_FIXTURE (ModelFixture, TestLongEulerInterpolation) {
 	values.push_back(value_row);
 
 	animation->duration = 5.;
-	animation->column_infos = columns;
+	animation->state_descriptor.states = states;
 	animation->raw_values = values;
 
 	KeyFrame frame_first = animation->getKeyFrameAtTime (0.f);	

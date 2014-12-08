@@ -19,51 +19,9 @@
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
+#include "StateDescriptor.h"
 #include "FrameConfig.h"
 #include "Curve.h"
-
-/** \brief Description of the description of a column section entry of the
- * animation file.
- *
- * This data structure is also used to convert between raw Degree Of
- * Freedom (DOF) vectors to the actual frame transformation information.
- */
-struct ColumnInfo {
-	ColumnInfo() :
-		frame_name (""),
-		type (TransformTypeUnknown),
-		axis (AxisTypeUnknown),
-		is_time_column (false),
-		is_empty (false),
-		is_radian (false)
-	{}
-	enum TransformType {
-		TransformTypeUnknown = 0,
-		TransformTypeRotation,
-		TransformTypeTranslation,
-		TransformTypeScale,
-		TransformTypeLast
-	};
-	enum AxisType {
-		AxisTypeUnknown = 0,
-		AxisTypeX,
-		AxisTypeY,
-		AxisTypeZ,
-		AxisTypeNegativeX,
-		AxisTypeNegativeY,
-		AxisTypeNegativeZ 
-	};
-
-	std::string toString();
-
-	std::string frame_name;
-	TransformType type;
-	AxisType axis;
-
-	bool is_time_column;
-	bool is_empty;
-	bool is_radian;
-};
 
 /** \brief A single pose of a frame at a given time */
 struct TransformInfo {
@@ -79,7 +37,7 @@ struct TransformInfo {
 	SimpleMath::GL::Quaternion rotation_quaternion;
 	Vector3f scaling;
 
-	void applyColumnValue (const ColumnInfo &column_info, float value, const FrameConfig &frame_config);
+	void applyStateValue (const StateInfo &column_info, float value, const FrameConfig &frame_config);
 };
 
 /** \brief Contains for all frames the transformations at a single keyframe
@@ -110,7 +68,7 @@ struct Animation {
 	bool loop;
 	FrameConfig configuration;
 
-	std::vector<ColumnInfo> column_infos;
+	StateDescriptor state_descriptor;
 	std::vector<std::vector<float> > raw_values;
 };
 
