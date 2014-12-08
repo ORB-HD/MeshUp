@@ -58,6 +58,8 @@ struct Animation {
 
 	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
 
+	void getInterpolatingIndices (float time, int *frame_prev, int *frame_next, float *time_fraction);
+
 	KeyFrame getKeyFrameAtFrameIndex (int frame_index);
 	KeyFrame getKeyFrameAtTime (float time);
 

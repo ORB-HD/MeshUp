@@ -139,6 +139,17 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 		if (line.size() == 0)
 			continue;
 
+		// check whether we have a CSV file with just the data
+		if (!found_column_section && !found_data_section) {
+			float value = 0.f;
+			istringstream value_stream (line.substr (0, line.find_first_of (" \t\r") - 1));
+			value_stream >> value;
+			if (!value_stream.fail()) {
+				data_section = true;	
+				found_data_section = true;
+			}
+		}
+	
 		if (line.substr (0, string("COLUMNS:").size()) == "COLUMNS:") {
 			found_column_section = true;
 			column_section = true;
@@ -359,11 +370,6 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 		}
 	}
 
-	if (!found_column_section) {
-		cerr << "Error: did not find COLUMNS: section in animation file!" << endl;
-		abort();
-	}
-
 	if (!found_data_section) {
 		cerr << "Error: did not find DATA: section in animation file!" << endl;
 		abort();
@@ -405,27 +411,35 @@ KeyFrame Animation::getKeyFrameAtFrameIndex (int frame_index) {
 	return keyframe;
 }
 
+void Animation::getInterpolatingIndices (float time, int *frame_prev, int *frame_next, float *time_fraction) {
+	*frame_prev= 0;
+	*frame_next= 0;
+	*time_fraction = 0.f;
+
+	if (raw_values.size() > 1) {
+		while (time > raw_values[*frame_next][0]) {
+			*frame_prev = *frame_next;
+			(*frame_next) ++;
+
+			if (*frame_next == raw_values.size()) {
+				*frame_prev = raw_values.size() - 2;
+				*frame_next = raw_values.size() - 1;
+				*time_fraction = 1.;
+				break;
+			}
+	
+			*time_fraction = (time - raw_values[*frame_prev][0]) / (raw_values[*frame_next][0] - raw_values[*frame_prev][0]);
+		}
+	}
+}
+
 KeyFrame Animation::getKeyFrameAtTime (float time) {
-	// compute interpolating frame indices and the time fraction
 	int frame_prev = 0, frame_next = 0;
 	float time_fraction = 0.f;
 
-	if (raw_values.size() > 1) {
-		while (time > raw_values[frame_next][0]) {
-			frame_prev = frame_next;
-			frame_next ++;
+	getInterpolatingIndices (time, &frame_prev, &frame_next, &time_fraction);
 
-			if (frame_next == raw_values.size()) {
-				frame_prev = raw_values.size() - 2;
-				frame_next = raw_values.size() - 1;
-				time_fraction = 1.;
-				break;
-			}
-
-			time_fraction = (time - raw_values[frame_prev][0]) / (raw_values[frame_next][0] - raw_values[frame_prev][0]);
-		}
-	}
-
+	// compute interpolating frame indices and the time fraction
 	// perform interpolation for all frames
 	KeyFrame keyframe_prev = getKeyFrameAtFrameIndex (frame_prev);
 	KeyFrame keyframe_next = getKeyFrameAtFrameIndex (frame_next);
@@ -477,6 +491,11 @@ void ModelApplyKeyFrame (MeshupModelPtr model, KeyFrame &keyframe) {
 }
 
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
+	// Use model state descriptor if the animation does not have one
+	if (animation->state_descriptor.states.size() == 0) {
+		animation->state_descriptor = model->state_descriptor;
+	}
+
 	KeyFrame keyframe = animation->getKeyFrameAtTime (time);
 	ModelApplyKeyFrame (model, keyframe);
 

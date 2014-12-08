@@ -1,8 +1,10 @@
-MeshUp - A Copyright (c) 2012-2013 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+MeshUp - A Copyright (c) 2012-2014 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
 
 # Introduction
 
-MeshUp is a visualization tool for multi-body systems based on skeletal animation and magic. It renders models in real-time and allows to render motions directly to videos or image sequences.
+MeshUp is a visualization tool for multi-body systems based on skeletal
+animation and magic. It renders models in real-time and allows to render
+motions directly to videos or image sequences.
 
 # Features:
 
@@ -15,7 +17,7 @@ MeshUp is a visualization tool for multi-body systems based on skeletal animatio
 
 # Usage:
 
-	meshup [model_name] [animation_file]
+	meshup [model_file(s)] [animation_file(s)]
 
 See meshup --help for more options.
 
@@ -37,9 +39,9 @@ values, not radians.
 
 # Meshes
 
-Similar as in storing [Model Files](#markdown-header-model-files), MeshUp tries to find meshes in various
-places. Unlike for models, meshes are required to be in a subfolder called
-"meshes/".
+Similar as in storing [Model Files](#markdown-header-model-files), MeshUp
+tries to find meshes in various places. Unlike for models, meshes are
+required to be in a subfolder called "meshes/".
 
 See [Notes](#markdown-header-notes) further down for information on how to
 export meshes to OBJ files that can be included directly into Meshup.

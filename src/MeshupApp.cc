@@ -218,7 +218,7 @@ void MeshupApp::loadAnimation(const char* filename) {
 	scene->longest_animation = std::max (scene->longest_animation, animation->duration);
 
 	unsigned int i = scene->animations.size() - 1;
-//	UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
+	UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
 }
 
 void MeshupApp::setAnimationFraction (float fraction) {
@@ -226,7 +226,7 @@ void MeshupApp::setAnimationFraction (float fraction) {
 }
 
 void print_usage() {
-	cout << "Usage: meshup [model_name] [animation_file] " << endl
+	cout << "Usage: meshup [model_file(s)] [animation_file(s)] " << endl
 		<< "Visualization tool for multi-body systems based on skeletal animation and magic." << endl
 		<< endl
 		<< "Report bugs to martin.felis@iwr.uni-heidelberg.de" << endl;
