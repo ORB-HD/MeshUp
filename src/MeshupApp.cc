@@ -219,6 +219,8 @@ void MeshupApp::loadAnimation(const char* filename) {
 
 	unsigned int i = scene->animations.size() - 1;
 	UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
+
+ 	initialize_curves(); 
 }
 
 void MeshupApp::setAnimationFraction (float fraction) {
@@ -536,39 +538,30 @@ void MeshupApp::animation_loaded() {
 	for (unsigned int i = 0; i < scene->animations.size(); i++) {
 		UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
 	}
-
-	initialize_curves();
 }
 
 void MeshupApp::initialize_curves() {
-	// qDebug() << "initializing curves";
+	float curve_frame_rate = 100.f;
 
-	float curve_frame_rate = 60.f;
-	float duration = scene->longest_animation;
-	
-	float time_step = duration / curve_frame_rate;
-	unsigned int step_count = duration * curve_frame_rate;
 	float old_time = scene->current_time;
-	float current_time = 0.f;
 
 	// qDebug() << "duration = " << scientific << duration << endl;
 	// cout << "time_step = " << scientific << time_step << endl;
-	// cout << "step_count = " << scientific << step_count << endl;
 
 	for (unsigned int i = 0; i < scene->models.size(); i++) {
 		scene->models[i]->clearCurves();
 	}
-		
-	while (current_time < duration) {
-		current_time += time_step;
-		if (current_time > duration)
-			current_time = duration;
 
-		float fraction = current_time / duration * 2.f - 1.f;
+	for (unsigned int i = 0; i < scene->animations.size(); i++) {
+		float current_time = 0.f;
+		float duration = scene->animations[i]->duration;
+		float time_step = duration / curve_frame_rate;
 
-		for (unsigned int i = 0; i < scene->animations.size(); i++) {
-			UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
+		while (1) {
+			float fraction = current_time / duration * 2.f - 1.f;
 
+			UpdateModelFromAnimation (scene->models[i], scene->animations[i], current_time);
+			scene->models[i]->updateFrames();
 			MeshupModel::FrameMap::iterator frame_iter = scene->models[i]->framemap.begin();
 
 			for (frame_iter; frame_iter != scene->models[i]->framemap.end(); frame_iter++) {
@@ -587,8 +580,14 @@ void MeshupApp::initialize_curves() {
 							colorscale::blue(fraction))
 						);
 			}
-		}
 
+			if (current_time == duration)
+				break;
+
+			current_time += time_step;
+			if (current_time > duration)
+				current_time = duration;
+		}
 	}
 
 	scene->current_time = old_time;

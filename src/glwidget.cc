@@ -554,7 +554,6 @@ void GLWidget::drawScene() {
 	if (depth_test_enabled)
 		glEnable (GL_DEPTH_TEST);
 
-
 	/*
 	if (draw_count % 100 == 0) {
 		qDebug() << "drawing time: " << draw_time << "(s) count: " << draw_count << " ~" << draw_time / draw_count << "(s) per draw";
