@@ -4,6 +4,10 @@
 #include "Animation.h"
 #include "GL/glew.h"
 
+#include <iostream>
+
+using namespace std;
+
 void Scene::setCurrentTime (double t){
 	current_time = t;
 
@@ -12,13 +16,20 @@ void Scene::setCurrentTime (double t){
 	}
 }
 
-void Scene::drawMeshes(){
+void Scene::drawMeshes() {
+	float z_start = 0.;
+	float z_offset = 0.;
+	
+	if (models.size() > 1) {
+		z_start = 0.5f * models.size();
+		z_offset = -1.f;
+	}
+
 	glPushMatrix();
-	glTranslatef (0., 0., 0.5 * models.size());
+	glTranslatef (0., 0., z_start);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-
-		glTranslatef (0., 0., -1.);
+		glTranslatef (0., 0., z_offset);
 		models[i]->draw();
 	}
 
@@ -26,12 +37,19 @@ void Scene::drawMeshes(){
 }
 
 void Scene::drawBaseFrameAxes(){
+	float z_start = 0.;
+	float z_offset = 0.;
+	
+	if (models.size() > 1) {
+		z_start = 0.5f * models.size();
+		z_offset = -1.f;
+	}
+
 	glPushMatrix();
-	glTranslatef (0., 0., 0.5 * models.size());
+	glTranslatef (0., 0., z_start);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-
-		glTranslatef (0., 0., -1.);
+		glTranslatef (0., 0., z_offset);
 		models[i]->drawBaseFrameAxes();
 	}
 
@@ -39,12 +57,19 @@ void Scene::drawBaseFrameAxes(){
 }
 
 void Scene::drawFrameAxes(){
+	float z_start = 0.;
+	float z_offset = 0.;
+	
+	if (models.size() > 1) {
+		z_start = 0.5f * models.size();
+		z_offset = -1.f;
+	}
+
 	glPushMatrix();
-	glTranslatef (0., 0., 0.5 * models.size());
+	glTranslatef (0., 0., z_start);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-
-		glTranslatef (0., 0., -1.);
+		glTranslatef (0., 0., z_offset);
 		models[i]->drawFrameAxes();
 	}
 
@@ -52,12 +77,19 @@ void Scene::drawFrameAxes(){
 }
 
 void Scene::drawPoints(){
+	float z_start = 0.;
+	float z_offset = 0.;
+	
+	if (models.size() > 1) {
+		z_start = 0.5f * models.size();
+		z_offset = -1.f;
+	}
+
 	glPushMatrix();
-	glTranslatef (0., 0., 0.5 * models.size());
+	glTranslatef (0., 0., z_start);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-
-		glTranslatef (0., 0., -1.);
+		glTranslatef (0., 0., z_offset);
 		models[i]->drawPoints();
 	}
 
@@ -65,12 +97,19 @@ void Scene::drawPoints(){
 }
 
 void Scene::drawCurves(){
+	float z_start = 0.;
+	float z_offset = 0.;
+	
+	if (models.size() > 1) {
+		z_start = 0.5f * models.size();
+		z_offset = -1.f;
+	}
+
 	glPushMatrix();
-	glTranslatef (0., 0., 0.5 * models.size());
+	glTranslatef (0., 0., z_start);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-
-		glTranslatef (0., 0., -1.);
+		glTranslatef (0., 0., z_offset);
 		models[i]->drawCurves();
 	}
 
