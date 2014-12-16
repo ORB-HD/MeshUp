@@ -476,48 +476,31 @@ void MeshupApp::action_load_animation() {
 }
 
 void MeshupApp::action_reload_files() {
-	cerr << "Fix reloading!" << endl;
-	abort();
+	for (unsigned int i = 0; i < scene->models.size(); i++) {
+		MeshupModel* model = new MeshupModel;
 
-//	MeshupModelPtr test_model (new MeshupModel());
-//	AnimationPtr test_animation (new Animation());
-//
-//	string model_filename = glWidget->model_data->model_filename;
-//	string animation_filename = glWidget->animation_data->animation_filename;
-//
-//	// no model to reload
-//	if (model_filename.size() == 0) 
-//		return;
-//
-//	bool status;
-//	status = test_model->loadModelFromFile(model_filename.c_str(), false);
-//
-//	if (!status) {
-//		cerr << "Reloading of model '" << model_filename.c_str() << "' failed!";
-//		return;
-//	}
-//
-//	glWidget->model_data = test_model;
-//
-//	// no animation to reload
-//	if (animation_filename.size() == 0)
-//		return;
-//
-//	status = test_animation->loadFromFile(animation_filename.c_str(), glWidget->model_data->configuration, false);
-//	if (!status) {
-//		cerr << "Reloading of animation '" << animation_filename.c_str() << "' failed!";
-//		return;
-//	}
-//
-//	// try to set old animation time.
-//	if (glWidget->animation_data &&  scene->current_time < test_animation->duration) {
-//		test_animation->current_time=scene->current_time;
-//	}
-//
-//	// everything worked fine -> replace the current model
-//	glWidget->animation_data = test_animation;
-//
-//	emit (animation_loaded());
+		if (model->loadModelFromFile (scene->models[i]->model_filename.c_str())) {
+			model->resetPoses();
+			model->updateSegments();
+			delete scene->models[i];
+			scene->models[i] = model;
+		} else {
+			cerr << "Error loading model " << scene->models[i]->model_filename << endl;
+		}
+	}
+
+	for (unsigned int i = 0; i < scene->animations.size(); i++) {
+		Animation* animation = new Animation();
+
+		if (animation->loadFromFile (scene->animations[i]->animation_filename.c_str(), scene->models[i]->configuration)) {
+			delete scene->animations[i];
+			scene->animations[i] = animation;
+		} else {
+			cerr << "Error loading animation " << scene->animations[i]->animation_filename << endl;
+		}
+	}
+
+	emit (animation_loaded());
 	
 	return;
 }
