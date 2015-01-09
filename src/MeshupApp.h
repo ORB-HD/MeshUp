@@ -10,12 +10,19 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QTime>
 #include <QTimer>
 #include <QTimeLine>
 #include <QSocketNotifier>
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
+
+extern "C" {
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
 
 struct Scene;
 
@@ -26,6 +33,12 @@ class MeshupApp : public QMainWindow, public Ui::MainWindow
 public:
     MeshupApp(QWidget *parent = 0);
 
+		int main_argc;
+		char** main_argv;
+		lua_State *L;
+		Scene* scene;
+
+		std::vector<std::string> args;
 		std::vector<std::string> model_files_queue;
 		std::vector<std::string> animation_files_queue;
 
@@ -34,13 +47,12 @@ public:
 		void loadAnimation (const char *filename);
 		void setAnimationFraction (float fraction);
 
-		Scene* scene;
-
 		// unix signal handler
 		static void SIGUSR1Handler(int unused);
 		
 protected:
-		QTimer *timer;
+		QTime updateTime;
+		QTimer *sceneRefreshTimer;
 		QTimeLine *timeLine;
 		QLabel *versionLabel;
 
@@ -58,6 +70,7 @@ public slots:
 		void handleSIGUSR1();
 
 		void opengl_initialized();
+		void drawScene ();
 
 		void saveSettings ();
 		void loadSettings ();

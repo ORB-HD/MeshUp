@@ -53,7 +53,7 @@ struct Animation {
 		current_time (0.f),
 		duration (0.f),
 		loop (false),
-		raw_values (std::vector<std::vector<float> >())
+		raw_values (std::vector<VectorNd>())
 	{}
 
 	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
@@ -71,7 +71,7 @@ struct Animation {
 	FrameConfig configuration;
 
 	StateDescriptor state_descriptor;
-	std::vector<std::vector<float> > raw_values;
+	std::vector<VectorNd> raw_values;
 };
 
 typedef Animation* AnimationPtr;

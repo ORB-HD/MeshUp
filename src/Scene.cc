@@ -10,7 +10,6 @@ using namespace std;
 
 void Scene::setCurrentTime (double t){
 	current_time = t;
-
 	for (unsigned int i = 0; i < animations.size(); i++) {
 		UpdateModelFromAnimation (models[i], animations[i], current_time);
 	}

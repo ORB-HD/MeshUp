@@ -22,6 +22,7 @@
 #include "MeshupApp.h"
 #include "Animation.h"
 #include "Scene.h"
+#include "Scripting.h"
 
 #include <assert.h>
 #include <iostream>
@@ -47,7 +48,6 @@ const double TimeLineDuration = 1000.;
 
 MeshupApp::MeshupApp(QWidget *parent)
 {
-	timer = new QTimer (this);
 	setupUi(this); // this sets up GUI
 
 	scene = new Scene;
@@ -71,9 +71,9 @@ MeshupApp::MeshupApp(QWidget *parent)
 	//  that makes sense
 	glRefreshTime=20; 
 
-	timer->setSingleShot(false);
-	// Start of timer is now at the end of this function
-	//  to allow the settings being used
+	sceneRefreshTimer = new QTimer (this);
+	sceneRefreshTimer->setSingleShot(false);
+	updateTime.start();
 
 	timeLine = new QTimeLine (TimeLineDuration, this);
 	timeLine->setCurveShape(QTimeLine::LinearCurve);
@@ -118,8 +118,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	dockPlayerControls->setVisible(true);
 	dockViewSettings->setVisible(false);
 
-	// the timer is used to continously redraw the OpenGL widget
-	connect (timer, SIGNAL(timeout()), glWidget, SLOT(updateGL()));
+	// the sceneRefreshTimer is used to continously redraw the OpenGL widget
+	connect (sceneRefreshTimer, SIGNAL(timeout()), this , SLOT(drawScene()));
 
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
@@ -169,19 +169,24 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	loadSettings();
 	
-	timer->start(glRefreshTime);
+	sceneRefreshTimer->start(glRefreshTime);
 }
 
 void MeshupApp::opengl_initialized () {
 	glWidget->scene = scene;
 
-	for (unsigned int i=0; i < model_files_queue.size(); i++) {
-		loadModel (model_files_queue[i].c_str());
-	}
+	parseArguments (main_argc, main_argv);
+}
 
-	for (unsigned int i=0; i < animation_files_queue.size(); i++) {
-		loadAnimation (animation_files_queue[i].c_str());
-	}
+void MeshupApp::drawScene () {
+	if (L)
+		scripting_update (L, 1.0e-3f * static_cast<float>(updateTime.restart()) );
+
+	scene->setCurrentTime(scene->current_time);
+	glWidget->updateGL();
+
+	if (L)
+		scripting_draw (L);
 }
 
 void MeshupApp::loadModel(const char* filename) {
@@ -235,6 +240,8 @@ void print_usage() {
 }
 
 void MeshupApp::parseArguments (int argc, char* argv[]) {
+	string scripting_file = "";
+
 	for (int i = 1; i < argc; i++) {
 		if (string(argv[i]) == "--help"
 				|| string(argv[i]) == "-h") {
@@ -243,14 +250,46 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 		}
 
 		string arg = argv[i];
-		if (arg.substr (arg.size() - 3) == "lua") {
+		if (arg == "-s" || arg == "--script") {
+			i++;
+			if (i == argc) {
+				cerr << "Error: no scripting file provided!" << endl;
+				abort();
+			}
+
+			arg = argv[i];
+			if (arg.size() < 3 || arg.substr (arg.size() - 3) != "lua") {
+				cerr << "Error: invalid scripting file! Must be a .lua file." << endl;
+				abort();
+			}
+
+			scripting_file = arg;
+		} else if (arg.size() >= 3 && arg.substr (arg.size() - 3) == "lua") {
 			string model_filename = find_model_file_by_name (arg.c_str());
 			if (model_filename.size() != 0) {
 				loadModel(model_filename.c_str());
 			}
-		} else if (arg.substr (arg.size() - 3) == "csv") {
+		} else if (arg.size() >= 3 && arg.substr (arg.size() - 3) == "csv") {
 			loadAnimation (arg.c_str());
 		}
+	}
+
+	if (scripting_file != "") {
+		cout << "Initialize scripting file " << scripting_file << endl;
+		scripting_init (this, scripting_file.c_str());
+	} else {
+		scripting_init (this, NULL);
+	}
+
+	if (L) {
+		int script_args_start = argc;
+		for (int i = 0; i < argc; i++) {
+			if (i < argc -2 && (string("-s") == argv[i] || string("--script") == argv[i])) {
+				script_args_start = i + 2;
+				break;
+			}
+		}
+		scripting_load (L, argc - script_args_start, &argv[script_args_start]);
 	}
 }
 

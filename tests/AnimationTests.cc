@@ -37,7 +37,7 @@ struct ModelFixture {
 
 TEST_FIXTURE (ModelFixture, TestLongEulerInterpolation) {
 	std::vector<StateInfo> states;
-	std::vector<std::vector<float> > values;
+	std::vector<VectorNd > values;
 
 	StateInfo time_column;
 	time_column.is_time_column = true;
@@ -62,7 +62,7 @@ TEST_FIXTURE (ModelFixture, TestLongEulerInterpolation) {
 	states.push_back (upperarm_r_y);
 	states.push_back (upperarm_r_x);
 
-	std::vector<float> value_row (4, 0.f);
+	VectorNd value_row (VectorNd::Zero (4));
 	values.push_back(value_row);
 	value_row[0] = 5.f;
 	value_row[1] = 200.f;

@@ -348,7 +348,7 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 			state_time = value;
 
 			// convert the data to raw values
-			std::vector<float> state_values(columns.size(), 0.);
+			VectorNd state_values (VectorNd::Zero (columns.size()));
 			for (int ci = 0; ci < columns.size(); ci++) {
 				istringstream value_stream (columns[ci]);
 				if (!(value_stream >> value)) {
