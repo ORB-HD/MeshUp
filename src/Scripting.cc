@@ -332,7 +332,13 @@ static int meshup_animation_addValues (lua_State *L) {
 		luaL_error (L, "Invalid values for animation: expected %d values but got %d", animation->raw_values[0].size(), values.size());
 	}
 
+	app_ptr->scene->longest_animation = std::max (app_ptr->scene->longest_animation, animation->duration);
+
 	animation->raw_values.push_back (values);
+
+	if (animation->duration < values[0])
+		animation->duration = values[0];
+
 	return 0;
 }
 
@@ -357,6 +363,10 @@ static int meshup_animation_setValuesAt (lua_State *L) {
 	}
 
 	animation->raw_values[row] = values;
+
+	// TODO: properly check whether values are still ordered in time?
+	if (animation->duration < values[0])
+		animation->duration = values[0];
 	
 	return 0;
 }
