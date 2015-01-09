@@ -494,6 +494,7 @@ void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, flo
 	// Use model state descriptor if the animation does not have one
 	if (animation->state_descriptor.states.size() == 0) {
 		animation->state_descriptor = model->state_descriptor;
+		animation->configuration = model->configuration;
 	}
 
 	KeyFrame keyframe = animation->getKeyFrameAtTime (time);
