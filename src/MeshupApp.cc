@@ -233,10 +233,15 @@ void MeshupApp::setAnimationFraction (float fraction) {
 }
 
 void print_usage() {
-	cout << "Usage: meshup [model_file(s)] [animation_file(s)] " << endl
+	cout << "Usage: meshup [model_file(s)] [animation_file(s)] [-s script.lua [args] ] " << endl
 		<< "Visualization tool for multi-body systems based on skeletal animation and magic." << endl
 		<< endl
-		<< "Report bugs to martin.felis@iwr.uni-heidelberg.de" << endl;
+		<< "-s, --script FILE    use the provided FILE as script. See doc/scripting/" << endl
+		<< "                     for examples and documentation. Note that any re-" << endl
+		<< "                     maining arguments will be sent to the meshup.load(args)" << endl
+		<< "                     script function." << endl
+		<< endl
+		<< "Report bugs to <martin.felis@iwr.uni-heidelberg.de>" << endl;
 }
 
 void MeshupApp::parseArguments (int argc, char* argv[]) {
