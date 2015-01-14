@@ -8,8 +8,6 @@ Debug/
 RelWithDebInfo/
 Release/
 doc/html/
-doc/scripting/index.html
-doc/scripting/ldoc.css
 
 meshup
 CMakeCache.txt

@@ -1,0 +1,492 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>MeshUp Lua API</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>MeshUp</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><strong>meshup</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>meshup</code></h1>
+<p>Puppeteer Lua Scripting Module.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#update">update (dt)</a></td>
+	<td class="summary">Update function that gets called every frame before it is drawn.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#draw">draw ()</a></td>
+	<td class="summary">Issues the scene to be drawn</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#draw">draw ()</a></td>
+	<td class="summary">Closes meshup</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#animation.getFilename">animation.getFilename (self)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#animation.getRawDimensions">animation.getRawDimensions (self)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#animation.addValues">animation.addValues (self, values)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#animation.setValuesAt">animation.setValuesAt (self, row, values)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#model.getFilename">model.getFilename (self)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#model.getDofCount">model.getDofCount (self)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#loadModel">loadModel (filename)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getModel">getModel (index)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getModelCount">getModelCount ()</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getAnimation">getAnimation (index)</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#getAnimationCount">getAnimationCount ()</a></td>
+	<td class="summary">
+
+</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "update"></a>
+    <strong>update (dt)</strong>
+    </dt>
+    <dd>
+    Update function that gets called every frame before it is drawn. (dt)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">dt</span>
+         the elapsed time in seconds since the last drawing update
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "draw"></a>
+    <strong>draw ()</strong>
+    </dt>
+    <dd>
+    Issues the scene to be drawn ()
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "draw"></a>
+    <strong>draw ()</strong>
+    </dt>
+    <dd>
+    Closes meshup ()
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the filename of the model
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "animation.getFilename"></a>
+    <strong>animation.getFilename (self)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the filename of the model</li>
+        <li>
+        rows, cols of the raw values</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "animation.getRawDimensions"></a>
+    <strong>animation.getRawDimensions (self)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        rows, cols of the raw values
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "animation.addValues"></a>
+    <strong>animation.addValues (self, values)</strong>
+    </dt>
+    <dd>
+
+ remaining entries
+ Adds new values to the animation
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation to which the values should be added
+        </li>
+        <li><span class="parameter">values</span>
+         value of the time at index 1 and state values at the
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "animation.setValuesAt"></a>
+    <strong>animation.setValuesAt (self, row, values)</strong>
+    </dt>
+    <dd>
+
+ remaining entries
+ Sets the raw values at the given row
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation for which the values should be set
+        </li>
+        <li><span class="parameter">row</span>
+         index of the row for which the new values should be set
+        </li>
+        <li><span class="parameter">values</span>
+         value of the time at index 1 and state values at the
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the filename of the model
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "model.getFilename"></a>
+    <strong>model.getFilename (self)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the model
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        the filename of the model</li>
+        <li>
+        the number of degrees of freedom</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "model.getDofCount"></a>
+    <strong>model.getDofCount (self)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the model
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the number of degrees of freedom
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "loadModel"></a>
+    <strong>loadModel (filename)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        model at given index or first model if no index is provided
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getModel"></a>
+    <strong>getModel (index)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">index</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        model at given index or first model if no index is provided</li>
+        <li>
+        number of loaded models.</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getModelCount"></a>
+    <strong>getModelCount ()</strong>
+    </dt>
+    <dd>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        number of loaded models.</li>
+        <li>
+        animation at given index or first animation if no index is provided</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getAnimation"></a>
+    <strong>getAnimation (index)</strong>
+    </dt>
+    <dd>
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">index</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        animation at given index or first animation if no index is provided</li>
+        <li>
+        number of loaded animations</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "getAnimationCount"></a>
+    <strong>getAnimationCount ()</strong>
+    </dt>
+    <dd>
+
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        number of loaded animations
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2015-01-09 12:13:06 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
