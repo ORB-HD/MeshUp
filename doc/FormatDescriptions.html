@@ -1,0 +1,316 @@
+<h1>Introduction</h1>
+<p>MeshUp is a 3d visualization tool for rigid-body motions. It is based on
+skeletal animation. The visualization needs three things: a model file,
+meshes and an animation file. This document describes the file format for
+the models for MeshUp.</p>
+<h2>Models</h2>
+<p>Models define a hierarchy of Frames to which geometric objects such as
+spheres, boxes or a generic mesh can be attached. There is one special
+Frame called BASE which is the global reference frame.</p>
+<p>Between a parent and a joint frame there can be a transformation
+(translation and rotation) which is called the joint frame. If the joint
+frame contains no transformation the parent and child frame coincide.</p>
+<p>For details see <a href="#model-format">Model Format</a>.</p>
+<h2>Meshes</h2>
+<p>Meshes are geometric objects thar can be created with 3d content creation
+tools such as Blender, MilkShape, etc. So far MeshUp only supports the OBJ
+file format to load meshes. Furthermore there are some limitations (see
+README for more details).</p>
+<h2>Animations</h2>
+<p>Animation files contain the motion information independent of the model.
+The actual data is stored in a comma separated format which allows easy
+export from a simulation program and also plotting using Octave or even a
+Spreadsheet program.</p>
+<p>For details see <a href="#animation-files">Animation Files</a>.</p>
+<p><a id="model-format"></a></p>
+<h1>Model Format</h1>
+<p>Models have to be specified as a specially formatted Lua table which must
+be returned by the script, i.e. if the model is specified in the table
+"model = { ... }" the script has to return this when loaded. Within the
+returned table, MeshUp goes through the table "frames" and builds
+the model from the individual Frame Information Tables (see further down
+for more information about those).</p>
+<p>A valid file could look like this:</p>
+<p>model = {
+    configuration = { ... }
+    frames = {
+    {
+      <frame 1 information table>
+    },
+    {
+      <frame 2 information table>
+    }
+    }
+  }</p>
+<p>return model</p>
+<h2>Configuration</h2>
+<p>The configuration table describes your coordinate system. Note that in
+general the coordinate system is assumed to be right-handed. The
+configuration is specified using the principal axes of your global
+coordinate system:</p>
+<p>Example:</p>
+<p>model = {
+    configuration = {
+    axis_front = { 1, 0, 0 },
+    axis_up  = { 0, 0, 1 },
+    axis_right = { 0, -1, 0 },
+    },</p>
+<pre><code>frames = {
+...
+}
+</code></pre>
+<p>}</p>
+<p>This defines a right-handed coordinate system for which X poits forward, Y
+to the left and Z up (as seen from the model).</p>
+<p><strong>Note:</strong> The table frames must contain all Frame Information Tables as a list
+and individual tables must <em>not</em> be specified with a key, i.e.</p>
+<p>frames = {
+    some_frame = {
+    ...
+    },
+    {
+    ..
+    }
+  }</p>
+<p>is not possible as Lua does not retain the order of the individual
+frames when an explicit key is specified.</p>
+<h2>Frame Information Table</h2>
+<p>The Frame Information Table is searched for values to build the skeletal
+hierarchy. The following fields are used by MeshUp (everything else is ignored):</p>
+<p><em>name</em> (required, type: string):</p>
+<blockquote>
+<p>Name of the body that is being added. This name must be unique.</p>
+</blockquote>
+<p><em>parent</em> (required, type: string):</p>
+<blockquote>
+<p>If the value is "ROOT" the parent frame of this body is assumed to be
+ the base coordinate system, otherwise it must be the exact same string
+ as was used for the "name"-field of the parent frame.</p>
+</blockquote>
+<p><em>joint_frame</em> (optional, type: table):</p>
+<blockquote>
+<p>Specifies the origin of the joint in the frame of the parent. It uses
+ the values (if existing):</p>
+<p>r (3-d vector, default: (0., 0., 0.))
+   E (3x3 matrix, default: identity matrix)</p>
+<p>for which r is the translation and E the rotation of the joint frame.</p>
+</blockquote>
+<p><em>joint</em> (optional, type: table):</p>
+<blockquote>
+<p>Specifies the degrees of freedom for the joint. Here are some examples:</p>
+<ul>
+<li>
+<p>Revolute joint around the X-axis:</p>
+<p>joint = { { 1, 0, 0, 0, 0, 0, } }</p>
+</li>
+<li>
+<p>Revolute joint around the Y-axis:</p>
+<p>joint = { { 0, 1, 0, 0, 0, 0, } }</p>
+</li>
+<li>
+<p>Joint that first rotates around Y and then around X:</p>
+<p>joint = { 
+   { 0, 1, 0, 0, 0, 0, },
+   { 1, 0, 0, 0, 0, 0, },
+ }</p>
+</li>
+<li>
+<p>Furthermore the following 3-DoF joints are available:</p>
+<ul>
+<li>JointTypeEulerXYZ</li>
+<li>JointTypeEulerYXZ</li>
+<li>JointTypeEulerZYX</li>
+<li>JointTypeTranslationXYZ</li>
+</ul>
+<p>which are e.g. used as:</p>
+<p>joint = { "JointTypeTranslationYXZ" }
+</p>
+</li>
+</ul>
+</blockquote>
+<p><em>visuals</em> (optional, type: array of Mesh Information Tables):</p>
+<blockquote>
+<p>Specification of all meshes that are attached to the current frame.</p>
+</blockquote>
+<p><em>points</em> (optional, type: array of Point Information Tables):</p>
+<blockquote>
+<p>Additional points that are specified relative to the frame and move with
+  it.</p>
+</blockquote>
+<h2>Mesh Information Table</h2>
+<p>The Mesh Information Table describes the geometric mesh including its
+properties such as color and dimensions and where it origin should be
+placed in the current frame.</p>
+<p>An example Mesh Information Table looks like this:</p>
+<p>HipMesh1 = {
+      name = "HipMesh1",
+      dimensions = { 0.25, 0.4, 0.25 },
+      color = { 0.8, 0.8, 0.2},
+      mesh_center = { 0, 0, 0.125 },
+      src = "meshes/unit_cube.obj",
+    },</p>
+<p>The Mesh Information Table can use the following attributes:</p>
+<p><em>scale</em> (3-d vector, default:  {1., 1., 1.})</p>
+<blockquote>
+<p>Scales the model relative to its default size. A scale of {2., 2., 2. }
+ will draw the mesh twice as big as its default size. Note that dimensions
+ takes precedence over scale.</p>
+</blockquote>
+<p><em>dimensions</em> (3-d vector, default:  {0., 0., 0.})</p>
+<blockquote>
+<p>Scales the mesh so that its absolute size (more precisely its bounding
+ box) is that of dimensions. Note that dimensions takes precedence over
+ scale. Once it is unequal to {0., 0., 0.} it will be used instead of the
+ definition of scale.</p>
+</blockquote>
+<p><em>color</em> (3-d vector, default:  {1., 1., 1.})</p>
+<blockquote>
+<p>The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
+ and white is (1., 1., 1.).</p>
+</blockquote>
+<p><em>translate</em> (3-d vector, default:  {0., 0., 0.})</p>
+<blockquote>
+<p>Shifts the whole mesh by a given vector.</p>
+</blockquote>
+<p><em>mesh_center</em> (3-d vector, default:  {0., 0., 0.})</p>
+<blockquote>
+<p>Shifts the whole mesh so that the center of its bounding box is at the
+ position defined by mesh_center.  </p>
+</blockquote>
+<p><em>rotate</em> (table, default: { axis = {1., 0., 0.}, angle = 0.})</p>
+<blockquote>
+<p>Rotates the visual around the specified axis by the given angle.</p>
+</blockquote>
+<p><em>geometry</em> (table, default: none)</p>
+<blockquote>
+<p>A geometric object which can be specified instead of a mesh file (see
+src/). Here are examples for all supported objects along with their
+default properties:</p>
+<ul>
+<li>
+<p>Box Geometry:</p>
+<p>geometry = {
+  box = { dimensions = {1., 1., 1.} }
+}</p>
+</li>
+<li>
+<p>Sphere Geometry:</p>
+<p>geometry = {
+  sphere = { radius=1., rows=16, segments=32 }
+}</p>
+</li>
+<li>
+<p>Capsule Geometry:</p>
+<p>geometry = {
+  capsule = { radius=1., length=2., rows=16, segments=32 }
+}
+  The capsule geometry is aligned along the Z-axis. <code>length</code>
+  specifies the total length of the capsule including the rounded caps.</p>
+</li>
+<li>
+<p>Cylinder Geometry:</p>
+<p>geometry = {
+  capsule = { radius=1., length=2., rows=16, segments=32 }
+}
+  The cylinder geometry is aligned along the Z-axis.</p>
+</li>
+</ul>
+<p>Please note that the attributes <em>geometry</em> and <em>src</em> are exclusive!
+Furthermore the sizes and radii specified in the geometry table will be
+overridden when <code>scale</code> or <code>dimensions</code> are present in the Mesh
+Information Table.</p>
+</blockquote>
+<p><em>src</em> (string)</p>
+<blockquote>
+<p>The path to the mesh file, i.e. a path to an OBJ file. If the src string
+ is "mymesh.obj" it will search in the following paths from top to
+ bottom:</p>
+<ul>
+<li><code>./mymesh.obj</code></li>
+<li><code>/mymesh.obj</code></li>
+<li><code>${MESHUP_PATH}/mymesh.obj</code></li>
+<li><code>${INSTALL_PREFIX}/mymesh.obj</code></li>
+<li><code>${INSTALL_PREFIX}/meshes/mymesh.obj</code></li>
+<li><code>/usr/local/share/meshup/meshes/mymesh.obj</code></li>
+<li><code>/usr/share/meshup/meshes/mymesh.obj</code></li>
+</ul>
+<p><code>${INSTALL_PREFIX}</code> is the install prefix specified via the CMake
+variables <code>CMAKE_INSTALL_PREFIX</code>.</p>
+<p>Please note that the attributes <em>geometry</em> and <em>src</em> are exclusive!</p>
+</blockquote>
+<h2>Point Information Table</h2>
+<p>The Point Information Table describes a single point relative to a frame.
+This point then moves together with the frame. The point is optionally
+drawn with a line from the frame's origin to the location of the point.</p>
+<p>An example Point Information Table looks like this:</p>
+<p>ToolCenterPoint = {
+      coordinates = { 0.25, 0.1, 0.5 },
+      color = { 0.8, 0.8, 0.2},
+      draw_line = true,
+    },</p>
+<p>The Point Information Table has the following attributes:</p>
+<p><em>coordinates</em> (3-d vector)</p>
+<blockquote>
+<p>These are the coordinates of the point in the frame in which the point is
+ defined.</p>
+</blockquote>
+<p><em>color</em> (3-d vector, default:  {1., 1., 1.})</p>
+<blockquote>
+<p>The color of the mesh as red-green-blue values. Black is (0., 0., 0.)
+ and white is (1., 1., 1.).</p>
+</blockquote>
+<p><em>draw_line</em> (boolean, default:  false)</p>
+<blockquote>
+<p>Specifies whether a line from the frame origin to the point should be
+ drawn.</p>
+</blockquote>
+<p><em>line_width</em> (number, default:  1.)</p>
+<blockquote>
+<p>Specifies the width of the line in pixels. Note that the width range
+ may be limited by the graphics hardware and/or driver. (Added in v0.3.14)</p>
+</blockquote>
+<p><a id="animation-files"></a></p>
+<h1>Animation Files</h1>
+<p>Animation files are designed so that they can be written to a comma or tab
+separated file and still be read by MeshUp. There is a small number of
+keywords that specify how the data is being interpreted.</p>
+<p>There are two sections in the animation file: COLUMNS and DATA.</p>
+<h2>COLUMNS section</h2>
+<p>The COLUMNS section specifies the separate columns of the file and is
+started with a line that only contains "COLUMNS:". Each following entry
+that may be separated by commas or whitespaces specifies a single degree of
+freedom for a frame or the time. The first entry corresponds to the first
+column, the second for the second and so on.</p>
+<p>The first column must always be "time". If a column should be
+ignored by MeshUp set the entry to "empty".</p>
+<p>The mapping for joints is specified in the following syntax:</p>
+<p><frame name>:<joint type>:<axis>[:<unit>]</p>
+<p>where</p>
+<p><frame name> is the name of the frame used in the model.
+  <joint type> can be 
+    t,translation for translational motions
+    r,rotation for rotational motions
+    s,scale for scaling motions
+  <axis> can be either of x,y,z for the respective axes. Negative axes can
+    be specified by prepending a '-' to the axis name.
+  <unit> (optional) can be r,rad, or radian to specify that the columns
+    should be interpreted as radians instead of the default degrees.</p>
+<p>For a single frame all column specifications must be consecutive in the
+COLUMN section.</p>
+<h2>DATA section</h2>
+<p>The <code>DATA</code> section has to be specified as multi-column data of the raw values
+for which each column is separated by a "," (comma) and at least one
+whitespace (space or tab).</p>
+<h3>DATA_FROM</h3>
+<p>The section either starts with <code>DATA:</code> and directly after it the data or
+alternatively, one can use <code>DATA_FROM: &lt;some/path/to/filename.cs&gt;</code> to load the
+actual data from another data file. This can be useful when wanting to keep
+the actual data as a clear .csv file or if one wants to re-use the header
+of a file.</p>
+<p>By default DATA_FROM will load the data file from the same
+directory as the original file. However if the file should be loaded from
+n absolute path you must start the path with a "/", e.g. <code>DATA_FROM:
+/some/absolute/path/data.csv</code>.</p>
+<h2>Examples</h2>
+<p>Meshup comes with a set of example files, e.g. see sampleanimation.txt for
+an example.</p>

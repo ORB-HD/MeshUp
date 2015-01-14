@@ -120,6 +120,36 @@ hierarchy. The following fields are used by MeshUp (everything else is ignored):
 >   
 >  for which r is the translation and E the rotation of the joint frame.
 
+*joint* (optional, type: table):
+>  Specifies the degrees of freedom for the joint. Here are some examples:
+>
+>  * Revolute joint around the X-axis:
+>
+>      joint = { { 1, 0, 0, 0, 0, 0, } }
+>
+>  * Revolute joint around the Y-axis:
+>
+>      joint = { { 0, 1, 0, 0, 0, 0, } }
+>
+>  * Joint that first rotates around Y and then around X:
+>
+>      joint = { 
+>        { 0, 1, 0, 0, 0, 0, },
+>        { 1, 0, 0, 0, 0, 0, },
+>      }
+>
+>  * Furthermore the following 3-DoF joints are available:
+>  
+>      - JointTypeEulerXYZ
+>      - JointTypeEulerYXZ
+>      - JointTypeEulerZYX
+>      - JointTypeTranslationXYZ
+>
+>      which are e.g. used as:
+>
+>        joint = { "JointTypeTranslationYXZ" }
+>
+
 *visuals* (optional, type: array of Mesh Information Tables):
 >   Specification of all meshes that are attached to the current frame.
 
