@@ -4,6 +4,9 @@ dir = "doc/scripting"
 
 not_luadoc = true
 add_language_extension(".cc", "c")
+
+examples = "doc/scripting/examplescript.lua"
+
 file = { "src", exclude = {
 		"src/Animation.cc",
 		"src/Animation.h",

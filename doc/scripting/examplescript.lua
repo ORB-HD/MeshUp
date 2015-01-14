@@ -1,3 +1,17 @@
+--[[
+-- Example for the Lua scripting within MeshUp
+--
+-- Run this using
+--   meshup somemodel.lua -s examplescript.lua
+--
+-- This script creates a dummy animation that gets updated at every
+-- timestep. All degrees of freedom of the model are set to some sinusoidal
+-- values to make the model move funnily.
+--
+-- Please note that the model must have its degrees of freedom specified in
+-- its Frame Information Table (see doc/FormatDescriptions.html for more
+-- information).
+--]]
 local dof_count = 0
 local animation = {}
 local model = {}
