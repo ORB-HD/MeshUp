@@ -1,6 +1,6 @@
 # Introduction
 
-MeshUp is a 3d visualization tool for rigid-body motions. It is based on
+MeshUp is a 3D visualization tool for rigid-body motions. It is based on
 skeletal animation. The visualization needs three things: a model file,
 meshes and an animation file. This document describes the file format for
 the models for MeshUp.
@@ -45,19 +45,19 @@ for more information about those).
 
 A valid file could look like this:
 
-  model = {
-    configuration = { ... }
-    frames = {
-    {
-      <frame 1 information table>
-    },
-    {
-      <frame 2 information table>
+    model = {
+      configuration = { ... }
+      frames = {
+      {
+        <frame 1 information table>
+      },
+      {
+        <frame 2 information table>
+      }
+      }
     }
-    }
-  }
 
-  return model
+    return model
 
 ## Configuration
 
@@ -68,17 +68,17 @@ coordinate system:
 
 Example:
 
-  model = {
-    configuration = {
-    axis_front = { 1, 0, 0 },
-    axis_up  = { 0, 0, 1 },
-    axis_right = { 0, -1, 0 },
-    },
-  
-    frames = {
-    ...
+    model = {
+      configuration = {
+      axis_front = { 1, 0, 0 },
+      axis_up  = { 0, 0, 1 },
+      axis_right = { 0, -1, 0 },
+      },
+    
+      frames = {
+      ...
+      }
     }
-  }
 
 This defines a right-handed coordinate system for which X poits forward, Y
 to the left and Z up (as seen from the model).
@@ -86,14 +86,14 @@ to the left and Z up (as seen from the model).
 **Note:** The table frames must contain all Frame Information Tables as a list
 and individual tables must *not* be specified with a key, i.e.
 
-  frames = {
-    some_frame = {
-    ...
-    },
-    {
-    ..
+    frames = {
+      some_frame = {
+      ...
+      },
+      {
+      ..
+      }
     }
-  }
 
 is not possible as Lua does not retain the order of the individual
 frames when an explicit key is specified.
@@ -115,8 +115,8 @@ hierarchy. The following fields are used by MeshUp (everything else is ignored):
 >  Specifies the origin of the joint in the frame of the parent. It uses
 >  the values (if existing):
 >
->    r (3-d vector, default: (0., 0., 0.))
->    E (3x3 matrix, default: identity matrix)
+>      r (3-d vector, default: (0., 0., 0.))
+>      E (3x3 matrix, default: identity matrix)
 >   
 >  for which r is the translation and E the rotation of the joint frame.
 
@@ -165,7 +165,7 @@ placed in the current frame.
 
 An example Mesh Information Table looks like this:
 
-  HipMesh1 = {
+    HipMesh1 = {
       name = "HipMesh1",
       dimensions = { 0.25, 0.4, 0.25 },
       color = { 0.8, 0.8, 0.2},
@@ -220,16 +220,16 @@ The Mesh Information Table can use the following attributes:
 > * Capsule Geometry:
 >
 >      geometry = {
->       capsule = { radius=1., length=2., rows=16, segments=32 }
->     }
+>        capsule = { radius=1., length=2., rows=16, segments=32 }
+>      }
 >   The capsule geometry is aligned along the Z-axis. ```length```
 >   specifies the total length of the capsule including the rounded caps.
 >
 > * Cylinder Geometry:
 >
 >      geometry = {
->       capsule = { radius=1., length=2., rows=16, segments=32 }
->     }
+>        capsule = { radius=1., length=2., rows=16, segments=32 }
+>      }
 >   The cylinder geometry is aligned along the Z-axis.
 >
 > Please note that the attributes *geometry* and *src* are exclusive!
@@ -263,11 +263,11 @@ drawn with a line from the frame's origin to the location of the point.
 
 An example Point Information Table looks like this:
 
-  ToolCenterPoint = {
-      coordinates = { 0.25, 0.1, 0.5 },
-      color = { 0.8, 0.8, 0.2},
-      draw_line = true,
-    },
+    ToolCenterPoint = {
+        coordinates = { 0.25, 0.1, 0.5 },
+        color = { 0.8, 0.8, 0.2},
+        draw_line = true,
+      },
 
 The Point Information Table has the following attributes:
 
@@ -290,13 +290,29 @@ The Point Information Table has the following attributes:
 <a id="animation-files"></a>
 # Animation Files
 
-Animation files are designed so that they can be written to a comma or tab
-separated file and still be read by MeshUp. There is a small number of
-keywords that specify how the data is being interpreted.
+Animation files are designed so that they can be written to a comma
+separated file and still be read by MeshUp. The first column must always be
+the time. Any intermediate values are computed by meshup using
+interpolation.
 
-There are two sections in the animation file: COLUMNS and DATA.
+All other columns (referred to as data columns) are interpreted as
+translations, rotations, or scalings of the model frames. MeshUp can be
+instructed to interpret the data columns in two ways:
 
-## COLUMNS section
+1. Use the degrees of freedom descriptions of the joints in the Frame
+Information Table
+2. Describe the type of transformations using a special header in the
+animation file
+
+The latter has always precedence.
+
+## Transformation Description in the Animation File
+
+There is a small number of keywords that specify how the data is being
+interpreted. There are two sections in the animation file: COLUMNS and
+DATA.
+
+### COLUMNS section
 
 The COLUMNS section specifies the separate columns of the file and is
 started with a line that only contains "COLUMNS:". Each following entry
@@ -309,30 +325,30 @@ ignored by MeshUp set the entry to "empty".
 
 The mapping for joints is specified in the following syntax:
 
-  <frame name>:<joint type>:<axis>[:<unit>]
+    <frame name>:<joint type>:<axis>[:<unit>]
 
 where
 
-  <frame name> is the name of the frame used in the model.
-  <joint type> can be 
-    t,translation for translational motions
-    r,rotation for rotational motions
-    s,scale for scaling motions
-  <axis> can be either of x,y,z for the respective axes. Negative axes can
-    be specified by prepending a '-' to the axis name.
-  <unit> (optional) can be r,rad, or radian to specify that the columns
-    should be interpreted as radians instead of the default degrees.
+    <frame name> is the name of the frame used in the model.
+    <joint type> can be 
+      t,translation for translational motions
+      r,rotation for rotational motions
+      s,scale for scaling motions
+    <axis> can be either of x,y,z for the respective axes. Negative axes can
+      be specified by prepending a '-' to the axis name.
+    <unit> (optional) can be r,rad, or radian to specify that the columns
+      should be interpreted as radians instead of the default degrees.
 
 For a single frame all column specifications must be consecutive in the
 COLUMN section.
 
-## DATA section
+### DATA section
 
 The ```DATA``` section has to be specified as multi-column data of the raw values
 for which each column is separated by a "," (comma) and at least one
 whitespace (space or tab).
 
-### DATA_FROM
+#### DATA_FROM
 
 The section either starts with ```DATA:``` and directly after it the data or
 alternatively, one can use ```DATA_FROM: <some/path/to/filename.cs>``` to load the
