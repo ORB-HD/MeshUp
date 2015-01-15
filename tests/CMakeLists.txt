@@ -46,14 +46,4 @@ IF ( UNITTEST++_FOUND )
 			glew
 		)
 		
-	OPTION (RUN_AUTOMATIC_TESTS "Perform automatic tests after compilation?" OFF)
-
-	IF (RUN_AUTOMATIC_TESTS)
-	ADD_CUSTOM_COMMAND (TARGET runtests
-		POST_BUILD
-		COMMAND ./runtests
-		COMMENT "Running automated tests..."
-		)
-	ENDIF (RUN_AUTOMATIC_TESTS)
-
 ENDIF ( UNITTEST++_FOUND )
