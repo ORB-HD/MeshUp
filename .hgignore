@@ -7,6 +7,7 @@ vendor/jsoncpp/doc/doxyfile
 Debug/
 RelWithDebInfo/
 Release/
+build*
 doc/html/
 
 meshup
@@ -15,6 +16,8 @@ CMakeFiles
 cmake_install.cmake
 install_manifest.txt
 debug
+
+Xcode
 
 tags
 Makefile
