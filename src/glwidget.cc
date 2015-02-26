@@ -71,7 +71,8 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_shadows (false),
 		draw_curves (false),
 		draw_points (true),
-		draw_orthographic (false)
+		draw_orthographic (false),
+		white_mode (false)
 {
 	poi.set (0.f, 1.f, 0.f);
 	eye.set (6.f, 3.f, 6.f);
@@ -195,6 +196,18 @@ void GLWidget::toggle_draw_orthographic (bool status) {
 	draw_orthographic = status;
 
 	resizeGL (windowWidth, windowHeight);
+}
+
+void GLWidget::toggle_white_mode (bool status) {
+	white_mode = status;
+
+	qDebug() << "white mode is " << white_mode;
+
+	if (white_mode) {
+		glClearColor (1.f, 1.f, 1.f, 1.f);
+	} else {
+		glClearColor (0.f, 0.f, 0.f, 1.f);
+	}
 }
 
 void GLWidget::set_front_view () {
@@ -335,6 +348,8 @@ void GLWidget::initializeGL()
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
+	glEnable(GL_DEPTH_CLAMP);
+
 	emit opengl_initialized();
 }
 
@@ -392,9 +407,9 @@ void GLWidget::updateCamera() {
 
 		glOrtho (- w * 0.5, w * 0.5,
 				-h * 0.5, h * 0.5,
-			0.005, 200);
+			0.001, 50);
 	} else {
-		gluPerspective (fov, aspect, 0.005, 200);
+		gluPerspective (fov, aspect, 0.001, 50);
 	}
 
 	// setup of the modelview matrix
@@ -433,7 +448,7 @@ void GLWidget::updateLightingMatrices () {
 	glPopMatrix();
 }
 
-void draw_checkers_board_shaded() {
+void draw_checkers_board_shaded(bool white_mode) {
 	float length = 16.f;
 	int count = 32;
 	float xmin (-length),
@@ -449,6 +464,17 @@ void draw_checkers_board_shaded() {
 	float m = 1.f / (shade_width);
 	Vector4f clear_color;
 	glGetFloatv (GL_COLOR_CLEAR_VALUE, clear_color.data());
+
+	if (white_mode)
+		clear_color.set (1.f, 1.f, 1.f, 1.f);
+	else
+		clear_color.set (0.f, 0.f, 0., 1.f);
+
+	Vector4f ground_color (0.5f, 0.5f, 0.5f, 1.f);
+
+	glDisable (GL_LIGHTING);
+	glEnable(GL_DEPTH_TEST);
+
 	glBegin (GL_QUADS);
 
 	for (int i = 0; i < count; i++) {
@@ -459,7 +485,7 @@ void draw_checkers_board_shaded() {
 			Vector3f v2 ((j + 1) * xstep + xmin + x_shift, 0., (i + 1) * zstep + zmin);
 			Vector3f v3 ((j + 1) * xstep + xmin + x_shift, 0., i * zstep + zmin);
 
-			float distance = v0.norm();
+			float distance = (v0 * 0.5 + v2 * 0.5).norm();
 			float alpha = 1.;
 
 			if (distance > shade_start) {
@@ -471,26 +497,29 @@ void draw_checkers_board_shaded() {
 			assert (alpha >= 0.f &&  alpha <= 1.f);
 
 			// upper left
-			Vector4f color (0.6f, 0.6f, 0.6f, 1.f);
+			Vector4f color = ground_color;
 
-			color = (1.f - alpha) * clear_color + color * alpha;
+			color = (1.f - alpha) * clear_color + ground_color * alpha;
 
-			if (color[0] <= 0.f
-					&& color[1] <= 0.f
-					&& color[2] <= 0.f
-				 )
-				continue;
+		//	if (color[0] <= 0.f
+		//			&& color[1] <= 0.f
+		//			&& color[2] <= 0.f
+		//		 )
+		//		continue;
 
-			glColor3fv (color.data());
+			glColor4fv (color.data());
 			glVertex3fv (v0.data());
+			glColor4fv (color.data());
 			glVertex3fv (v1.data());
+			glColor4fv (color.data());
 			glVertex3fv (v2.data());
+			glColor4fv (color.data());
 			glVertex3fv (v3.data());
 		}
 	}
 
 	glEnd();
-	
+	glEnable (GL_LIGHTING);
 }
 
 void GLWidget::drawGrid() {
@@ -527,7 +556,7 @@ void GLWidget::drawScene() {
 		drawGrid();
 
 	if (draw_floor)
-		draw_checkers_board_shaded();
+		draw_checkers_board_shaded(white_mode);
 
 	if (draw_meshes)
 		scene->drawMeshes();
@@ -563,7 +592,6 @@ void GLWidget::drawScene() {
 
 void GLWidget::shadowMapSetupPass1 () {
 	updateLightingMatrices();
-
 
 	// 1st pass: from light's pont of view
 	glMatrixMode(GL_PROJECTION);
@@ -688,7 +716,7 @@ void GLWidget::shadowMapSetupPass3 () {
 	// shadow comparison generates an INTENSITY result
 	glTexParameteri (GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY);
 
-	// set alpha test to discalrd false comparisons
+	// set alpha test to discard false comparisons
 	glAlphaFunc (GL_GEQUAL, 0.99f);
 	glEnable (GL_ALPHA_TEST);
 }
@@ -720,7 +748,6 @@ void GLWidget::paintGL() {
 	if (draw_shadows) {
 		// start the shadow mapping magic!
 		shadowMapSetupPass1();
-
 		drawScene();
 
 		shadowMapSetupPass2();

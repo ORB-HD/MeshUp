@@ -69,6 +69,7 @@
     <addaction name="actionToggleViewSettings"/>
     <addaction name="actionTogglePlayerControls"/>
     <addaction name="actionToggleCameraControls"/>
+    <addaction name="actionToggleWhiteBackground"/>
    </widget>
    <widget class="QMenu" name="menuRender">
     <property name="title">
@@ -546,6 +547,14 @@
    </property>
    <property name="shortcut">
     <string>C</string>
+   </property>
+  </action>
+  <action name="actionToggleWhiteBackground">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>White Background</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>

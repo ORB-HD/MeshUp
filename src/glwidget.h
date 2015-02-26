@@ -48,8 +48,8 @@ class GLWidget : public QGLWidget
 		bool draw_shadows;
 		bool draw_curves;
 		bool draw_points;
-
 		bool draw_orthographic;
+		bool white_mode;
 
 	protected:
 		void update_timer();
@@ -105,8 +105,8 @@ class GLWidget : public QGLWidget
 		void toggle_draw_shadows(bool status);
 		void toggle_draw_curves(bool status);
 		void toggle_draw_points(bool status);
-
 		void toggle_draw_orthographic(bool status);
+		void toggle_white_mode(bool status);
 
 		void set_front_view ();
 		void set_side_view ();

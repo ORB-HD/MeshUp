@@ -134,6 +134,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
 	connect (checkBoxDrawCurves, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_curves(bool)));
 	connect (checkBoxDrawPoints, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_points(bool)));
+	connect (actionToggleWhiteBackground, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_white_mode(bool)));
 
 	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (set_front_view()));
 	connect (actionSideView, SIGNAL (triggered()), glWidget, SLOT (set_side_view()));
@@ -803,8 +804,12 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		cout << "running mencoder to produce a movie" << endl;
 		stringstream mencoder;
 		mencoder << "mencoder mf://"  << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-"<< "*.png ";
-		mencoder << "-mf w=" << width << ":h="<< height << ":fps=" << fps << ":type=png -ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
-		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".avi";
+		mencoder << "-mf w=" << width << ":h="<< height << ":fps=" << fps << ":type=png ";
+		mencoder << "-ovc x264 -x264encopts bitrate=1500:vbv_maxrate=1500:vbv_bufsize=2000:nocabac:level_idc=13:global_header:keyint=25 -of lavf -lavfopts format=mp4 -o ";
+		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".mp4";
+
+//		mencoder << "-ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
+//		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".avi";
 		
 		cout << mencoder.str() << endl;
 		
