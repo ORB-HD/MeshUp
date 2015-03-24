@@ -370,11 +370,42 @@ static int meshup_animation_setValuesAt (lua_State *L) {
 	
 	return 0;
 }
+
+///
+// @function animation.getValuesAt
+// @param self the animation of which we want the values
+// @param row index of the row for which we want to get the values
+// Returns a table with all values (first entry is time)
+static int meshup_animation_getValuesAt (lua_State *L) {
+	Animation *animation = check_animation (L, 1);
+	int row = luaL_checkint (L, 2) - 1;
+
+	if (row < 0 || row >= animation->raw_values.size()) {
+		luaL_error (L, "Invalid row %d", row);
+	}
+
+	if (animation->raw_values.size() > 0 && animation->raw_values.size() <= row) {
+		luaL_error (L, "Invalid row. Requested %d but only have %d rows", row, animation->raw_values.size());
+	}
+
+	size_t num_values = animation->raw_values[row].size();
+	lua_createtable (L, num_values, 0);
+
+	for (size_t i = 0; i < num_values; i++) {
+		lua_pushnumber (L, i + 1);
+		lua_pushnumber (L, animation->raw_values[row][i]);
+		lua_settable (L, -3);
+	}
+
+	return 1;
+}
+
 static const struct luaL_Reg meshup_animation_f[] = {
 	{ "getFilename", meshup_animation_getFilename},
 	{ "getRawDimensions", meshup_animation_getRawDimensions},
 	{ "addValues", meshup_animation_addValues},
 	{ "setValuesAt", meshup_animation_setValuesAt},
+	{ "getValuesAt", meshup_animation_getValuesAt},
 	{ NULL, NULL }
 };
 
