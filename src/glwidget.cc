@@ -58,7 +58,6 @@ GLuint shadow_map_texture_id = 0;
 Vector4f light_ka (0.2f, 0.2f, 0.2f, 1.0f);
 Vector4f light_kd (0.7f, 0.7f, 0.7f, 1.0f);
 Vector4f light_ks (1.0f, 1.0f, 1.0f, 1.0f);
-Vector4f light_position (0.f, 0.f, 0.f, 1.f);
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent),
@@ -149,10 +148,14 @@ void GLWidget::setCameraPoi (const Vector3f values) {
 }
 
 void GLWidget::setCameraEye (const Vector3f values) {
-	cout << "Setting new eye: " << values.transpose() << endl;;
 	camera.eye = values;
 	camera.updateSphericalCoordinates();
 	emit camera_changed();
+}
+
+void GLWidget::saveScreenshot (const char* filename, int width, int height, bool transparency) {
+	QImage image = renderContentOffscreen (width, height, transparency);
+	image.save (filename, 0, -1);
 }
 
 /****************
@@ -315,13 +318,16 @@ void GLWidget::initializeGL()
 	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd.data());
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_ks.data());
 
-	light_position.set (3.f, 6.f, 3.f, 1.f);
+	light_position.set (-0.f, 3.f, 5.f, 1.f);
 	glLightfv (GL_LIGHT0, GL_POSITION, light_position.data());
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
 	glEnable(GL_DEPTH_CLAMP);
+
+	camera.width = width();
+	camera.height = height();
 
 	emit opengl_initialized();
 }
@@ -637,7 +643,6 @@ void GLWidget::shadowMapCleanup() {
 
 	glDisable (GL_LIGHTING);
 	glDisable (GL_ALPHA_TEST);
-
 }
 
 void GLWidget::paintGL() {

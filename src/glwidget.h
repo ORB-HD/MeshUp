@@ -47,11 +47,15 @@ class GLWidget : public QGLWidget
 		bool draw_points;
 		bool white_mode;
 
+		Vector4f light_position;
+
 		Vector3f getCameraPoi();
 		Vector3f getCameraEye();
 
 		void setCameraPoi (const Vector3f values);
 		void setCameraEye (const Vector3f values);
+
+		void saveScreenshot (const char* filename, int width, int height, bool transparency = true);
 
 	protected:
 		void update_timer();

@@ -332,7 +332,6 @@ static int meshup_camera_setCenter (lua_State *L) {
 
 	app_ptr->glWidget->setCameraPoi (coords);
 
-
 	return 0;
 }
 
@@ -619,6 +618,53 @@ static int meshup_newAnimation (lua_State *L) {
 	return 1;
 }
 
+///
+// @function meshup.setLightPosition
+// @param light_x
+// @param light_y
+// @param light_y
+// Sets the light to the given position
+static int meshup_setLightPosition (lua_State *L) {
+	Vector4f coords;
+	coords[0] = luaL_checknumber (L, 1);
+	coords[1] = luaL_checknumber (L, 2);
+	coords[2] = luaL_checknumber (L, 3);
+	coords[4] = 1.;
+
+	app_ptr->glWidget->light_position = coords;
+
+	return 0;
+}
+
+///
+// @function meshup.saveScreenshot
+// @param filename
+// @param width (optional)
+// @param height (optional)
+// @param transparency (optional) whether black should be transparent
+// Makes a screenshot and stores as PNG file.
+static int meshup_saveScreenshot (lua_State *L) {
+	string filename = luaL_checkstring (L, 1);
+
+	int width = app_ptr->glWidget->camera.width;
+	int height = app_ptr->glWidget->camera.height;
+	bool transparency = false;
+
+	if (lua_gettop(L) > 1 && !lua_isnil(L, 2))
+		width = luaL_checknumber (L, 2);
+
+	if (lua_gettop(L) > 2 && !lua_isnil(L, 3))
+		height = luaL_checknumber (L, 3);
+
+	if (lua_gettop(L) > 3) {
+		transparency = lua_toboolean (L, 4);
+	}
+
+	app_ptr->glWidget->saveScreenshot (filename.c_str(), width, height, transparency);
+
+	return 0;
+}
+
 static const struct luaL_Reg meshup_f[] = {
 	{ "getCamera", meshup_getCamera},
 	{ "getModel", meshup_getModel},
@@ -626,6 +672,8 @@ static const struct luaL_Reg meshup_f[] = {
 	{ "getAnimation", meshup_getAnimation},
 	{ "getAnimationCount", meshup_getAnimationCount},
 	{ "newAnimation", meshup_newAnimation},
+	{ "setLightPosition", meshup_setLightPosition},
+	{ "saveScreenshot", meshup_saveScreenshot},
 	{ NULL, NULL}
 };
 

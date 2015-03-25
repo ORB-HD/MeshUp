@@ -711,8 +711,7 @@ void MeshupApp::actionRenderAndSaveToFile () {
 
 	cout << "Saving screenshot to: " << filename_stream.str() << " (size: " << w << "x" << h << ")" << endl;
 
-	QImage image = glWidget->renderContentOffscreen (w,h, renderImageDialog->TransparentBackgroundCheckBox->isChecked());
-	image.save (filename_stream.str().c_str(), 0, -1);
+	glWidget->saveScreenshot (filename_stream.str().c_str(), w, h, renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked());
 }
 
 void MeshupApp::actionRenderSeriesAndSaveToFile () {
