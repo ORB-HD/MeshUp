@@ -16,6 +16,8 @@
 #include <iostream>
 #include "SimpleMath/SimpleMath.h"
 
+#include "Camera.h"
+
 struct Scene;
 
 class GLWidget : public QGLWidget
@@ -33,12 +35,7 @@ class GLWidget : public QGLWidget
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		Vector3f getCameraPoi();
-		Vector3f getCameraEye();
-		void setCameraPoi (const Vector3f values);
-		void setCameraEye (const Vector3f values);
-
-		void updateSphericalCoordinates();
+		Camera camera;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;
@@ -48,8 +45,13 @@ class GLWidget : public QGLWidget
 		bool draw_shadows;
 		bool draw_curves;
 		bool draw_points;
-		bool draw_orthographic;
 		bool white_mode;
+
+		Vector3f getCameraPoi();
+		Vector3f getCameraEye();
+
+		void setCameraPoi (const Vector3f values);
+		void setCameraEye (const Vector3f values);
 
 	protected:
 		void update_timer();
@@ -74,17 +76,6 @@ class GLWidget : public QGLWidget
 		void shadowMapCleanup();
 
 		QPoint lastMousePos;
-		// azimuth
-		float phi;
-		// the elevation angle
-		float theta;
-		// radius
-		float r;
-		float fov;
-
-		Vector3f poi;
-		Vector3f eye;
-		Vector3f up;
 
 		unsigned int application_time_msec;
 		unsigned int first_frame_msec;

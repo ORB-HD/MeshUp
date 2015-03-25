@@ -3,16 +3,20 @@
 
 #include <vector>
 
+#include "SimpleMath/SimpleMath.h"
+
 struct Animation;
 struct MeshupModel;
 
 struct Scene {
 	Scene() :
 		current_time (0.f),
-		longest_animation (0.f)
+		longest_animation (0.f),
+		model_displacement (0.f, 0.f, 1.f)
 	{};
 	float current_time;
 	float longest_animation;
+	Vector3f model_displacement;
 
 	std::vector<Animation*> animations;
 	std::vector<MeshupModel*> models;

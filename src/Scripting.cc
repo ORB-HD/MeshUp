@@ -7,6 +7,7 @@
 #include "Scene.h"
 #include "Animation.h"
 #include "Model.h"
+#include "Camera.h"
 
 #include <errno.h>
 
@@ -27,6 +28,9 @@ extern "C" {
 
 #define check_animation(l, idx)\
 	*(Animation**)luaL_checkudata(l, idx, "meshup_animation")
+
+#define check_camera(l, idx)\
+	*(Camera**)luaL_checkudata(l, idx, "meshup_camera")
 
 MeshupApp *app_ptr = NULL;
 
@@ -292,6 +296,93 @@ VectorNd l_checkvectornd (lua_State *L, int index) {
 	return result;
 }
 
+//
+// Camera
+//
+
+///
+// @function camera.getCenter
+// @param self the camera
+// @return center_x, center_y, center_z
+// Returns the point where the camera is looking to
+static int meshup_camera_getCenter (lua_State *L) {
+	Camera *camera = check_camera (L, 1);
+
+	lua_pushnumber (L, camera->poi[0]);
+	lua_pushnumber (L, camera->poi[1]);
+	lua_pushnumber (L, camera->poi[2]);
+
+	return 3;
+}
+
+///
+// @function camera.setCenter
+// @param self the camera
+// @param center_x
+// @param center_y
+// @param center_z
+// Sets the camera point of interest to the specified coordinates
+static int meshup_camera_setCenter (lua_State *L) {
+	Camera *camera = check_camera (L, 1);
+
+	Vector3f coords;
+	coords[0] = luaL_checknumber (L, 2);
+	coords[1] = luaL_checknumber (L, 3);
+	coords[2] = luaL_checknumber (L, 4);
+
+	app_ptr->glWidget->setCameraPoi (coords);
+
+
+	return 0;
+}
+
+///
+// @function camera.getEye
+// @param self the camera
+// @return center_x, center_y, center_z
+// Returns the coordinates of the camera
+static int meshup_camera_getEye (lua_State *L) {
+	Camera *camera = check_camera (L, 1);
+
+	lua_pushnumber (L, camera->eye[0]);
+	lua_pushnumber (L, camera->eye[1]);
+	lua_pushnumber (L, camera->eye[2]);
+
+	return 3;
+}
+
+///
+// @function camera.setEye
+// @param self the camera
+// @param eye_x
+// @param eye_y
+// @param eye_z
+// Sets the camera's location to the specified coordinates.
+static int meshup_camera_setEye (lua_State *L) {
+	Camera *camera = check_camera (L, 1);
+
+	Vector3f coords;
+	coords[0] = luaL_checknumber (L, 2);
+	coords[1] = luaL_checknumber (L, 3);
+	coords[2] = luaL_checknumber (L, 4);
+
+	app_ptr->glWidget->setCameraEye (coords);
+
+	return 0;
+}
+
+static const struct luaL_Reg meshup_camera_f[] = {
+	{ "getCenter", meshup_camera_getCenter},
+	{ "setCenter", meshup_camera_setCenter},
+	{ "getEye", meshup_camera_getEye},
+	{ "setEye", meshup_camera_setEye},
+	{ NULL, NULL }
+};
+
+//
+// Animation
+//
+
 ///
 // @function animation.getFilename 
 // @param self the animation
@@ -409,6 +500,10 @@ static const struct luaL_Reg meshup_animation_f[] = {
 	{ NULL, NULL }
 };
 
+//
+// Model
+//
+
 ///
 // @function model.getFilename 
 // @param self the model
@@ -447,6 +542,16 @@ static int meshup_loadModel (lua_State *L) {
 	app_ptr->loadModel (filename.c_str());	
 
 	return 0;
+}
+
+///
+// @function meshup.getCamera
+// @param index
+// @return model at given index or first model if no index is provided
+static int meshup_getCamera (lua_State *L) {
+	push_userdata (L, &(app_ptr->glWidget->camera), "meshup_camera");
+
+	return 1;
 }
 
 ///
@@ -515,6 +620,7 @@ static int meshup_newAnimation (lua_State *L) {
 }
 
 static const struct luaL_Reg meshup_f[] = {
+	{ "getCamera", meshup_getCamera},
 	{ "getModel", meshup_getModel},
 	{ "getModelCount", meshup_getModelCount},
 	{ "getAnimation", meshup_getAnimation},
@@ -525,6 +631,12 @@ static const struct luaL_Reg meshup_f[] = {
 
 void register_functions (lua_State *L){
 	// create metatables for all types of objects we want to access from Lua
+	luaL_newmetatable(L, "meshup_camera");
+	lua_newtable(L); // index
+	luaL_register(L, NULL, meshup_camera_f);
+	lua_setfield(L, -2, "__index");
+	lua_pop (L, 1);
+
 	luaL_newmetatable(L, "meshup_model");
 	lua_newtable(L); // index
 	luaL_register(L, NULL, meshup_model_f);

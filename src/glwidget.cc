@@ -71,19 +71,12 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_shadows (false),
 		draw_curves (false),
 		draw_points (true),
-		draw_orthographic (false),
 		white_mode (false)
 {
-	poi.set (0.f, 1.f, 0.f);
-	eye.set (6.f, 3.f, 6.f);
+	camera.poi.set (0.f, 1.f, 0.f);
+	camera.eye.set (6.f, 3.f, 6.f);
 
-	updateSphericalCoordinates();
-
-	/*
-	qDebug () << r;
-	qDebug () << theta;
-	qDebug () << phi;
-	*/
+	camera.updateSphericalCoordinates();
 
 	delta_time_sec = -1.;
 
@@ -142,19 +135,24 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 }
 
 Vector3f GLWidget::getCameraPoi() {
-	return poi;
+	return camera.poi;
 }
 
 Vector3f GLWidget::getCameraEye() {
-	return eye;
+	return camera.eye;
 }
 
 void GLWidget::setCameraPoi (const Vector3f values) {
-	poi = values;
+	camera.poi = values;
+	camera.updateSphericalCoordinates();
+	emit camera_changed();
 }
 
 void GLWidget::setCameraEye (const Vector3f values) {
-	eye = values;
+	cout << "Setting new eye: " << values.transpose() << endl;;
+	camera.eye = values;
+	camera.updateSphericalCoordinates();
+	emit camera_changed();
 }
 
 /****************
@@ -193,7 +191,7 @@ void GLWidget::toggle_draw_points (bool status) {
 }
 
 void GLWidget::toggle_draw_orthographic (bool status) {
-	draw_orthographic = status;
+	camera.orthographic = status;
 
 	resizeGL (windowWidth, windowHeight);
 }
@@ -211,42 +209,17 @@ void GLWidget::toggle_white_mode (bool status) {
 }
 
 void GLWidget::set_front_view () {
-	if (fabs(phi) > 1.0e-5) {
-		// front
-		theta = 90. * M_PI / 180.;
-		phi = 0.;
-	}	else {
-		// back
-		theta = 90. * M_PI / 180.;
-		phi = 180 * M_PI / 180.;
-	}
-
+	camera.setFrontView();
 	emit camera_changed();
 }
 
 void GLWidget::set_side_view () {
-	if (fabs(fabs(phi) - 90. * M_PI / 180.) > 1.0e-5 && fabs(fabs(theta) - 90. * M_PI / 180.)) {
-		// right
-		theta = 90. * M_PI / 180.;
-		phi = 90. * M_PI / 180.;
-	} else {
-		// left
-		theta = 90. * M_PI / 180.;
-		phi = 270. * M_PI / 180.;
-	}
+	camera.setSideView();
 	emit camera_changed();
 }
 
 void GLWidget::set_top_view () {
-	if (fabs(theta) > 1.0e-5) {
-		// top
-		phi = 180. * M_PI / 180.;
-		theta = 0.;
-	} else {
-		// bottom
-		phi = 0. * M_PI / 180.;
-		theta = 180. * M_PI / 180.;
-	}
+	camera.setTopView();
 	emit camera_changed();
 }
 
@@ -353,90 +326,22 @@ void GLWidget::initializeGL()
 	emit opengl_initialized();
 }
 
-void GLWidget::updateSphericalCoordinates() {
-	Vector3f los = poi - eye;
-	r = los.norm();
-	theta = acos (-los[1] / r);
-	phi = atan (los[2] / los[0]);
-
-	// atan only returns +- pi/2 so we have to fix the azimuth here
-	if (los[0] > 0.f) {
-		if (los[2] >= 0.f)
-			phi += M_PI;
-		else
-			phi -= M_PI;
-	}
-}
-
-void GLWidget::updateCamera() {
-	// update the camera
-	float s_theta, c_theta, s_phi, c_phi;
-	s_theta = sin (theta);
-	c_theta = cos (theta);
-	s_phi = sin (phi);
-	c_phi = cos (phi);
-
-	eye[0] = (r * s_theta * c_phi);
-	eye[1] = (r * c_theta);
-	eye[2] = (r * s_theta * s_phi);
-
-	eye += poi;
-
-	if (eye[1] < 0.)
-		eye[1];
-
-	Vector3f right (-s_phi, 0., c_phi);
-
-	Vector3f eye_normalized (eye);
-	eye_normalized.normalize();
-
-	up = right.cross (eye_normalized);
-
-	// setup of the projection
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-
-	fov = 45;
-	GLfloat aspect = (GLfloat) windowWidth / (GLfloat) windowHeight;
-
-	if (draw_orthographic) {
-		GLfloat distance = (GLfloat) (poi - eye).norm();
-
-		GLfloat w = tan(fov * M_PI / 180.) * 0.01 * windowWidth * distance / 10.f;
-		GLfloat h = w / aspect; 
-
-		glOrtho (- w * 0.5, w * 0.5,
-				-h * 0.5, h * 0.5,
-			0.001, 50);
-	} else {
-		gluPerspective (fov, aspect, 0.001, 50);
-	}
-
-	// setup of the modelview matrix
-	glMatrixMode (GL_MODELVIEW);
-	glLoadIdentity();
-
-	gluLookAt (eye[0], eye[1], eye[2],
-			poi[0], poi[1], poi[2],
-			up[0], up[1], up[2]);
-}
-
 void GLWidget::updateLightingMatrices () {
 	//Calculate & save matrices
 	glPushMatrix();
 
 	glLoadIdentity();
-	gluPerspective(fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
+	gluPerspective(camera.fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_projection_matrix.data());
 
 	glLoadIdentity();
-	gluLookAt(eye[0], eye[1], eye[2],
-			poi[0], poi[1], poi[2],
-			up[0], up[1], up[2]);
+	gluLookAt(camera.eye[0], camera.eye[1], camera.eye[2],
+			camera.poi[0], camera.poi[1], camera.poi[2],
+			camera.up[0], camera.up[1], camera.up[2]);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_view_matrix.data());
 
 	glLoadIdentity();
-	gluPerspective(fov, 1.0f, 1.0f, 20.0f);
+	gluPerspective(camera.fov, 1.0f, 1.0f, 20.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, light_projection_matrix.data());
 
 	glLoadIdentity();
@@ -741,7 +646,7 @@ void GLWidget::paintGL() {
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
-	updateCamera();
+	camera.update();
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -790,6 +695,9 @@ void GLWidget::resizeGL(int width, int height)
 
 	windowWidth = width;
 	windowHeight = height;
+
+	camera.width = width;
+	camera.height = height;
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
@@ -818,31 +726,14 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	if (event->buttons().testFlag(Qt::MiddleButton)
 			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
 #endif
-		// move
-		Vector3f eye_normalized (poi - eye);
-		eye_normalized.normalize();
-
-		Vector3f global_y (0.f, 1.f, 0.f);
-		Vector3f right = up.cross (eye_normalized);
-		Vector3f local_up = eye_normalized.cross(right);
-		poi += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
-		eye += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
+		camera.move (dx, dy);
 
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::LeftButton)) {
-		// rotate
-		phi += 0.01 * dx;
-		theta -= 0.01 * dy;
-
-		theta = std::max(theta, 0.01f);
-		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
-
+		camera.rotate (dx, dy);
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
-		// zoom
-		r += 0.05 * dy;
-		r = std::max (0.01f, r);
-
+		camera.zoom (dy);
 		emit camera_changed();
 	}
 

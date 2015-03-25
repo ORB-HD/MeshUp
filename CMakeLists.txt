@@ -86,6 +86,7 @@ ADD_EXECUTABLE ( meshup
 	src/MeshVBO.cc
 	src/Curve.cc
 	src/Scene.cc
+	src/Camera.cc
 	src/Scripting.cc
 	src/luatables/luatables.cc
 

@@ -16,19 +16,17 @@ void Scene::setCurrentTime (double t){
 }
 
 void Scene::drawMeshes() {
-	float z_start = 0.;
-	float z_offset = 0.;
+	Vector3f offset_start (0.f, 0.f, 0.f);
 	
 	if (models.size() > 1) {
-		z_start = 0.5f * models.size();
-		z_offset = -1.f;
+		offset_start = model_displacement * models.size();
 	}
 
 	glPushMatrix();
-	glTranslatef (0., 0., z_start);
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-		glTranslatef (0., 0., z_offset);
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		models[i]->draw();
 	}
 
