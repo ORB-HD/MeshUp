@@ -370,11 +370,26 @@ static int meshup_camera_setEye (lua_State *L) {
 	return 0;
 }
 
+///
+// @function camera.setOrthographic
+// @param self the camera
+// @param status
+// Enables or disables orthographic projection of the camera
+static int meshup_camera_setOrthographic (lua_State *L) {
+	Camera *camera = check_camera (L, 1);
+
+	bool status = lua_toboolean (L, 2);
+	app_ptr->glWidget->toggle_draw_orthographic (status);
+
+	return 0;
+}
+
 static const struct luaL_Reg meshup_camera_f[] = {
 	{ "getCenter", meshup_camera_getCenter},
 	{ "setCenter", meshup_camera_setCenter},
 	{ "getEye", meshup_camera_getEye},
 	{ "setEye", meshup_camera_setEye},
+	{ "setOrthographic", meshup_camera_setOrthographic},
 	{ NULL, NULL }
 };
 
@@ -490,12 +505,25 @@ static int meshup_animation_getValuesAt (lua_State *L) {
 	return 1;
 }
 
+///
+// @function animation.getDuration
+// @param self the animation of which we want the values
+// Returns the duration of the animation in seconds 
+static int meshup_animation_getDuration (lua_State *L) {
+	Animation *animation = check_animation (L, 1);
+
+	double duration = animation->raw_values[animation->raw_values.size() - 1][0];
+	lua_pushnumber (L, duration);
+	return 1;
+}
+
 static const struct luaL_Reg meshup_animation_f[] = {
 	{ "getFilename", meshup_animation_getFilename},
 	{ "getRawDimensions", meshup_animation_getRawDimensions},
 	{ "addValues", meshup_animation_addValues},
 	{ "setValuesAt", meshup_animation_setValuesAt},
 	{ "getValuesAt", meshup_animation_getValuesAt},
+	{ "getDuration", meshup_animation_getDuration},
 	{ NULL, NULL }
 };
 
@@ -619,6 +647,18 @@ static int meshup_newAnimation (lua_State *L) {
 }
 
 ///
+// @function meshup.setCurrentTime
+// @param time the current time
+// Sets the current time of all animations to the specified value
+static int meshup_setCurrentTime (lua_State *L) {
+	double time  = luaL_checknumber (L, 1);
+
+	app_ptr->glWidget->scene->setCurrentTime (time);
+
+	return 0;
+}
+
+///
 // @function meshup.setLightPosition
 // @param light_x
 // @param light_y
@@ -665,6 +705,24 @@ static int meshup_saveScreenshot (lua_State *L) {
 	return 0;
 }
 
+///
+// @function meshup.setModelDisplacement
+// @param x
+// @param y
+// @param z
+// Specifies how multiple models should be displaced.
+static int meshup_setModelDisplacement (lua_State *L) {
+	Vector3f coords;
+
+	coords[0] = luaL_checknumber (L, 1);
+	coords[1] = luaL_checknumber (L, 2);
+	coords[2] = luaL_checknumber (L, 3);
+
+	app_ptr->scene->model_displacement = coords;
+
+	return 0;
+}
+
 static const struct luaL_Reg meshup_f[] = {
 	{ "getCamera", meshup_getCamera},
 	{ "getModel", meshup_getModel},
@@ -672,8 +730,10 @@ static const struct luaL_Reg meshup_f[] = {
 	{ "getAnimation", meshup_getAnimation},
 	{ "getAnimationCount", meshup_getAnimationCount},
 	{ "newAnimation", meshup_newAnimation},
+	{ "setCurrentTime", meshup_setCurrentTime},
 	{ "setLightPosition", meshup_setLightPosition},
 	{ "saveScreenshot", meshup_saveScreenshot},
+	{ "setModelDisplacement", meshup_setModelDisplacement},
 	{ NULL, NULL}
 };
 

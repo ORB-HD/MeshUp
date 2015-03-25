@@ -447,16 +447,22 @@ void GLWidget::drawGrid() {
 	xstep = fabs (xmin - xmax) / (float)count;
 	zstep = fabs (zmin - zmax) / (float)count;
 
-	glColor3f (1.f, 1.f, 1.f);
-	glLineWidth(1.f);
+	glDisable (GL_LIGHTING);
+	glColor3f (0.2f, 0.2f, 0.2f);
+	glLineWidth(2.f);
 	glBegin (GL_LINES);
 	for (i = 0; i <= count; i++) {
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (i * xstep + xmin, 0., zmin);
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (i * xstep + xmin, 0., zmax);
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (xmin, 0, i * zstep + zmin);
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (xmax, 0, i * zstep + zmin);
 	}
 	glEnd ();
+	glEnable (GL_LIGHTING);
 }
 
 void GLWidget::drawScene() {
