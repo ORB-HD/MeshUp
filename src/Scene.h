@@ -12,7 +12,7 @@ struct Scene {
 	Scene() :
 		current_time (0.f),
 		longest_animation (0.f),
-		model_displacement (0.f, 0.f, 1.f)
+		model_displacement (0.f, 0.f, -1.f)
 	{};
 	float current_time;
 	float longest_animation;

@@ -19,7 +19,7 @@ void Scene::drawMeshes() {
 	Vector3f offset_start (0.f, 0.f, 0.f);
 	
 	if (models.size() > 1) {
-		offset_start = model_displacement * models.size();
+		offset_start = - model_displacement * models.size() * 0.5;
 	}
 
 	glPushMatrix();
@@ -34,19 +34,17 @@ void Scene::drawMeshes() {
 }
 
 void Scene::drawBaseFrameAxes(){
-	float z_start = 0.;
-	float z_offset = 0.;
+	Vector3f offset_start (0.f, 0.f, 0.f);
 	
 	if (models.size() > 1) {
-		z_start = 0.5f * models.size();
-		z_offset = -1.f;
+		offset_start = - model_displacement * models.size() * 0.5;
 	}
 
 	glPushMatrix();
-	glTranslatef (0., 0., z_start);
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-		glTranslatef (0., 0., z_offset);
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		models[i]->drawBaseFrameAxes();
 	}
 
@@ -54,19 +52,17 @@ void Scene::drawBaseFrameAxes(){
 }
 
 void Scene::drawFrameAxes(){
-	float z_start = 0.;
-	float z_offset = 0.;
+	Vector3f offset_start (0.f, 0.f, 0.f);
 	
 	if (models.size() > 1) {
-		z_start = 0.5f * models.size();
-		z_offset = -1.f;
+		offset_start = - model_displacement * models.size() * 0.5;
 	}
 
 	glPushMatrix();
-	glTranslatef (0., 0., z_start);
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-		glTranslatef (0., 0., z_offset);
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		models[i]->drawFrameAxes();
 	}
 
@@ -74,19 +70,17 @@ void Scene::drawFrameAxes(){
 }
 
 void Scene::drawPoints(){
-	float z_start = 0.;
-	float z_offset = 0.;
+	Vector3f offset_start (0.f, 0.f, 0.f);
 	
 	if (models.size() > 1) {
-		z_start = 0.5f * models.size();
-		z_offset = -1.f;
+		offset_start = - model_displacement * models.size() * 0.5;
 	}
 
 	glPushMatrix();
-	glTranslatef (0., 0., z_start);
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-		glTranslatef (0., 0., z_offset);
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		models[i]->drawPoints();
 	}
 
@@ -94,19 +88,17 @@ void Scene::drawPoints(){
 }
 
 void Scene::drawCurves(){
-	float z_start = 0.;
-	float z_offset = 0.;
+	Vector3f offset_start (0.f, 0.f, 0.f);
 	
 	if (models.size() > 1) {
-		z_start = 0.5f * models.size();
-		z_offset = -1.f;
+		offset_start = - model_displacement * models.size() * 0.5;
 	}
 
 	glPushMatrix();
-	glTranslatef (0., 0., z_start);
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
 	for (unsigned int i = 0; i < models.size(); i++) {
-		glTranslatef (0., 0., z_offset);
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		models[i]->drawCurves();
 	}
 
