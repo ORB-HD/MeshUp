@@ -216,6 +216,12 @@ void MeshupApp::loadAnimation(const char* filename) {
 		abort();
 	}
 
+	if (scene->models.size() == scene->animations.size()) {
+		// no model given for this animation therefore copy the previous model
+		// for this animation
+		loadModel(scene->models[scene->models.size() - 1]->model_filename.c_str());
+	}
+
 	Animation* animation = new Animation();
 	// TODO: gracefully ignore erroneous files
 	animation->loadFromFile (filename, scene->models[scene->models.size() - 1]->configuration);
