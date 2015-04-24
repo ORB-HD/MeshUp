@@ -30,6 +30,10 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Camera">Camera </a></li>
+<li><a href="#Animation">Animation </a></li>
+<li><a href="#Model">Model </a></li>
+<li><a href="#Meshup">Meshup </a></li>
 </ul>
 
 
@@ -40,6 +44,8 @@
 <h2>Examples</h2>
 <ul class="$(kind=='Topics' and '' or 'nowrap'">
   <li><a href="examples/examplescript.lua.html">examplescript.lua</a></li>
+  <li><a href="examples/frontal_montage.lua.html">frontal_montage.lua</a></li>
+  <li><a href="examples/lateral_montage.lua.html">lateral_montage.lua</a></li>
 </ul>
 
 </div>
@@ -47,7 +53,7 @@
 <div id="content">
 
 <h1>Module <code>meshup</code></h1>
-<p>Puppeteer Lua Scripting Module.</p>
+<p>MeshUp Lua Scripting Module.</p>
 <p>
 
 </p>
@@ -61,77 +67,115 @@
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#draw">draw ()</a></td>
-	<td class="summary">Issues the scene to be drawn</td>
+	<td class="summary">Gets called after meshup performed its drawing.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#draw">draw ()</a></td>
-	<td class="summary">Closes meshup</td>
+	<td class="name" nowrap><a href="#quit">quit ()</a></td>
+	<td class="summary">Gets called when meshup closes.</td>
 	</tr>
+</table>
+<h2><a href="#Camera">Camera </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#camera.getCenter">camera.getCenter (self)</a></td>
+	<td class="summary">Get the point where the camera is looking to.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#camera.setCenter">camera.setCenter (self, center_x, center_y, center_z)</a></td>
+	<td class="summary">Specify where the camera is looking at.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#camera.getEye">camera.getEye (self)</a></td>
+	<td class="summary">Get the location (eye) of the camera.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#camera.setEye">camera.setEye (self, eye_x, eye_y, eye_z)</a></td>
+	<td class="summary">Set the location of the camera.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#camera.setOrthographic">camera.setOrthographic (self, status)</a></td>
+	<td class="summary">Enable or disable orthographic projection.</td>
+	</tr>
+</table>
+<h2><a href="#Animation">Animation </a></h2>
+<table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#animation.getFilename">animation.getFilename (self)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get the filename of the given animation.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#animation.getRawDimensions">animation.getRawDimensions (self)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get the dimensions of the animation data.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#animation.addValues">animation.addValues (self, values)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Add values to the animation.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#animation.setValuesAt">animation.setValuesAt (self, row, values)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Set values of the animation at a specified data index.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#animation.getValuesAt">animation.getValuesAt (self, row)</a></td>
+	<td class="summary">Get the animation state at a given data index.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#animation.getDuration">animation.getDuration (self)</a></td>
+	<td class="summary">Get the duration of an animation.</td>
+	</tr>
+</table>
+<h2><a href="#Model">Model </a></h2>
+<table class="function_list">
+	<tr>
 	<td class="name" nowrap><a href="#model.getFilename">model.getFilename (self)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get the filename of a model.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#model.getDofCount">model.getDofCount (self)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get the number of degrees of freedom of a model.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#loadModel">loadModel (filename)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Load a model from a given filename.</td>
+	</tr>
+</table>
+<h2><a href="#Meshup">Meshup </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#getCamera">getCamera ()</a></td>
+	<td class="summary">Get the current camera</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#getModel">getModel (index)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get a model</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#getModelCount">getModelCount ()</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get the number of currently loaded models.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#getAnimation">getAnimation (index)</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get an animation.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#getAnimationCount">getAnimationCount ()</a></td>
-	<td class="summary">
-
-</td>
+	<td class="summary">Get the number of currently loaded animations.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setCurrentTime">setCurrentTime (time)</a></td>
+	<td class="summary">Set the current time for all animations.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setLightPosition">setLightPosition (light_x, light_y, light_y)</a></td>
+	<td class="summary">Set the light position.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#saveScreenshot">saveScreenshot (filename, width, height, transparency)</a></td>
+	<td class="summary">Save a screenshot to a .png file.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#setModelDisplacement">setModelDisplacement (x, y, z)</a></td>
+	<td class="summary">Specify how multiple models are displaced from each other.</td>
 	</tr>
 </table>
 
@@ -167,7 +211,7 @@
     <strong>draw ()</strong>
     </dt>
     <dd>
-    Issues the scene to be drawn ()
+    Gets called after meshup performed its drawing. ()
 
 
 
@@ -177,13 +221,194 @@
 
 </dd>
     <dt>
-    <a name = "draw"></a>
-    <strong>draw ()</strong>
+    <a name = "quit"></a>
+    <strong>quit ()</strong>
     </dt>
     <dd>
-    Closes meshup ()
+    Gets called when meshup closes. ()
 
 
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Camera"></a>Camera </h2>
+
+
+    <dl class="function">
+    <dt>
+    <a name = "camera.getCenter"></a>
+    <strong>camera.getCenter (self)</strong>
+    </dt>
+    <dd>
+    Get the point where the camera is looking to.
+ Center of the camera is also sometimes called "point of interest (POI)".
+ Returns the point where the camera is looking to
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the camera
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        center<em>x, center</em>y, center_z
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "camera.setCenter"></a>
+    <strong>camera.setCenter (self, center_x, center_y, center_z)</strong>
+    </dt>
+    <dd>
+    Specify where the camera is looking at.
+ Sets the camera point of interest to the specified coordinates
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the camera
+        </li>
+        <li><span class="parameter">center_x</span>
+
+
+
+        </li>
+        <li><span class="parameter">center_y</span>
+
+
+
+        </li>
+        <li><span class="parameter">center_z</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "camera.getEye"></a>
+    <strong>camera.getEye (self)</strong>
+    </dt>
+    <dd>
+    Get the location (eye) of the camera.
+ Returns the coordinates of the camera
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the camera
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        center<em>x, center</em>y, center_z
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "camera.setEye"></a>
+    <strong>camera.setEye (self, eye_x, eye_y, eye_z)</strong>
+    </dt>
+    <dd>
+    Set the location of the camera.
+ Sets the camera's location to the specified coordinates.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the camera
+        </li>
+        <li><span class="parameter">eye_x</span>
+
+
+
+        </li>
+        <li><span class="parameter">eye_y</span>
+
+
+
+        </li>
+        <li><span class="parameter">eye_z</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "camera.setOrthographic"></a>
+    <strong>camera.setOrthographic (self, status)</strong>
+    </dt>
+    <dd>
+    Enable or disable orthographic projection.
+ Enables or disables orthographic projection of the camera
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the camera
+        </li>
+        <li><span class="parameter">status</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Animation"></a>Animation </h2>
+
+
+    <dl class="function">
+    <dt>
+    <a name = "animation.getFilename"></a>
+    <strong>animation.getFilename (self)</strong>
+    </dt>
+    <dd>
+    Get the filename of the given animation.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation
+        </li>
+    </ul>
 
     <h3>Returns:</h3>
     <ol>
@@ -196,38 +421,11 @@
 
 </dd>
     <dt>
-    <a name = "animation.getFilename"></a>
-    <strong>animation.getFilename (self)</strong>
-    </dt>
-    <dd>
-
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">self</span>
-         the animation
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-        <li>
-        the filename of the model</li>
-        <li>
-        rows, cols of the raw values</li>
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "animation.getRawDimensions"></a>
     <strong>animation.getRawDimensions (self)</strong>
     </dt>
     <dd>
-
+    Get the dimensions of the animation data.
 
 
     <h3>Parameters:</h3>
@@ -252,7 +450,7 @@
     <strong>animation.addValues (self, values)</strong>
     </dt>
     <dd>
-
+    Add values to the animation.
  remaining entries
  Adds new values to the animation
 
@@ -277,7 +475,7 @@
     <strong>animation.setValuesAt (self, row, values)</strong>
     </dt>
     <dd>
-
+    Set values of the animation at a specified data index.
  remaining entries
  Sets the raw values at the given row
 
@@ -295,22 +493,67 @@
         </li>
     </ul>
 
-    <h3>Returns:</h3>
-    <ol>
-
-        the filename of the model
-    </ol>
 
 
 
 
 </dd>
     <dt>
+    <a name = "animation.getValuesAt"></a>
+    <strong>animation.getValuesAt (self, row)</strong>
+    </dt>
+    <dd>
+    Get the animation state at a given data index.
+ Returns a table with all values (first entry is time)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation of which we want the values
+        </li>
+        <li><span class="parameter">row</span>
+         index of the row for which we want to get the values
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "animation.getDuration"></a>
+    <strong>animation.getDuration (self)</strong>
+    </dt>
+    <dd>
+    Get the duration of an animation.
+ Returns the duration of the animation in seconds
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">self</span>
+         the animation of which we want the values
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Model"></a>Model </h2>
+
+
+    <dl class="function">
+    <dt>
     <a name = "model.getFilename"></a>
     <strong>model.getFilename (self)</strong>
     </dt>
     <dd>
-
+    Get the filename of a model.
 
 
     <h3>Parameters:</h3>
@@ -322,10 +565,8 @@
 
     <h3>Returns:</h3>
     <ol>
-        <li>
-        the filename of the model</li>
-        <li>
-        the number of degrees of freedom</li>
+
+        the filename of the model
     </ol>
 
 
@@ -337,7 +578,7 @@
     <strong>model.getDofCount (self)</strong>
     </dt>
     <dd>
-
+    Get the number of degrees of freedom of a model.
 
 
     <h3>Parameters:</h3>
@@ -362,7 +603,7 @@
     <strong>loadModel (filename)</strong>
     </dt>
     <dd>
-
+    Load a model from a given filename.
 
 
     <h3>Parameters:</h3>
@@ -374,10 +615,29 @@
         </li>
     </ul>
 
+
+
+
+
+</dd>
+</dl>
+    <h2><a name="Meshup"></a>Meshup </h2>
+
+
+    <dl class="function">
+    <dt>
+    <a name = "getCamera"></a>
+    <strong>getCamera ()</strong>
+    </dt>
+    <dd>
+    Get the current camera
+
+
+
     <h3>Returns:</h3>
     <ol>
 
-        model at given index or first model if no index is provided
+        camera object that is currently used for rendering
     </ol>
 
 
@@ -389,7 +649,7 @@
     <strong>getModel (index)</strong>
     </dt>
     <dd>
-
+    Get a model
 
 
     <h3>Parameters:</h3>
@@ -403,10 +663,8 @@
 
     <h3>Returns:</h3>
     <ol>
-        <li>
-        model at given index or first model if no index is provided</li>
-        <li>
-        number of loaded models.</li>
+
+        model at given index or first model if no index is provided.
     </ol>
 
 
@@ -418,16 +676,14 @@
     <strong>getModelCount ()</strong>
     </dt>
     <dd>
-
+    Get the number of currently loaded models.
 
 
 
     <h3>Returns:</h3>
     <ol>
-        <li>
-        number of loaded models.</li>
-        <li>
-        animation at given index or first animation if no index is provided</li>
+
+        number of loaded models.
     </ol>
 
 
@@ -439,7 +695,7 @@
     <strong>getAnimation (index)</strong>
     </dt>
     <dd>
-
+    Get an animation.
 
 
     <h3>Parameters:</h3>
@@ -453,10 +709,8 @@
 
     <h3>Returns:</h3>
     <ol>
-        <li>
-        animation at given index or first animation if no index is provided</li>
-        <li>
-        number of loaded animations</li>
+
+        animation at given index or first animation if no index is provided
     </ol>
 
 
@@ -468,7 +722,7 @@
     <strong>getAnimationCount ()</strong>
     </dt>
     <dd>
-
+    Get the number of currently loaded animations.
 
 
 
@@ -482,6 +736,125 @@
 
 
 </dd>
+    <dt>
+    <a name = "setCurrentTime"></a>
+    <strong>setCurrentTime (time)</strong>
+    </dt>
+    <dd>
+    Set the current time for all animations.
+ Sets the current time of all animations to the specified value
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">time</span>
+         the current time
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "setLightPosition"></a>
+    <strong>setLightPosition (light_x, light_y, light_y)</strong>
+    </dt>
+    <dd>
+    Set the light position.
+ Sets the light to the given position
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">light_x</span>
+
+
+
+        </li>
+        <li><span class="parameter">light_y</span>
+
+
+
+        </li>
+        <li><span class="parameter">light_y</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "saveScreenshot"></a>
+    <strong>saveScreenshot (filename, width, height, transparency)</strong>
+    </dt>
+    <dd>
+    Save a screenshot to a .png file.
+ Makes a screenshot and stores as PNG file.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">filename</span>
+
+
+
+        </li>
+        <li><span class="parameter">width</span>
+         (optional)
+        </li>
+        <li><span class="parameter">height</span>
+         (optional)
+        </li>
+        <li><span class="parameter">transparency</span>
+         (optional) whether black should be transparent
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "setModelDisplacement"></a>
+    <strong>setModelDisplacement (x, y, z)</strong>
+    </dt>
+    <dd>
+    Specify how multiple models are displaced from each other.
+ Specifies how multiple models should be displaced.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+
+
+
+        </li>
+        <li><span class="parameter">y</span>
+
+
+
+        </li>
+        <li><span class="parameter">z</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
 </dl>
 
 
@@ -489,7 +862,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2015-01-14 15:56:51 </i>
+<i style="float:right;">Last updated 2015-04-24 18:43:31 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

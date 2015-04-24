@@ -5,11 +5,17 @@ dir = "doc/scripting"
 not_luadoc = true
 add_language_extension(".cc", "c")
 
-examples = "doc/scripting/examplescript.lua"
+examples = {
+	"doc/scripting/examplescript.lua",
+	"doc/scripting/frontal_montage.lua",
+	"doc/scripting/lateral_montage.lua",
+}
 
 file = { "src", exclude = {
 		"src/Animation.cc",
 		"src/Animation.h",
+		"src/Camera.cc",
+		"src/Camera.h",
 		"src/Curve.cc",
 		"src/Curve.h",
 		"src/FrameConfig.h",

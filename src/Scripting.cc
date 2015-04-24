@@ -1,4 +1,4 @@
-/// Puppeteer Lua Scripting Module.
+/// MeshUp Lua Scripting Module.
 // @module meshup
 
 #include "MeshupApp.h"
@@ -220,10 +220,8 @@ void scripting_update (lua_State *L, float dt) {
 	assert (lua_gettop(L) == 0);
 }
 
-/***
- * Issues the scene to be drawn 
- * @function meshup.draw()
- */
+/// Gets called after meshup performed its drawing.
+// @function meshup.draw()
 void scripting_draw (lua_State *L) {
 	assert (lua_gettop(L) == 0);
 	lua_getglobal (L, "meshup");
@@ -240,8 +238,8 @@ void scripting_draw (lua_State *L) {
 }
 
 /***
- * Closes meshup
- * @function meshup.draw()
+ * Gets called when meshup closes.
+ * @function meshup.quit()
  */
 void scripting_quit (lua_State *L) {
 	assert (lua_gettop(L) == 0);
@@ -296,11 +294,12 @@ VectorNd l_checkvectornd (lua_State *L, int index) {
 	return result;
 }
 
-//
-// Camera
-//
-
 ///
+// Camera
+// @section Camera
+
+/// Get the point where the camera is looking to.
+// Center of the camera is also sometimes called "point of interest (POI)".
 // @function camera.getCenter
 // @param self the camera
 // @return center_x, center_y, center_z
@@ -315,7 +314,7 @@ static int meshup_camera_getCenter (lua_State *L) {
 	return 3;
 }
 
-///
+/// Specify where the camera is looking at.
 // @function camera.setCenter
 // @param self the camera
 // @param center_x
@@ -335,7 +334,7 @@ static int meshup_camera_setCenter (lua_State *L) {
 	return 0;
 }
 
-///
+/// Get the location (eye) of the camera.
 // @function camera.getEye
 // @param self the camera
 // @return center_x, center_y, center_z
@@ -350,7 +349,7 @@ static int meshup_camera_getEye (lua_State *L) {
 	return 3;
 }
 
-///
+/// Set the location of the camera.
 // @function camera.setEye
 // @param self the camera
 // @param eye_x
@@ -370,7 +369,7 @@ static int meshup_camera_setEye (lua_State *L) {
 	return 0;
 }
 
-///
+/// Enable or disable orthographic projection.
 // @function camera.setOrthographic
 // @param self the camera
 // @param status
@@ -393,11 +392,11 @@ static const struct luaL_Reg meshup_camera_f[] = {
 	{ NULL, NULL }
 };
 
-//
-// Animation
-//
-
 ///
+// Animation
+// @section Animation
+
+/// Get the filename of the given animation.
 // @function animation.getFilename 
 // @param self the animation
 // @return the filename of the model
@@ -407,7 +406,7 @@ static int meshup_animation_getFilename (lua_State *L) {
 	return 1;
 }
 
-///
+/// Get the dimensions of the animation data.
 // @function animation.getRawDimensions
 // @param self the animation
 // @return rows, cols of the raw values
@@ -423,7 +422,7 @@ static int meshup_animation_getRawDimensions (lua_State *L) {
 	return 2;
 }
 
-///
+/// Add values to the animation.
 // @function animation.addValues
 // @param self the animation to which the values should be added
 // @param values value of the time at index 1 and state values at the
@@ -447,7 +446,7 @@ static int meshup_animation_addValues (lua_State *L) {
 	return 0;
 }
 
-///
+/// Set values of the animation at a specified data index.
 // @function animation.setValuesAt
 // @param self the animation for which the values should be set
 // @param row index of the row for which the new values should be set
@@ -476,7 +475,7 @@ static int meshup_animation_setValuesAt (lua_State *L) {
 	return 0;
 }
 
-///
+/// Get the animation state at a given data index.
 // @function animation.getValuesAt
 // @param self the animation of which we want the values
 // @param row index of the row for which we want to get the values
@@ -505,7 +504,7 @@ static int meshup_animation_getValuesAt (lua_State *L) {
 	return 1;
 }
 
-///
+/// Get the duration of an animation.
 // @function animation.getDuration
 // @param self the animation of which we want the values
 // Returns the duration of the animation in seconds 
@@ -527,11 +526,11 @@ static const struct luaL_Reg meshup_animation_f[] = {
 	{ NULL, NULL }
 };
 
-//
-// Model
-//
-
 ///
+// Model
+// @section Model
+
+/// Get the filename of a model.
 // @function model.getFilename 
 // @param self the model
 // @return the filename of the model
@@ -541,7 +540,7 @@ static int meshup_model_getFilename (lua_State *L) {
 	return 1;
 }
 
-///
+/// Get the number of degrees of freedom of a model.
 // @function model.getDofCount
 // @param self the model
 // @return the number of degrees of freedom
@@ -560,7 +559,7 @@ static const struct luaL_Reg meshup_model_f[] = {
 	{ NULL, NULL }
 };
 
-///
+/// Load a model from a given filename.
 // @function meshup.loadModel
 // @param filename
 static int meshup_loadModel (lua_State *L) {
@@ -572,19 +571,22 @@ static int meshup_loadModel (lua_State *L) {
 }
 
 ///
+// Meshup
+// @section MeshUp
+
+/// Get the current camera
 // @function meshup.getCamera
-// @param index
-// @return model at given index or first model if no index is provided
+// @return camera object that is currently used for rendering
 static int meshup_getCamera (lua_State *L) {
 	push_userdata (L, &(app_ptr->glWidget->camera), "meshup_camera");
 
 	return 1;
 }
 
-///
+/// Get a model
 // @function meshup.getModel
 // @param index
-// @return model at given index or first model if no index is provided
+// @return model at given index or first model if no index is provided.
 static int meshup_getModel (lua_State *L) {
 	int index = 0;
 	if (lua_gettop (L) == 1) {
@@ -600,7 +602,7 @@ static int meshup_getModel (lua_State *L) {
 	return 1;
 }
 
-///
+/// Get the number of currently loaded models.
 // @function meshup.getModelCount
 // @return number of loaded models.
 static int meshup_getModelCount (lua_State *L) {
@@ -609,7 +611,7 @@ static int meshup_getModelCount (lua_State *L) {
 	return 1;
 }
 
-///
+/// Get an animation.
 // @function meshup.getAnimation
 // @param index
 // @return animation at given index or first animation if no index is provided
@@ -628,7 +630,7 @@ static int meshup_getAnimation (lua_State *L) {
 	return 1;
 }
 
-///
+/// Get the number of currently loaded animations.
 // @function meshup.getAnimationCount
 // @return number of loaded animations
 static int meshup_getAnimationCount (lua_State *L) {
@@ -646,7 +648,7 @@ static int meshup_newAnimation (lua_State *L) {
 	return 1;
 }
 
-///
+/// Set the current time for all animations.
 // @function meshup.setCurrentTime
 // @param time the current time
 // Sets the current time of all animations to the specified value
@@ -658,7 +660,7 @@ static int meshup_setCurrentTime (lua_State *L) {
 	return 0;
 }
 
-///
+/// Set the light position.
 // @function meshup.setLightPosition
 // @param light_x
 // @param light_y
@@ -676,7 +678,7 @@ static int meshup_setLightPosition (lua_State *L) {
 	return 0;
 }
 
-///
+/// Save a screenshot to a .png file.
 // @function meshup.saveScreenshot
 // @param filename
 // @param width (optional)
@@ -705,7 +707,7 @@ static int meshup_saveScreenshot (lua_State *L) {
 	return 0;
 }
 
-///
+/// Specify how multiple models are displaced from each other.
 // @function meshup.setModelDisplacement
 // @param x
 // @param y
