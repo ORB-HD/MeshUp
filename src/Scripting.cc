@@ -671,7 +671,7 @@ static int meshup_setLightPosition (lua_State *L) {
 	coords[0] = luaL_checknumber (L, 1);
 	coords[1] = luaL_checknumber (L, 2);
 	coords[2] = luaL_checknumber (L, 3);
-	coords[4] = 1.;
+	coords[3] = 1.;
 
 	app_ptr->glWidget->light_position = coords;
 
