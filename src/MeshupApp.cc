@@ -527,28 +527,27 @@ void MeshupApp::action_load_animation() {
 
 void MeshupApp::action_reload_files() {
 	for (unsigned int i = 0; i < scene->models.size(); i++) {
-		MeshupModel* model = new MeshupModel;
+		string filename = scene->models[i]->model_filename;
+		MeshupModel* model = scene->models[i];
+		model->clear();
 
-		if (model->loadModelFromFile (scene->models[i]->model_filename.c_str())) {
+		if (model->loadModelFromFile (filename.c_str())) {
 			model->resetPoses();
 			model->updateSegments();
-			delete scene->models[i];
-			scene->models[i] = model;
 		} else {
 			cerr << "Error loading model " << scene->models[i]->model_filename << endl;
 		}
 	}
 
 	for (unsigned int i = 0; i < scene->animations.size(); i++) {
-		Animation* animation = new Animation();
+		Animation* animation = scene->animations[i];
 
-		if (animation->loadFromFile (scene->animations[i]->animation_filename.c_str(), scene->models[i]->configuration)) {
-			delete scene->animations[i];
-			scene->animations[i] = animation;
-		} else {
+		if (!animation->loadFromFile (animation->animation_filename.c_str(), scene->models[i]->configuration)) {
 			cerr << "Error loading animation " << scene->animations[i]->animation_filename << endl;
 		}
 	}
+
+ 	initialize_curves(); 
 
 	emit (animation_loaded());
 	
