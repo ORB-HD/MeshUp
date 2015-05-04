@@ -553,9 +553,39 @@ static int meshup_model_getDofCount (lua_State *L) {
 	return 1;
 }
 
+/// Compute the global coordinates for a point in frame coordinates
+// @function model.calcFramePointToGlobal
+// @param self the model
+// @param frame_name name of the frame
+// @param coords coordinates of the frame-local point
+// @return global_x, global_y, global_z global coordinates of the point
+static int meshup_model_calcFramePointToGlobal (lua_State *L) {
+	MeshupModel *model = check_meshup_model (L, 1);
+	string frame_name = luaL_checkstring (L, 2);
+	Vector3f frame_coords = l_checkvector3f (L, 3);
+
+	Frame* frame = model->findFrame (frame_name.c_str());
+
+	if (!frame) {
+		luaL_error (L, "Could not find frame with name '%s'.", frame_name.c_str());
+		return 0;
+	}
+
+	Vector4f frame_coords_h (frame_coords[0], frame_coords[1], frame_coords[2], 1.f);
+
+	Vector3f global_coords = model->configuration.axes_rotation * Vector3f((frame->pose_transform.transpose() * frame_coords_h).block<3,1>(0,0));
+
+	lua_pushnumber (L, global_coords[0]);
+	lua_pushnumber (L, global_coords[1]);
+	lua_pushnumber (L, global_coords[2]);
+
+	return 3;
+}
+
 static const struct luaL_Reg meshup_model_f[] = {
 	{ "getFilename", meshup_model_getFilename},
 	{ "getDofCount", meshup_model_getDofCount},
+	{ "calcFramePointToGlobal", meshup_model_calcFramePointToGlobal},
 	{ NULL, NULL }
 };
 
