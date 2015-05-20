@@ -262,6 +262,11 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 		}
 
 		string arg = argv[i];
+		string arg_extension = "";
+
+		if (arg.find (".")) 
+			arg_extension = arg.substr (arg.rfind(".") + 1);
+
 		if (arg == "-s" || arg == "--script") {
 			i++;
 			if (i == argc) {
@@ -281,7 +286,7 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 			if (model_filename.size() != 0) {
 				loadModel(model_filename.c_str());
 			}
-		} else if (arg.size() >= 3 && arg.substr (arg.size() - 3) == "csv") {
+		} else if (arg.size() >= 3 && ( arg_extension == "csv") || (arg_extension == "txt")) {
 			loadAnimation (arg.c_str());
 		}
 	}
