@@ -14,11 +14,11 @@
 #include <QImage>
 
 #include <iostream>
+#include "SimpleMath/SimpleMath.h"
 
-#include "Model.h"
+#include "Camera.h"
 
-struct Animation;
-typedef boost::shared_ptr<Animation> AnimationPtr;
+struct Scene;
 
 class GLWidget : public QGLWidget
 {
@@ -31,22 +31,11 @@ class GLWidget : public QGLWidget
 		QSize minimumSizeHint() const;
 		QSize sizeHint() const;
 
-		void loadModel (const char *filename);
-		void loadAnimation (const char *filename);
-
-		float getAnimationDuration();
+		Scene *scene;
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		Vector3f getCameraPoi();
-		Vector3f getCameraEye();
-		void setCameraPoi (const Vector3f values);
-		void setCameraEye (const Vector3f values);
-
-		void updateSphericalCoordinates();
-
-		MeshupModelPtr model_data;
-		AnimationPtr animation_data;
+		Camera camera;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;
@@ -56,8 +45,17 @@ class GLWidget : public QGLWidget
 		bool draw_shadows;
 		bool draw_curves;
 		bool draw_points;
+		bool white_mode;
 
-		bool draw_orthographic;
+		Vector4f light_position;
+
+		Vector3f getCameraPoi();
+		Vector3f getCameraEye();
+
+		void setCameraPoi (const Vector3f values);
+		void setCameraEye (const Vector3f values);
+
+		void saveScreenshot (const char* filename, int width, int height, bool transparency = true);
 
 	protected:
 		void update_timer();
@@ -82,17 +80,6 @@ class GLWidget : public QGLWidget
 		void shadowMapCleanup();
 
 		QPoint lastMousePos;
-		// azimuth
-		float phi;
-		// the elevation angle
-		float theta;
-		// radius
-		float r;
-		float fov;
-
-		Vector3f poi;
-		Vector3f eye;
-		Vector3f up;
 
 		unsigned int application_time_msec;
 		unsigned int first_frame_msec;
@@ -104,8 +91,6 @@ class GLWidget : public QGLWidget
 		float windowWidth;
 		float windowHeight;
 
-		bool opengl_initialized;
-
 	public slots:
 		void toggle_draw_grid(bool status);
 		void toggle_draw_base_axes(bool status);
@@ -115,8 +100,8 @@ class GLWidget : public QGLWidget
 		void toggle_draw_shadows(bool status);
 		void toggle_draw_curves(bool status);
 		void toggle_draw_points(bool status);
-
 		void toggle_draw_orthographic(bool status);
+		void toggle_white_mode(bool status);
 
 		void set_front_view ();
 		void set_side_view ();
@@ -125,12 +110,9 @@ class GLWidget : public QGLWidget
 		void actionRenderImage();
 		void actionRenderSeriesImage();
 
-		void setAnimationTime (float fraction);
-	
 	signals:
-		void animation_loaded();
-		void model_loaded();
 		void camera_changed();
+		void opengl_initialized();
 };
 
 #endif

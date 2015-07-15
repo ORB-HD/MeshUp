@@ -14,8 +14,6 @@
 #include "SimpleMath/SimpleMathGL.h"
 #include "string_utils.h"
 
-#include "json/json.h"
-
 #include <cstdlib>
 #include <cstdio>
 #include <iostream>
@@ -42,45 +40,45 @@ using namespace std;
 
 const string invalid_id_characters = "{}[],;: \r\n\t#";
 
-/** \brief Searches for the proper animation interpolants and updates the
- * poses */
-void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
-
-void TransformInfo::applyColumnValue (const ColumnInfo &column_info, float value, const FrameConfig &frame_config) {
+void TransformInfo::applyStateValue (const StateInfo &state_info, float value, const FrameConfig &frame_config) {
 	// handle radian
-	if (column_info.type==ColumnInfo::TransformTypeRotation && column_info.is_radian) {
+	if (state_info.type==StateInfo::TransformTypeRotation && state_info.is_radian) {
 		value *= 180. / M_PI;
 	}
 
 	Vector3f axis (0.f, 0.f, 0.f);
-	switch (column_info.axis) {
-		case ColumnInfo::AxisTypeX: axis[0] = 1.f; break;
-		case ColumnInfo::AxisTypeY: axis[1] = 1.f; break;
-		case ColumnInfo::AxisTypeZ: axis[2] = 1.f; break;
-		case ColumnInfo::AxisTypeNegativeX: axis[0] = -1.f; break;
-		case ColumnInfo::AxisTypeNegativeY: axis[1] = -1.f; break;
-		case ColumnInfo::AxisTypeNegativeZ: axis[2] = -1.f; break;
+	switch (state_info.axis) {
+		case StateInfo::AxisTypeX: axis[0] = 1.f; break;
+		case StateInfo::AxisTypeY: axis[1] = 1.f; break;
+		case StateInfo::AxisTypeZ: axis[2] = 1.f; break;
+		case StateInfo::AxisTypeNegativeX: axis[0] = -1.f; break;
+		case StateInfo::AxisTypeNegativeY: axis[1] = -1.f; break;
+		case StateInfo::AxisTypeNegativeZ: axis[2] = -1.f; break;
 		default: cerr << "Error: invalid axis type!"; abort();
 	}
 
 	axis = frame_config.axes_rotation.transpose() * axis;
 
-	if (column_info.type == ColumnInfo::TransformTypeTranslation) {
+	if (state_info.type == StateInfo::TransformTypeTranslation) {
 		translation = translation + axis * value;
-	} else if (column_info.type == ColumnInfo::TransformTypeScale) {
-		switch (column_info.axis) {
-			case ColumnInfo::AxisTypeX: scaling[0] = value; break;
-			case ColumnInfo::AxisTypeY: scaling[1] = value; break;
-			case ColumnInfo::AxisTypeZ: scaling[2] = value; break;
-			case ColumnInfo::AxisTypeNegativeX: scaling[0] = -value; break;
-			case ColumnInfo::AxisTypeNegativeY: scaling[1] = -value; break;
-			case ColumnInfo::AxisTypeNegativeZ: scaling[2] = -value; break;
+	} else if (state_info.type == StateInfo::TransformTypeScale) {
+		switch (state_info.axis) {
+			case StateInfo::AxisTypeX: scaling[0] = value; break;
+			case StateInfo::AxisTypeY: scaling[1] = value; break;
+			case StateInfo::AxisTypeZ: scaling[2] = value; break;
+			case StateInfo::AxisTypeNegativeX: scaling[0] = -value; break;
+			case StateInfo::AxisTypeNegativeY: scaling[1] = -value; break;
+			case StateInfo::AxisTypeNegativeZ: scaling[2] = -value; break;
 			default: cerr << "Error: invalid axis type!"; abort();	
 		}
-	} else if (column_info.type == ColumnInfo::TransformTypeRotation) {
+	} else if (state_info.type == StateInfo::TransformTypeRotation) {
 		rotation_quaternion = SimpleMath::GL::Quaternion::fromGLRotate(value, axis[0], axis[1], axis[2]) * rotation_quaternion; 
 	}
 }
+
+/** \brief Searches for the proper animation interpolants and updates the
+ * poses */
+void InterpolateModelFramesFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);
 
 bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict) {
 	ifstream file_in (filename);
@@ -117,11 +115,11 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 	bool found_data_section = false;
 	bool column_section = false;
 	bool data_section = false;
-	int column_index = 0;
+	int state_index = 0;
 	int line_number = 0;
-	column_infos.clear();
+	state_descriptor.states.clear();
 
-	std::list<std::string> column_frame_names;
+	std::list<std::string> state_frame_names;
 
 	while (!file_in.eof()) {
 		previous_line = line;
@@ -141,12 +139,23 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 		if (line.size() == 0)
 			continue;
 
+		// check whether we have a CSV file with just the data
+		if (!found_column_section && !found_data_section) {
+			float value = 0.f;
+			istringstream value_stream (line.substr (0, line.find_first_of (" \t\r") - 1));
+			value_stream >> value;
+			if (!value_stream.fail()) {
+				data_section = true;	
+				found_data_section = true;
+			}
+		}
+	
 		if (line.substr (0, string("COLUMNS:").size()) == "COLUMNS:") {
 			found_column_section = true;
 			column_section = true;
 
 			// we set it to -1 and can then easily increasing the value
-			column_index = -1;
+			state_index = -1;
 
 			line = strip_comments (strip_whitespaces (line.substr(string("COLUMNS:").size(), line.size())));
 			if (line.size() == 0)
@@ -212,32 +221,32 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 
 				// it's safe to increase the column index here, as we did
 				// initialize it with -1
-				column_index++;
+				state_index++;
 
-				string column_def = strip_whitespaces(elements[ei]);
-				// cout << "  E: " << column_def << endl;
+				string state_def = strip_whitespaces(elements[ei]);
+				// cout << "  E: " << state_def << endl;
 
-				if (tolower(column_def) == "time") {
+				if (tolower(state_def) == "time") {
 					if (ei != 0) {
 						cerr << "Error: first column must be time column (it was column " << ei <<")!" << endl;
 						abort();
 					}
-					ColumnInfo column_info;
-					column_info.is_time_column = true;
-					column_infos.push_back(column_info);
-					// cout << "Setting time column to " << column_index << endl;
+					StateInfo state_info;
+					state_info.is_time_column = true;
+					state_descriptor.states.push_back(state_info);
+					// cout << "Setting time column to " << state_index << endl;
 					continue;
 				}
-				if (tolower(column_def) == "empty") {
-					ColumnInfo column_info;
-					column_info.is_empty = true;
-					column_infos.push_back(column_info);
+				if (tolower(state_def) == "empty") {
+					StateInfo state_info;
+					state_info.is_empty = true;
+					state_descriptor.states.push_back(state_info);
 					continue;
 				}
 				
-				std::vector<string> spec = tokenize(column_def, ":");
+				std::vector<string> spec = tokenize(state_def, ":");
 				if (spec.size() < 3 || spec.size() > 4) {
-					cerr << "Error: parsing column definition '" << column_def << "' in " << filename << " line " << line_number << endl;
+					cerr << "Error: parsing column definition '" << state_def << "' in " << filename << " line " << line_number << endl;
 
 					if (strict)
 						abort();
@@ -250,16 +259,13 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 
 				// the transform type
 				string type_str = tolower(strip_whitespaces(spec[1]));
-				ColumnInfo::TransformType type = ColumnInfo::TransformTypeUnknown;
-				if (type_str == "rotation"
-						|| type_str == "r")
-					type = ColumnInfo::TransformTypeRotation;
-				else if (type_str == "translation"
-						|| type_str == "t")
-					type = ColumnInfo::TransformTypeTranslation;
-				else if (type_str == "scale"
-						|| type_str == "s")
-					type = ColumnInfo::TransformTypeScale;
+				StateInfo::TransformType type = StateInfo::TransformTypeUnknown;
+				if (type_str == "rotation" || type_str == "r")
+					type = StateInfo::TransformTypeRotation;
+				else if (type_str == "translation" || type_str == "t")
+					type = StateInfo::TransformTypeTranslation;
+				else if (type_str == "scale" || type_str == "s")
+					type = StateInfo::TransformTypeScale;
 				else {
 					cerr << "Error: Unknown transform type '" << spec[1] << "' in " << filename << " line " << line_number << endl;
 					
@@ -271,19 +277,19 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 
 				// and the axis
 				string axis_str = tolower(strip_whitespaces(spec[2]));
-				ColumnInfo::AxisType axis_name;
+				StateInfo::AxisType axis_name;
 				if (axis_str == "x")
-					axis_name = ColumnInfo::AxisTypeX;
+					axis_name = StateInfo::AxisTypeX;
 				else if (axis_str == "y")
-					axis_name = ColumnInfo::AxisTypeY;
+					axis_name = StateInfo::AxisTypeY;
 				else if (axis_str == "z")
-					axis_name = ColumnInfo::AxisTypeZ;
+					axis_name = StateInfo::AxisTypeZ;
 				else if (axis_str == "-x")
-					axis_name = ColumnInfo::AxisTypeNegativeX;
+					axis_name = StateInfo::AxisTypeNegativeX;
 				else if (axis_str == "-y")
-					axis_name = ColumnInfo::AxisTypeNegativeY;
+					axis_name = StateInfo::AxisTypeNegativeY;
 				else if (axis_str == "-z")
-					axis_name = ColumnInfo::AxisTypeNegativeZ;
+					axis_name = StateInfo::AxisTypeNegativeZ;
 				else {
 					cerr << "Error: Unknown axis name '" << spec[2] << "' in " << filename << " line " << line_number << endl;
 
@@ -300,14 +306,14 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 						unit_is_radian = true;
 				}
 
-				ColumnInfo col_info;
+				StateInfo col_info;
 				col_info.frame_name = frame_name;
 				col_info.type = type;
 				col_info.axis = axis_name;
 				col_info.is_radian = unit_is_radian;
 
-				// cout << "Adding column " << column_index << " " << frame_name << ", " << type << ", " << axis_name << " radians = " << col_info.is_radian << endl;
-				column_infos.push_back(col_info);
+				// cout << "Adding column " << state_index << " " << frame_name << ", " << type << ", " << axis_name << " radians = " << col_info.is_radian << endl;
+				state_descriptor.states.push_back (col_info);
 			}
 
 			continue;
@@ -323,15 +329,15 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 			else
 				columns = tokenize (line);
 
-			if (columns.size() < column_infos.size()) {
+			if (columns.size() < state_descriptor.states.size()) {
 				cerr << "Error: only found " << columns.size() << " data columns in file " 
-					<< filename_str << " line " << line_number << ", but " << column_infos.size() << " columns were specified in the COLUMNS section." << endl;
+					<< filename_str << " line " << line_number << ", but " << state_descriptor.states.size() << " columns were specified in the COLUMNS section." << endl;
 				abort();
 			}
 
-			assert (columns.size() >= column_infos.size());
+			assert (columns.size() >= state_descriptor.states.size());
 
-			float column_time;
+			float state_time;
 			float value;
 			istringstream value_stream (columns[0]);
 			if (!(value_stream >> value)) {
@@ -339,34 +345,29 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 				abort();
 			}
 			
-			column_time = value;
+			state_time = value;
 
 			// convert the data to raw values
-			std::vector<float> column_values(columns.size(), 0.);
+			VectorNd state_values (VectorNd::Zero (columns.size()));
 			for (int ci = 0; ci < columns.size(); ci++) {
 				istringstream value_stream (columns[ci]);
 				if (!(value_stream >> value)) {
 					cerr << "Error: could not convert value string '" << value_stream.str() << "' into a number in " << filename << ":" << line_number << "." << endl;
 					abort();
 				}
-				column_values[ci] = value;
+				state_values[ci] = value;
 			}
-			raw_values.push_back(column_values);
+			raw_values.push_back(state_values);
 
-			force_fps_previous_frame = column_time;
+			force_fps_previous_frame = state_time;
 			force_fps_frame_count++;
 			// cout << "Reading frame at t = " << scientific << force_fps_previous_frame << endl;
 
-			if (column_time > duration)
-				duration = column_time;
+			if (state_time > duration)
+				duration = state_time;
 
 			continue;
 		}
-	}
-
-	if (!found_column_section) {
-		cerr << "Error: did not find COLUMNS: section in animation file!" << endl;
-		abort();
 	}
 
 	if (!found_data_section) {
@@ -393,44 +394,52 @@ KeyFrame Animation::getKeyFrameAtFrameIndex (int frame_index) {
 
 	keyframe.timestamp = raw_values[frame_index][0];
 
-	for (int ci = 1; ci < column_infos.size(); ci++) {
-		if (column_infos[ci].is_empty)
+	for (int ci = 1; ci < state_descriptor.states.size(); ci++) {
+		if (state_descriptor.states[ci].is_empty)
 			continue;
 
-		if (keyframe.transformations.find(column_infos[ci].frame_name) == keyframe.transformations.end())
-			keyframe.transformations[column_infos[ci].frame_name] = TransformInfo();
+		if (keyframe.transformations.find(state_descriptor.states[ci].frame_name) == keyframe.transformations.end())
+			keyframe.transformations[state_descriptor.states[ci].frame_name] = TransformInfo();
 
-		TransformInfo transform = keyframe.transformations[column_infos[ci].frame_name];
+		TransformInfo transform = keyframe.transformations[state_descriptor.states[ci].frame_name];
 
-		transform.applyColumnValue (column_infos[ci], raw_values[frame_index][ci], configuration);
+		transform.applyStateValue (state_descriptor.states[ci], raw_values[frame_index][ci], configuration);
 
-		keyframe.transformations[column_infos[ci].frame_name] = transform;
+		keyframe.transformations[state_descriptor.states[ci].frame_name] = transform;
 	}
 
 	return keyframe;
 }
 
+void Animation::getInterpolatingIndices (float time, int *frame_prev, int *frame_next, float *time_fraction) {
+	*frame_prev= 0;
+	*frame_next= 0;
+	*time_fraction = 0.f;
+
+	if (raw_values.size() > 1) {
+		while (time > raw_values[*frame_next][0]) {
+			*frame_prev = *frame_next;
+			(*frame_next) ++;
+
+			if (*frame_next == raw_values.size()) {
+				*frame_prev = raw_values.size() - 2;
+				*frame_next = raw_values.size() - 1;
+				*time_fraction = 1.;
+				break;
+			}
+	
+			*time_fraction = (time - raw_values[*frame_prev][0]) / (raw_values[*frame_next][0] - raw_values[*frame_prev][0]);
+		}
+	}
+}
+
 KeyFrame Animation::getKeyFrameAtTime (float time) {
-	// compute interpolating frame indices and the time fraction
 	int frame_prev = 0, frame_next = 0;
 	float time_fraction = 0.f;
 
-	if (raw_values.size() > 1) {
-		while (time > raw_values[frame_next][0]) {
-			frame_prev = frame_next;
-			frame_next ++;
+	getInterpolatingIndices (time, &frame_prev, &frame_next, &time_fraction);
 
-			if (frame_next == raw_values.size()) {
-				frame_prev = raw_values.size() - 2;
-				frame_next = raw_values.size() - 1;
-				time_fraction = 1.;
-				break;
-			}
-
-			time_fraction = (time - raw_values[frame_prev][0]) / (raw_values[frame_next][0] - raw_values[frame_prev][0]);
-		}
-	}
-
+	// compute interpolating frame indices and the time fraction
 	// perform interpolation for all frames
 	KeyFrame keyframe_prev = getKeyFrameAtFrameIndex (frame_prev);
 	KeyFrame keyframe_next = getKeyFrameAtFrameIndex (frame_next);
@@ -481,51 +490,16 @@ void ModelApplyKeyFrame (MeshupModelPtr model, KeyFrame &keyframe) {
 	}
 }
 
-void UpdateModelSegmentTransformations (MeshupModelPtr model) {
-	MeshupModel::SegmentList::iterator seg_iter = model->segments.begin();
-
-	while (seg_iter != model->segments.end()) {
-		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
-
-		Vector3f scale(1.0f,1.0f,1.0f) ;
-
-		//only scale, if the dimensions are valid, i.e. are set in json-File
-		if (seg_iter->dimensions.squaredNorm() > 1.0e-4) {
-			scale = Vector3f(
-					fabs(seg_iter->dimensions[0]) / bbox_size[0],
-					fabs(seg_iter->dimensions[1]) / bbox_size[1],
-					fabs(seg_iter->dimensions[2]) / bbox_size[2]
-					);
-		} else if (seg_iter->scale[0] > 0.f) {
-			scale=seg_iter->scale;
-		}
-		
-		Vector3f translate(0.0f,0.0f,0.0f);
-		//only translate with meshcenter if it is defined in json file
-		if (!isnan(seg_iter->meshcenter[0])) {
-				Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
-				translate[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
-				translate[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
-				translate[2] = -center[2] * scale[2] + seg_iter->meshcenter[2];
-		}
-		translate+=seg_iter->translate;
-		
-		// we also have to apply the scaling after the transform:
-		seg_iter->gl_matrix = 
-			SimpleMath::GL::ScaleMat44 (scale[0], scale[1], scale[2])
-			* seg_iter->rotate.toGLMatrix()
-			* SimpleMath::GL::TranslateMat44 (translate[0], translate[1], translate[2])
-			* seg_iter->frame->pose_transform;
-
-		seg_iter++;
-	}
-}
-
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
+	// Use model state descriptor if the animation does not have one
+	if (animation->state_descriptor.states.size() == 0) {
+		animation->state_descriptor = model->state_descriptor;
+		animation->configuration = model->configuration;
+	}
+
 	KeyFrame keyframe = animation->getKeyFrameAtTime (time);
 	ModelApplyKeyFrame (model, keyframe);
 
 	model->updateFrames();
-
-	UpdateModelSegmentTransformations(model);
+	model->updateSegments();
 }

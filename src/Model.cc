@@ -327,6 +327,46 @@ void MeshupModel::updateFrames() {
 	}
 }
 
+void MeshupModel::updateSegments() {
+	MeshupModel::SegmentList::iterator seg_iter = segments.begin();
+
+	while (seg_iter != segments.end()) {
+		Vector3f bbox_size (seg_iter->mesh->bbox_max - seg_iter->mesh->bbox_min);
+
+		Vector3f scale(1.0f,1.0f,1.0f) ;
+
+		//only scale, if the dimensions are valid, i.e. are set in json-File
+		if (seg_iter->dimensions.squaredNorm() > 1.0e-4) {
+			scale = Vector3f(
+					fabs(seg_iter->dimensions[0]) / bbox_size[0],
+					fabs(seg_iter->dimensions[1]) / bbox_size[1],
+					fabs(seg_iter->dimensions[2]) / bbox_size[2]
+					);
+		} else if (seg_iter->scale[0] > 0.f) {
+			scale=seg_iter->scale;
+		}
+		
+		Vector3f translate(0.0f,0.0f,0.0f);
+		//only translate with meshcenter if it is defined in json file
+		if (!isnan(seg_iter->meshcenter[0])) {
+				Vector3f center ( seg_iter->mesh->bbox_min + bbox_size * 0.5f);
+				translate[0] = -center[0] * scale[0] + seg_iter->meshcenter[0];
+				translate[1] = -center[1] * scale[1] + seg_iter->meshcenter[1];
+				translate[2] = -center[2] * scale[2] + seg_iter->meshcenter[2];
+		}
+		translate+=seg_iter->translate;
+		
+		// we also have to apply the scaling after the transform:
+		seg_iter->gl_matrix = 
+			SimpleMath::GL::ScaleMat44 (scale[0], scale[1], scale[2])
+			* seg_iter->rotate.toGLMatrix()
+			* SimpleMath::GL::TranslateMat44 (translate[0], translate[1], translate[2])
+			* seg_iter->frame->pose_transform;
+
+		seg_iter++;
+	}
+}
+
 void MeshupModel::initDefaultFrameTransform() {
 	Matrix44f base_transform (Matrix44f::Identity());
 
@@ -799,6 +839,13 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 
 	configuration.init();
 
+	// initialize the model StateDescriptor. First entry must be the time
+	// info.
+	state_descriptor.clear();
+	StateInfo time_info;
+	time_info.is_time_column = true;
+	state_descriptor.states.push_back (time_info);
+
 	// frames
 	int frame_count = model_table["frames"].length();
 
@@ -824,6 +871,137 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			float line_width = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["line_width"].getDefault(1.f);
 
 			addPoint (point_iter->string_value, frame_name, coordinates, color, draw_line, line_width);
+		}
+
+		// Read joints to create model::state_descriptor
+		int joint_dofs = model_table["frames"][i]["joint"].length();
+		bool specialized_joint_type = true;
+
+		if (joint_dofs == 1) {
+			string dof_string = model_table["frames"][i]["joint"][1].getDefault<std::string>("");
+			
+			if (dof_string == "")
+				specialized_joint_type = false;
+			else if (dof_string == "JointTypeSpherical") {
+				cerr << "Error: JointTypeSpherical not yet supported!" << endl;
+				abort();
+			} else if (dof_string == "JointTypeEulerZYX") {
+				StateInfo state_info;
+				state_info.frame_name = frame_name;
+				state_info.type	= StateInfo::TransformTypeRotation;
+				state_info.is_radian = true;
+
+				state_info.axis = StateInfo::AxisTypeZ;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeY;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeX;
+				state_descriptor.states.push_back (state_info);
+			}
+			if (dof_string == "JointTypeEulerXYZ") {
+				StateInfo state_info;
+				state_info.frame_name = frame_name;
+				state_info.type	= StateInfo::TransformTypeRotation;
+				state_info.is_radian = true;
+
+				state_info.axis = StateInfo::AxisTypeX;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeY;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeZ;
+				state_descriptor.states.push_back (state_info);
+			}
+			if (dof_string == "JointTypeEulerYXZ") {
+				StateInfo state_info;
+				state_info.frame_name = frame_name;
+				state_info.type	= StateInfo::TransformTypeRotation;
+				state_info.is_radian = true;
+
+				state_info.axis = StateInfo::AxisTypeY;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeX;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeZ;
+				state_descriptor.states.push_back (state_info);
+			}
+			if (dof_string == "JointTypeTranslationXYZ") {
+				StateInfo state_info;
+				state_info.frame_name = frame_name;
+				state_info.type	= StateInfo::TransformTypeTranslation;
+
+				state_info.axis = StateInfo::AxisTypeX;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeY;
+				state_descriptor.states.push_back (state_info);
+				state_info.axis = StateInfo::AxisTypeZ;
+				state_descriptor.states.push_back (state_info);
+			}
+		} else {
+			specialized_joint_type = false;
+		}
+
+		if (!specialized_joint_type) {
+			StateInfo state_info;
+			state_info.frame_name = frame_name;
+
+			for (unsigned int di = 1; di < joint_dofs + 1; di++) {
+				if (model_table["frames"][i]["joint"][di].length() != 6) {
+					cerr << "LuaModel Error: invalid joint model subspace description at frames[" << i << "][\"joint\"][" << di << "]!" << endl;
+					cerr << "Expected length 6 but got " << model_table["frames"][i]["joint"][di].length() << endl;
+					abort();
+				}
+
+				double spatial_vector[6];
+				Vector3f m_v, m_w;
+				for (unsigned int dj = 0; dj < 3; dj++) {
+					m_w[dj] = model_table["frames"][i]["joint"][di][dj + 1];
+					m_v[dj] = model_table["frames"][i]["joint"][di][dj + 4];
+				}
+
+				if (m_v.squaredNorm() == 0.) {
+					state_info.type	= StateInfo::TransformTypeRotation;
+					state_info.is_radian = true;
+					if (m_w == Vector3f (1.f, 0.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeX;
+					else if (m_w == Vector3f (-1.f, 0.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeNegativeX;
+					else if (m_w == Vector3f (0.f, 1.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeY;
+					else if (m_w == Vector3f (0.f,-1.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeNegativeY;
+					else if (m_w == Vector3f (0.f, 0.f, 1.f))
+						state_info.axis = StateInfo::AxisTypeZ;
+					else if (m_w == Vector3f (0.f, 0.f,-1.f))
+						state_info.axis = StateInfo::AxisTypeNegativeZ;
+					else {
+						cerr << "LuaModel Error: only rotations around coordinate axes allowed (frames[" << i << "][\"joint\"][" << di << "])!" << endl;
+						abort();
+					}
+				} else if (m_w.squaredNorm() == 0.) {
+					state_info.type	= StateInfo::TransformTypeTranslation;
+					if (m_v == Vector3f (1.f, 0.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeX;
+					else if (m_v == Vector3f (-1.f, 0.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeNegativeX;
+					else if (m_v == Vector3f (0.f, 1.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeY;
+					else if (m_v == Vector3f (0.f,-1.f, 0.f))
+						state_info.axis = StateInfo::AxisTypeNegativeY;
+					else if (m_v == Vector3f (0.f, 0.f, 1.f))
+						state_info.axis = StateInfo::AxisTypeZ;
+					else if (m_v == Vector3f (0.f, 0.f,-1.f))
+						state_info.axis = StateInfo::AxisTypeNegativeZ;
+					else {
+						cerr << "LuaModel Error: only rotations around coordinate axes allowed (frames[" << i << "][\"joint\"][" << di << "])!" << endl;
+						abort();
+					}
+				} else {
+					cerr << "LuaModel Error: only pure rotations around or pure translations along coordinate axes allowed (frames[" << i << "][\"joint\"][" << di << "])!" << endl;
+					abort();
+				}
+
+				state_descriptor.states.push_back (state_info);
+			}
 		}
 
 		// Read visuals
@@ -920,6 +1098,11 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			addSegment (frame_name, mesh, dimensions, color, translate, rotate, scale, mesh_center);
 		}
 	}
+
+//	Print all state informations
+//	for (unsigned int i = 0; i < state_descriptor.states.size(); i++) {
+//		cout << "dof[" << i << "] = " << state_descriptor.states[i].frame_name << ":" << state_descriptor.states[i].toString() << endl;
+//	}
 
 	initDefaultFrameTransform();
 

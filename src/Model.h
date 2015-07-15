@@ -14,21 +14,21 @@
 #include <list>
 #include <iostream>
 #include <map>
-#include <boost/shared_ptr.hpp>
 #include <limits>
 
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
+#include "StateDescriptor.h"
 #include "FrameConfig.h"
 #include "MeshVBO.h"
 #include "Curve.h"
 
-typedef boost::shared_ptr<MeshVBO> MeshPtr;
-typedef boost::shared_ptr<Curve> CurvePtr;
+typedef MeshVBO* MeshPtr;
+typedef Curve* CurvePtr;
 
 struct Frame;
-typedef boost::shared_ptr<Frame> FramePtr;
+typedef Frame* FramePtr;
 
 /** \brief Searches in various locations for the model. */
 std::string find_model_file_by_name (const std::string &model_name);
@@ -166,6 +166,8 @@ struct MeshupModel {
 
 		configuration = other.configuration;
 		frames_initialized = other.frames_initialized;
+
+		state_descriptor = other.state_descriptor;
 	}
 
 	MeshupModel& operator= (const MeshupModel& other) {
@@ -183,6 +185,8 @@ struct MeshupModel {
 
 			configuration = other.configuration;
 			frames_initialized = other.frames_initialized;
+	
+			state_descriptor = other.state_descriptor;
 		}
 		return *this;
 	}
@@ -204,6 +208,8 @@ struct MeshupModel {
 
 	/// Configuration how transformations are defined
 	FrameConfig configuration;
+	/// Maps individual dofs to transformations
+	StateDescriptor state_descriptor;
 
 	/// Marks whether the frame transformations have to be initialized
 	bool frames_initialized;
@@ -242,8 +248,12 @@ struct MeshupModel {
 			const float line_width = 1.f
 			);
 
+	// resets all poses to identity, i.e. the neutral pose
 	void resetPoses();
+	// applies pose transformations to all frames
 	void updateFrames();
+	// applies frame transformations to the segments
+	void updateSegments();
 
 	FramePtr findFrame (const char* frame_name) {
 		FrameMap::iterator frame_iter = framemap.find (frame_name);
@@ -293,6 +303,7 @@ struct MeshupModel {
 		framemap.clear();
 		meshmap.clear();
 		clearCurves();
+		state_descriptor.clear();
 	
 		*this = MeshupModel();
 	}
@@ -314,6 +325,6 @@ struct MeshupModel {
 	void saveModelToLuaFile (const char* filename);
 };
 
-typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;
+typedef MeshupModel* MeshupModelPtr;
 
 #endif

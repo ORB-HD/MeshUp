@@ -14,57 +14,14 @@
 #include <list>
 #include <iostream>
 #include <map>
-#include <boost/shared_ptr.hpp>
 #include <limits>
 
 #include "SimpleMath/SimpleMath.h"
 #include "SimpleMath/SimpleMathGL.h"
 
+#include "StateDescriptor.h"
 #include "FrameConfig.h"
 #include "Curve.h"
-
-/** \brief Description of the description of a column section entry of the
- * animation file.
- *
- * This data structure is also used to convert between raw Degree Of
- * Freedom (DOF) vectors to the actual frame transformation information.
- */
-struct ColumnInfo {
-	ColumnInfo() :
-		frame_name (""),
-		type (TransformTypeUnknown),
-		axis (AxisTypeUnknown),
-		is_time_column (false),
-		is_empty (false),
-		is_radian (false)
-	{}
-	enum TransformType {
-		TransformTypeUnknown = 0,
-		TransformTypeRotation,
-		TransformTypeTranslation,
-		TransformTypeScale,
-		TransformTypeLast
-	};
-	enum AxisType {
-		AxisTypeUnknown = 0,
-		AxisTypeX,
-		AxisTypeY,
-		AxisTypeZ,
-		AxisTypeNegativeX,
-		AxisTypeNegativeY,
-		AxisTypeNegativeZ 
-	};
-
-	std::string toString();
-
-	std::string frame_name;
-	TransformType type;
-	AxisType axis;
-
-	bool is_time_column;
-	bool is_empty;
-	bool is_radian;
-};
 
 /** \brief A single pose of a frame at a given time */
 struct TransformInfo {
@@ -80,7 +37,7 @@ struct TransformInfo {
 	SimpleMath::GL::Quaternion rotation_quaternion;
 	Vector3f scaling;
 
-	void applyColumnValue (const ColumnInfo &column_info, float value, const FrameConfig &frame_config);
+	void applyStateValue (const StateInfo &column_info, float value, const FrameConfig &frame_config);
 };
 
 /** \brief Contains for all frames the transformations at a single keyframe
@@ -96,10 +53,12 @@ struct Animation {
 		current_time (0.f),
 		duration (0.f),
 		loop (false),
-		raw_values (std::vector<std::vector<float> >())
+		raw_values (std::vector<VectorNd>())
 	{}
 
 	bool loadFromFile (const char* filename, const FrameConfig &frame_config, bool strict = true);
+
+	void getInterpolatingIndices (float time, int *frame_prev, int *frame_next, float *time_fraction);
 
 	KeyFrame getKeyFrameAtFrameIndex (int frame_index);
 	KeyFrame getKeyFrameAtTime (float time);
@@ -111,17 +70,17 @@ struct Animation {
 	bool loop;
 	FrameConfig configuration;
 
-	std::vector<ColumnInfo> column_infos;
-	std::vector<std::vector<float> > raw_values;
+	StateDescriptor state_descriptor;
+	std::vector<VectorNd> raw_values;
 };
 
-typedef boost::shared_ptr<Animation> AnimationPtr;
+typedef Animation* AnimationPtr;
 
 struct MeshupModel;
-typedef boost::shared_ptr<MeshupModel> MeshupModelPtr;
+typedef MeshupModel* MeshupModelPtr;
 
 struct Frame;
-typedef boost::shared_ptr<Frame> FramePtr;
+typedef Frame* FramePtr;
 
 /** \brief Updates the transformations within the model for drawing */
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time);

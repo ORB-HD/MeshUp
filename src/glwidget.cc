@@ -32,12 +32,14 @@
 
 #ifdef __APPLE__
 #include <OpenGL/glu.h>
+#include <OpenGL/glext.h>
 #else
 #include <GL/glu.h>
 #endif
 
 #include "timer.h"
 #include "Animation.h"
+#include "Scene.h"
 
 using namespace std;
 
@@ -57,11 +59,10 @@ GLuint shadow_map_texture_id = 0;
 Vector4f light_ka (0.2f, 0.2f, 0.2f, 1.0f);
 Vector4f light_kd (0.7f, 0.7f, 0.7f, 1.0f);
 Vector4f light_ks (1.0f, 1.0f, 1.0f, 1.0f);
-Vector4f light_position (0.f, 0.f, 0.f, 1.f);
 
 GLWidget::GLWidget(QWidget *parent)
     : QGLWidget(parent),
-		opengl_initialized (false),
+		scene (NULL),
 		draw_base_axes (false),
 		draw_frame_axes (false),
 		draw_grid (false),
@@ -70,26 +71,17 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_shadows (false),
 		draw_curves (false),
 		draw_points (true),
-		draw_orthographic (false)
+		white_mode (false)
 {
-	poi.set (0.f, 1.f, 0.f);
-	eye.set (6.f, 3.f, 6.f);
+	camera.poi.set (0.f, 1.f, 0.f);
+	camera.eye.set (6.f, 3.f, 6.f);
 
-	updateSphericalCoordinates();
-
-	/*
-	qDebug () << r;
-	qDebug () << theta;
-	qDebug () << phi;
-	*/
+	camera.updateSphericalCoordinates();
 
 	delta_time_sec = -1.;
 
 	setFocusPolicy(Qt::StrongFocus);
 	setMouseTracking(true);
-
-	model_data = MeshupModelPtr (new MeshupModel());
-	animation_data = AnimationPtr (new Animation());
 }
 
 GLWidget::~GLWidget() {
@@ -98,50 +90,10 @@ GLWidget::~GLWidget() {
 	makeCurrent();
 }
 
-void GLWidget::loadModel(const char* filename) {
-	if (opengl_initialized) {
-		model_data->loadModelFromFile (filename);
-		emit model_loaded();
-	} else {
-		// mark file for later loading
-		model_filename = filename;
-	}
-}
-
-void GLWidget::loadAnimation(const char* filename) {
-	if (opengl_initialized) {
-		if (!model_data) {
-			std::cerr << "Error: could not load Animation without a model!" << std::endl;
-			abort();
-		}
-		AnimationPtr new_animation (new Animation());
-		if (new_animation->loadFromFile (filename, model_data->configuration)) {
-			if (animation_data->current_time <= new_animation->duration) {
-				new_animation->current_time = animation_data->current_time;
-			}
-			animation_data = new_animation;
-			emit animation_loaded();
-		} else {
-			std::cerr << "Error: could not load Animation!" << std::endl;
-		}
-	} else {
-		// mark file for later loading
-		animation_filename = filename;
-	}
-}
-
-void GLWidget::setAnimationTime (float fraction) {
-	animation_data->current_time = fraction * animation_data->duration;
-}
-
 void GLWidget::actionRenderImage () {
 }
 
 void GLWidget::actionRenderSeriesImage () {
-}
-
-float GLWidget::getAnimationDuration() {
-	return animation_data->duration;
 }
 
 QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool use_alpha) {
@@ -183,31 +135,28 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 }
 
 Vector3f GLWidget::getCameraPoi() {
-	if (model_data)
-		return model_data->configuration.axes_rotation * poi;
-
-	return poi;
+	return camera.poi;
 }
 
 Vector3f GLWidget::getCameraEye() {
-	if (model_data)
-		return model_data->configuration.axes_rotation * eye;
-
-	return eye;
+	return camera.eye;
 }
 
 void GLWidget::setCameraPoi (const Vector3f values) {
-	if (model_data)
-		poi = model_data->configuration.axes_rotation.transpose() * values;
-	else
-		poi = values;
+	camera.poi = values;
+	camera.updateSphericalCoordinates();
+	emit camera_changed();
 }
 
 void GLWidget::setCameraEye (const Vector3f values) {
-	if (model_data)
-		eye = model_data->configuration.axes_rotation.transpose() * values;
-	else
-		eye = values;
+	camera.eye = values;
+	camera.updateSphericalCoordinates();
+	emit camera_changed();
+}
+
+void GLWidget::saveScreenshot (const char* filename, int width, int height, bool transparency) {
+	QImage image = renderContentOffscreen (width, height, transparency);
+	image.save (filename, 0, -1);
 }
 
 /****************
@@ -246,48 +195,35 @@ void GLWidget::toggle_draw_points (bool status) {
 }
 
 void GLWidget::toggle_draw_orthographic (bool status) {
-	draw_orthographic = status;
+	camera.orthographic = status;
 
 	resizeGL (windowWidth, windowHeight);
 }
 
-void GLWidget::set_front_view () {
-	if (fabs(phi) > 1.0e-5) {
-		// front
-		theta = 90. * M_PI / 180.;
-		phi = 0.;
-	}	else {
-		// back
-		theta = 90. * M_PI / 180.;
-		phi = 180 * M_PI / 180.;
-	}
+void GLWidget::toggle_white_mode (bool status) {
+	white_mode = status;
 
+	qDebug() << "white mode is " << white_mode;
+
+	if (white_mode) {
+		glClearColor (1.f, 1.f, 1.f, 1.f);
+	} else {
+		glClearColor (0.f, 0.f, 0.f, 1.f);
+	}
+}
+
+void GLWidget::set_front_view () {
+	camera.setFrontView();
 	emit camera_changed();
 }
 
 void GLWidget::set_side_view () {
-	if (fabs(fabs(phi) - 90. * M_PI / 180.) > 1.0e-5 && fabs(fabs(theta) - 90. * M_PI / 180.)) {
-		// right
-		theta = 90. * M_PI / 180.;
-		phi = 90. * M_PI / 180.;
-	} else {
-		// left
-		theta = 90. * M_PI / 180.;
-		phi = 270. * M_PI / 180.;
-	}
+	camera.setSideView();
 	emit camera_changed();
 }
 
 void GLWidget::set_top_view () {
-	if (fabs(theta) > 1.0e-5) {
-		// top
-		phi = 180. * M_PI / 180.;
-		theta = 0.;
-	} else {
-		// bottom
-		phi = 0. * M_PI / 180.;
-		theta = 180. * M_PI / 180.;
-	}
+	camera.setTopView();
 	emit camera_changed();
 }
 
@@ -383,83 +319,18 @@ void GLWidget::initializeGL()
 	glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_kd.data());
 	glLightfv(GL_LIGHT0, GL_SPECULAR, light_ks.data());
 
-	light_position.set (3.f, 6.f, 3.f, 1.f);
+	light_position.set (-0.f, 3.f, 5.f, 1.f);
 	glLightfv (GL_LIGHT0, GL_POSITION, light_position.data());
 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
 
-	opengl_initialized = true;
+	glEnable(GL_DEPTH_CLAMP);
 
-	animation_data->loop = true;
-}
+	camera.width = width();
+	camera.height = height();
 
-void GLWidget::updateSphericalCoordinates() {
-	Vector3f los = poi - eye;
-	r = los.norm();
-	theta = acos (-los[1] / r);
-	phi = atan (los[2] / los[0]);
-
-	// atan only returns +- pi/2 so we have to fix the azimuth here
-	if (los[0] > 0.f) {
-		if (los[2] >= 0.f)
-			phi += M_PI;
-		else
-			phi -= M_PI;
-	}
-}
-
-void GLWidget::updateCamera() {
-	// update the camera
-	float s_theta, c_theta, s_phi, c_phi;
-	s_theta = sin (theta);
-	c_theta = cos (theta);
-	s_phi = sin (phi);
-	c_phi = cos (phi);
-
-	eye[0] = (r * s_theta * c_phi);
-	eye[1] = (r * c_theta);
-	eye[2] = (r * s_theta * s_phi);
-
-	eye += poi;
-
-	if (eye[1] < 0.)
-		eye[1];
-
-	Vector3f right (-s_phi, 0., c_phi);
-
-	Vector3f eye_normalized (eye);
-	eye_normalized.normalize();
-
-	up = right.cross (eye_normalized);
-
-	// setup of the projection
-	glMatrixMode (GL_PROJECTION);
-	glLoadIdentity ();
-
-	fov = 45;
-	GLfloat aspect = (GLfloat) windowWidth / (GLfloat) windowHeight;
-
-	if (draw_orthographic) {
-		GLfloat distance = (GLfloat) (poi - eye).norm();
-
-		GLfloat w = tan(fov * M_PI / 180.) * 0.01 * windowWidth * distance / 10.f;
-		GLfloat h = w / aspect; 
-
-		glOrtho (- w * 0.5, w * 0.5,
-				-h * 0.5, h * 0.5,
-			0.005, 200);
-	} else {
-		gluPerspective (fov, aspect, 0.005, 200);
-	}
-
-	// setup of the modelview matrix
-	glMatrixMode (GL_MODELVIEW);
-	glLoadIdentity();
-
-	gluLookAt (eye[0], eye[1], eye[2],
-			poi[0], poi[1], poi[2],
-			up[0], up[1], up[2]);
+	emit opengl_initialized();
 }
 
 void GLWidget::updateLightingMatrices () {
@@ -467,17 +338,17 @@ void GLWidget::updateLightingMatrices () {
 	glPushMatrix();
 
 	glLoadIdentity();
-	gluPerspective(fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
+	gluPerspective(camera.fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_projection_matrix.data());
 
 	glLoadIdentity();
-	gluLookAt(eye[0], eye[1], eye[2],
-			poi[0], poi[1], poi[2],
-			up[0], up[1], up[2]);
+	gluLookAt(camera.eye[0], camera.eye[1], camera.eye[2],
+			camera.poi[0], camera.poi[1], camera.poi[2],
+			camera.up[0], camera.up[1], camera.up[2]);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_view_matrix.data());
 
 	glLoadIdentity();
-	gluPerspective(fov, 1.0f, 1.0f, 20.0f);
+	gluPerspective(camera.fov, 1.0f, 1.0f, 20.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, light_projection_matrix.data());
 
 	glLoadIdentity();
@@ -489,7 +360,7 @@ void GLWidget::updateLightingMatrices () {
 	glPopMatrix();
 }
 
-void draw_checkers_board_shaded() {
+void draw_checkers_board_shaded(bool white_mode) {
 	float length = 16.f;
 	int count = 32;
 	float xmin (-length),
@@ -505,6 +376,17 @@ void draw_checkers_board_shaded() {
 	float m = 1.f / (shade_width);
 	Vector4f clear_color;
 	glGetFloatv (GL_COLOR_CLEAR_VALUE, clear_color.data());
+
+	if (white_mode)
+		clear_color.set (1.f, 1.f, 1.f, 1.f);
+	else
+		clear_color.set (0.f, 0.f, 0., 1.f);
+
+	Vector4f ground_color (0.5f, 0.5f, 0.5f, 1.f);
+
+	glDisable (GL_LIGHTING);
+	glEnable(GL_DEPTH_TEST);
+
 	glBegin (GL_QUADS);
 
 	for (int i = 0; i < count; i++) {
@@ -515,7 +397,7 @@ void draw_checkers_board_shaded() {
 			Vector3f v2 ((j + 1) * xstep + xmin + x_shift, 0., (i + 1) * zstep + zmin);
 			Vector3f v3 ((j + 1) * xstep + xmin + x_shift, 0., i * zstep + zmin);
 
-			float distance = v0.norm();
+			float distance = (v0 * 0.5 + v2 * 0.5).norm();
 			float alpha = 1.;
 
 			if (distance > shade_start) {
@@ -527,26 +409,29 @@ void draw_checkers_board_shaded() {
 			assert (alpha >= 0.f &&  alpha <= 1.f);
 
 			// upper left
-			Vector4f color (0.6f, 0.6f, 0.6f, 1.f);
+			Vector4f color = ground_color;
 
-			color = (1.f - alpha) * clear_color + color * alpha;
+			color = (1.f - alpha) * clear_color + ground_color * alpha;
 
-			if (color[0] <= 0.f
-					&& color[1] <= 0.f
-					&& color[2] <= 0.f
-				 )
-				continue;
+		//	if (color[0] <= 0.f
+		//			&& color[1] <= 0.f
+		//			&& color[2] <= 0.f
+		//		 )
+		//		continue;
 
-			glColor3fv (color.data());
+			glColor4fv (color.data());
 			glVertex3fv (v0.data());
+			glColor4fv (color.data());
 			glVertex3fv (v1.data());
+			glColor4fv (color.data());
 			glVertex3fv (v2.data());
+			glColor4fv (color.data());
 			glVertex3fv (v3.data());
 		}
 	}
 
 	glEnd();
-	
+	glEnable (GL_LIGHTING);
 }
 
 void GLWidget::drawGrid() {
@@ -563,66 +448,58 @@ void GLWidget::drawGrid() {
 	xstep = fabs (xmin - xmax) / (float)count;
 	zstep = fabs (zmin - zmax) / (float)count;
 
-	glColor3f (1.f, 1.f, 1.f);
-	glLineWidth(1.f);
+	glDisable (GL_LIGHTING);
+	glColor3f (0.2f, 0.2f, 0.2f);
+	glLineWidth(2.f);
 	glBegin (GL_LINES);
 	for (i = 0; i <= count; i++) {
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (i * xstep + xmin, 0., zmin);
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (i * xstep + xmin, 0., zmax);
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (xmin, 0, i * zstep + zmin);
+		glColor3f (0.2f, 0.2f, 0.2f);
 		glVertex3f (xmax, 0, i * zstep + zmin);
 	}
 	glEnd ();
+	glEnable (GL_LIGHTING);
 }
 
 void GLWidget::drawScene() {
+	if (!scene)
+		return;
+
 	if (draw_grid)
 		drawGrid();
 
 	if (draw_floor)
-		draw_checkers_board_shaded();
-
-	/*
-	glColor3f (1.f, 1.f, 1.f);
-	glBegin (GL_QUADS);
-	glNormal3f (0.f, 1.f, 0.f);
-	glVertex3f (-20.f, 0.f, -20.f);
-	glVertex3f (-20.f, 0.f, 20.f);
-	glVertex3f (20.f, 0.f, 20.f);
-	glVertex3f (20.f, 0.f, -20.f);
-	glEnd();
-	*/
-
-	timer_start (&timer_info);
+		draw_checkers_board_shaded(white_mode);
 
 	if (draw_meshes)
-		model_data->draw();
-
-	draw_time += timer_stop(&timer_info);
-	draw_count++;
+		scene->drawMeshes();
 
 	if (draw_base_axes)
-		model_data->drawBaseFrameAxes();
+		scene->drawBaseFrameAxes();
 	if (draw_frame_axes)
-		model_data->drawFrameAxes();
+		scene->drawFrameAxes();
 
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
 	if (depth_test_enabled)
 		glDisable (GL_DEPTH_TEST);
 
 	if (draw_points)
-		model_data->drawPoints();
+		scene->drawPoints();
 
 	glDisable (GL_LIGHTING);
 
 	if (draw_curves)
-		model_data->drawCurves();
+		scene->drawCurves();
 
 	glEnable (GL_LIGHTING);
 
 	if (depth_test_enabled)
 		glEnable (GL_DEPTH_TEST);
-
 
 	/*
 	if (draw_count % 100 == 0) {
@@ -633,7 +510,6 @@ void GLWidget::drawScene() {
 
 void GLWidget::shadowMapSetupPass1 () {
 	updateLightingMatrices();
-
 
 	// 1st pass: from light's pont of view
 	glMatrixMode(GL_PROJECTION);
@@ -758,7 +634,7 @@ void GLWidget::shadowMapSetupPass3 () {
 	// shadow comparison generates an INTENSITY result
 	glTexParameteri (GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE_ARB, GL_INTENSITY);
 
-	// set alpha test to discalrd false comparisons
+	// set alpha test to discard false comparisons
 	glAlphaFunc (GL_GEQUAL, 0.99f);
 	glEnable (GL_ALPHA_TEST);
 }
@@ -774,43 +650,21 @@ void GLWidget::shadowMapCleanup() {
 
 	glDisable (GL_LIGHTING);
 	glDisable (GL_ALPHA_TEST);
-
 }
 
 void GLWidget::paintGL() {
-	// check whether we should reload our model
-	if (model_filename.size() != 0) {
-		loadModel (model_filename.c_str());
-
-		// clear the variable to mark that we do not have to load a model
-		// anymore
-		model_filename = "";
-	}
-
-	// or the animation
-	if (animation_filename.size() != 0) {
-		loadAnimation (animation_filename.c_str());
-
-		// clear the variable to mark that we do not have to load the animation 
-		// anymore.
-		animation_filename = "";
-	}
-
 	update_timer();
 
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
-	updateCamera();
+	camera.update();
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	UpdateModelFromAnimation (model_data, animation_data, animation_data->current_time);
 
 	if (draw_shadows) {
 		// start the shadow mapping magic!
 		shadowMapSetupPass1();
-
 		drawScene();
 
 		shadowMapSetupPass2();
@@ -853,6 +707,9 @@ void GLWidget::resizeGL(int width, int height)
 
 	windowWidth = width;
 	windowHeight = height;
+
+	camera.width = width;
+	camera.height = height;
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
@@ -881,31 +738,14 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	if (event->buttons().testFlag(Qt::MiddleButton)
 			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
 #endif
-		// move
-		Vector3f eye_normalized (poi - eye);
-		eye_normalized.normalize();
-
-		Vector3f global_y (0.f, 1.f, 0.f);
-		Vector3f right = up.cross (eye_normalized);
-		Vector3f local_up = eye_normalized.cross(right);
-		poi += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
-		eye += right * (float)dx * 0.01f + local_up* dy * (float)0.01f;
+		camera.move (dx, dy);
 
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::LeftButton)) {
-		// rotate
-		phi += 0.01 * dx;
-		theta -= 0.01 * dy;
-
-		theta = std::max(theta, 0.01f);
-		theta = std::min(theta, static_cast<float>(M_PI * 0.99));
-
+		camera.rotate (dx, dy);
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
-		// zoom
-		r += 0.05 * dy;
-		r = std::max (0.01f, r);
-
+		camera.zoom (dy);
 		emit camera_changed();
 	}
 
