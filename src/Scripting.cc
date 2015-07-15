@@ -423,12 +423,12 @@ static int meshup_animation_getRawDimensions (lua_State *L) {
 }
 
 /// Add values to the animation.
-// @function animation.addValues
+// @function animation.addRawValues
 // @param self the animation to which the values should be added
 // @param values value of the time at index 1 and state values at the
 // remaining entries
 // Adds new values to the animation
-static int meshup_animation_addValues (lua_State *L) {
+static int meshup_animation_addRawValues (lua_State *L) {
 	Animation *animation = check_animation (L, 1);
 	VectorNd values = l_checkvectornd (L, 2);
 
@@ -447,13 +447,13 @@ static int meshup_animation_addValues (lua_State *L) {
 }
 
 /// Set values of the animation at a specified data index.
-// @function animation.setValuesAt
+// @function animation.setRawValuesAt
 // @param self the animation for which the values should be set
 // @param row index of the row for which the new values should be set
 // @param values value of the time at index 1 and state values at the
 // remaining entries
 // Sets the raw values at the given row
-static int meshup_animation_setValuesAt (lua_State *L) {
+static int meshup_animation_setRawValuesAt (lua_State *L) {
 	Animation *animation = check_animation (L, 1);
 	int row = luaL_checkint (L, 2) - 1;
 	VectorNd values = l_checkvectornd (L, 3);
@@ -476,11 +476,11 @@ static int meshup_animation_setValuesAt (lua_State *L) {
 }
 
 /// Get the animation state at a given data index.
-// @function animation.getValuesAt
+// @function animation.getRawValuesAt
 // @param self the animation of which we want the values
 // @param row index of the row for which we want to get the values
 // Returns a table with all values (first entry is time)
-static int meshup_animation_getValuesAt (lua_State *L) {
+static int meshup_animation_getRawValuesAt (lua_State *L) {
 	Animation *animation = check_animation (L, 1);
 	int row = luaL_checkint (L, 2) - 1;
 
@@ -519,9 +519,9 @@ static int meshup_animation_getDuration (lua_State *L) {
 static const struct luaL_Reg meshup_animation_f[] = {
 	{ "getFilename", meshup_animation_getFilename},
 	{ "getRawDimensions", meshup_animation_getRawDimensions},
-	{ "addValues", meshup_animation_addValues},
-	{ "setValuesAt", meshup_animation_setValuesAt},
-	{ "getValuesAt", meshup_animation_getValuesAt},
+	{ "addRawValues", meshup_animation_addRawValues},
+	{ "setRawValuesAt", meshup_animation_setRawValuesAt},
+	{ "getRawValuesAt", meshup_animation_getRawValuesAt},
 	{ "getDuration", meshup_animation_getDuration},
 	{ NULL, NULL }
 };
