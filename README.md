@@ -1,4 +1,4 @@
-MeshUp - A Copyright (c) 2012-2015 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+MeshUp - A Copyright (c) 2012-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
 
 # Introduction
 

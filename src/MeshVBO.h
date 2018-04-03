@@ -1,7 +1,7 @@
 /*
  * QtGLAppBase - Simple Qt Application to get started with OpenGL stuff.
  *
- * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2011-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -14,8 +14,7 @@
 #include <cstddef>
 #include <limits>
 
-#include "SimpleMath/SimpleMath.h"
-#include "SimpleMath/SimpleMathGL.h"
+#include "Math.h"
 
 typedef ptrdiff_t GLsizeiptr;
 

@@ -2,7 +2,7 @@
  * MeshUp - A visualization tool for multi-body systems based on skeletal
  * animation and magic.
  *
- * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2012-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -264,7 +264,7 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 		string arg = argv[i];
 		string arg_extension = "";
 
-		if (arg.find (".")) 
+		if (arg.find (".") != std::string::npos) 
 			arg_extension = arg.substr (arg.rfind(".") + 1);
 
 		if (arg == "-s" || arg == "--script") {
@@ -286,7 +286,7 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 			if (model_filename.size() != 0) {
 				loadModel(model_filename.c_str());
 			}
-		} else if (arg.size() >= 3 && ( arg_extension == "csv") || (arg_extension == "txt")) {
+		} else if (arg.size() >= 3 && (( arg_extension == "csv") || (arg_extension == "txt"))) {
 			loadAnimation (arg.c_str());
 		}
 	}

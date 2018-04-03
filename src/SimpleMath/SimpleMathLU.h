@@ -23,14 +23,14 @@ namespace SimpleMath {
 			
 			bool mIsFactorized;
 			unsigned int *mPermutations;
-			MatrixXXd mU;
+			MatrixXXd matrixLU;
 
 		public:
 			PartialPivLU(const matrix_type &matrix) :
 				mIsFactorized(false),
-				mU(matrix) {
+				matrixLU(matrix) {
 					// We can only solve quadratic systems
-					assert (mU.rows() == mU.cols());
+					assert (matrixLU.rows() == matrixLU.cols());
 
 					mPermutations = new unsigned int [matrix.cols()];
 					for (unsigned int i = 0; i < matrix.cols(); i++) {
@@ -39,18 +39,18 @@ namespace SimpleMath {
 					compute();
 			}
 			PartialPivLU compute() {
-				unsigned int n = mU.rows();
+				unsigned int n = matrixLU.rows();
 				unsigned int pi;
 
 				unsigned int i,j,k;
 
 				for (j = 0; j < n; j++) {
-					double pv = fabs (mU(j,mPermutations[j]));
+					double pv = fabs (matrixLU(j,mPermutations[j]));
 
 					// LOG << "j = " << j << " pv = " << pv << std::endl;
 					// find the pivot
 					for (k = j; k < n; k++) {
-						double pt = fabs (mU(j,mPermutations[k]));
+						double pt = fabs (matrixLU(j,mPermutations[k]));
 						if (pt > pv) {
 							pv = pt;
 							pi = k;
@@ -63,19 +63,19 @@ namespace SimpleMath {
 					}
 
 					for (i = j + 1; i < n; i++) {
-						if (fabs(mU(j,mPermutations[j])) <= std::numeric_limits<double>::epsilon()) {
-							std::cerr << "Error: pivoting failed for matrix U = " << std::endl;
-							std::cerr << "U = " << std::endl << A << std::endl;
+						if (fabs(A(j,pivot[j])) <= std::numeric_limits<double>::epsilon()) {
+							std::cerr << "Error: pivoting failed for matrix A = " << std::endl;
+							std::cerr << "A = " << std::endl << A << std::endl;
+							std::cerr << "b = " << b << std::endl;
 						}
-						//		assert (fabs(A(j,mPermutations[j])) > std::numeric_limits<double>::epsilon());
-						double d = mU(i,mPermutations[j])/mU(j,mPermutations[j]);
-
-						b[i] -= b[j] * d;
-
-						for (k = j; k < n; k++) {
-							mU(i,mPermutations[k]) -= mU(j,mPermutations[k]) * d;
-						}
+						//		assert (fabs(A(j,pivot[j])) > std::numeric_limits<double>::epsilon());
+						double d = A(i,pivot[j])/A(j,pivot[j]);
 					}
+
+					for (k = j; k < n; k++) {
+						A(i,pivot[k]) -= A(j,pivot[k]) * d;
+					}
+
 				}
 
 				mIsFactorized = true;

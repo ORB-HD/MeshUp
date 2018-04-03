@@ -14,10 +14,11 @@ namespace SimpleMath {
 	class HouseholderQR {
 		public:
 			typedef typename matrix_type::value_type value_type;	
+			HouseholderQR() :
+				mIsFactorized(false)
+			{}
 
 		private:
-			HouseholderQR() {}
-
 			typedef Dynamic::Matrix<value_type> MatrixXXd;
 			typedef Dynamic::Matrix<value_type> VectorXd;
 			
@@ -28,11 +29,12 @@ namespace SimpleMath {
 		public:
 			HouseholderQR(const matrix_type &matrix) :
 				mIsFactorized(false),
-				mQ(matrix.rows(), matrix.rows()),
-				mR(matrix) {
-					compute();
+				mQ(matrix.rows(), matrix.rows())
+				{
+					compute(matrix);
 			}
-			HouseholderQR compute() {
+			HouseholderQR compute(const matrix_type &matrix) {
+				mR = matrix;
 				mQ = Dynamic::Matrix<value_type>::Identity (mR.rows(), mR.rows());
 
 				for (unsigned int i = 0; i < mR.cols(); i++) {
@@ -109,7 +111,7 @@ namespace SimpleMath {
 
 				return result;
 			}
-			Dynamic::Matrix<value_type> matrixQ () const {
+			Dynamic::Matrix<value_type> householderQ () const {
 				return mQ;
 			}
 			Dynamic::Matrix<value_type> matrixR () const {
@@ -121,10 +123,7 @@ namespace SimpleMath {
 	class ColPivHouseholderQR {
 		public:
 			typedef typename matrix_type::value_type value_type;	
-
 		private:
-			ColPivHouseholderQR() {}
-
 			typedef Dynamic::Matrix<value_type> MatrixXXd;
 			typedef Dynamic::Matrix<value_type> VectorXd;
 			
@@ -136,16 +135,43 @@ namespace SimpleMath {
 			unsigned int mRank;
 
 		public:
+			ColPivHouseholderQR():
+				mIsFactorized(false) {
+					mPermutations = new unsigned int[1];
+				}
+
+			ColPivHouseholderQR (const ColPivHouseholderQR& other) {
+				mIsFactorized = other.mIsFactorized;
+				mQ = other.mQ;
+				mR = other.mR;
+				mPermutations = new unsigned int[mQ.cols()];
+				mThreshold = other.mThreshold;
+				mRank = other.mRank;
+			}
+
+			ColPivHouseholderQR& operator= (const ColPivHouseholderQR& other) {
+				if (this != &other) {
+					mIsFactorized = other.mIsFactorized;
+					mQ = other.mQ;
+					mR = other.mR;
+					delete[] mPermutations;
+					mPermutations = new unsigned int[mQ.cols()];
+					mThreshold = other.mThreshold;
+					mRank = other.mRank;
+				}
+				
+				return *this;
+			}
+
 			ColPivHouseholderQR(const matrix_type &matrix) :
 				mIsFactorized(false),
 				mQ(matrix.rows(), matrix.rows()),
-				mR(matrix),
 				mThreshold (std::numeric_limits<value_type>::epsilon() * matrix.cols()) {
 					mPermutations = new unsigned int [matrix.cols()];
 					for (unsigned int i = 0; i < matrix.cols(); i++) {
 						mPermutations[i] = i;
 					}
-					compute();
+					compute(matrix);
 			}
 			~ColPivHouseholderQR() {
 				delete[] mPermutations;
@@ -156,7 +182,8 @@ namespace SimpleMath {
 				
 				return *this;
 			}
-			ColPivHouseholderQR& compute() {
+			ColPivHouseholderQR& compute(const matrix_type &matrix) {
+				mR = matrix;
 				mQ = Dynamic::Matrix<value_type>::Identity (mR.rows(), mR.rows());
 
 				for (unsigned int i = 0; i < mR.cols(); i++) {
@@ -206,7 +233,7 @@ namespace SimpleMath {
 					MatrixXXd Q (MatrixXXd::Identity(mR.rows(), mR.rows()));
 
 					Q.block(i, i, block_rows, block_rows) = MatrixXXd (Q.block(i, i, block_rows, block_rows))
-						- MatrixXXd(v * v.transpose() / (v.squaredNorm() * 0.5));
+						- MatrixXXd(v * v.transpose() / (v.squaredNorm() * static_cast<value_type>(0.5)));
 
 					mR = Q * mR;
 
@@ -264,7 +291,7 @@ namespace SimpleMath {
 				return result;
 			}
 
-			Dynamic::Matrix<value_type> matrixQ () const {
+			Dynamic::Matrix<value_type> householderQ () const {
 				return mQ;
 			}
 			Dynamic::Matrix<value_type> matrixR () const {
@@ -283,7 +310,7 @@ namespace SimpleMath {
 				value_type abs_threshold = fabs(mR(0,0)) * mThreshold;
 
 				for (unsigned int i = 1; i < mR.cols(); i++) {
-					if (fabs(mR(i,i) < abs_threshold))
+					if (fabs(mR(i,i)) < abs_threshold)
 						return i;
 				}
 

@@ -2,7 +2,7 @@
  * MeshUp - A visualization tool for multi-body systems based on skeletal
  * animation and magic.
  *
- * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2011-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -12,10 +12,7 @@
 #include <QtGui>
 
 #ifdef __APPLE__
-#include <QtOpenGL/QGLWidget>
 #include <QtOpenGL/QGLFrameBufferObjectFormat>
-#else
-#include <QtOpenGL>
 #endif
 
 #include <QDebug>
@@ -100,15 +97,15 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 	makeCurrent();
 
 	// set up the actual format (alpha channel, depth buffer)
-	QGLFramebufferObjectFormat buffer_format;
+	QOpenGLFramebufferObjectFormat buffer_format;
 	if (use_alpha)
 		buffer_format.setInternalTextureFormat(GL_RGBA);
 	else
 		buffer_format.setInternalTextureFormat(GL_RGB);
-	buffer_format.setAttachment (QGLFramebufferObject::Depth );
+	buffer_format.setAttachment (QOpenGLFramebufferObject::Depth );
 
 	// create the buffer object
-	QGLFramebufferObject *fb = new QGLFramebufferObject(image_width, image_height, buffer_format);
+	QOpenGLFramebufferObject *fb = new QOpenGLFramebufferObject(image_width, image_height, buffer_format);
 
 	// future drawing shall be performed into this buffer
 	fb->bind();

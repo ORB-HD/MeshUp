@@ -1,7 +1,7 @@
 /*
  * QtGLAppBase - Simple Qt Application to get started with OpenGL stuff.
  *
- * Copyright (c) 2011-2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2011-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -9,7 +9,7 @@
 #ifndef _CAMERA_H
 #define _CAMERA_H
 
-#include <SimpleMath/SimpleMath.h>
+#include "Math.h"
 
 /**
  * \warning This class is hacked such that it uses the following

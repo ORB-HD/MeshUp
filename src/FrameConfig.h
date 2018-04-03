@@ -2,7 +2,7 @@
  * MeshUp - A visualization tool for multi-body systems based on skeletal
  * animation and magic.
  *
- * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2012-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -10,8 +10,7 @@
 #ifndef _FRAMECONFIG_H
 #define _FRAMECONFIG_H
 
-#include "SimpleMath/SimpleMath.h"
-#include "SimpleMath/SimpleMathGL.h"
+#include "Math.h"
 
 /** \brief Keeps track of convention used for frames */
 struct FrameConfig {

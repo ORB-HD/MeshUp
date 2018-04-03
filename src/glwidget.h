@@ -2,7 +2,7 @@
  * MeshUp - A visualization tool for multi-body systems based on skeletal
  * animation and magic.
  *
- * Copyright (c) 2012 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
+ * Copyright (c) 2012-2018 Martin Felis <martin.felis@iwr.uni-heidelberg.de>
  *
  * Licensed under the MIT license. See LICENSE for more details.
  */
@@ -10,11 +10,9 @@
 #ifndef GLWIDGET_H
 #define GLWIDGET_H
 
-#include <QGLWidget>
-#include <QImage>
+#include <QtOpenGL/QGLWidget>
 
 #include <iostream>
-#include "SimpleMath/SimpleMath.h"
 
 #include "Camera.h"
 

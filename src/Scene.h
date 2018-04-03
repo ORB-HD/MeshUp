@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "SimpleMath/SimpleMath.h"
+#include "Math.h"
 
 struct Animation;
 struct MeshupModel;

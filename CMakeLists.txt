@@ -1,6 +1,6 @@
 PROJECT ( MESHUP )
 
-CMAKE_MINIMUM_REQUIRED (VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.0)
 
 # Needed for UnitTest++
 LIST( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake )
@@ -12,7 +12,7 @@ SET (CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 SET (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 SET (MESHUP_VERSION_MAJOR 0)
-SET (MESHUP_VERSION_MINOR 4)
+SET (MESHUP_VERSION_MINOR 5)
 SET (MESHUP_VERSION_PATCH 0)
 SET (MESHUP_VERSION_STRING "${MESHUP_VERSION_MAJOR}.${MESHUP_VERSION_MINOR}.${MESHUP_VERSION_PATCH}")
 SET (MESHUP_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
@@ -32,7 +32,8 @@ ENDIF (NOT VCS_RESULT)
 SET( QT_USE_QTXML TRUE )
 SET( QT_USE_QTOPENGL TRUE )
 SET( QT_WRAP_CPP TRUE )
-FIND_PACKAGE (Qt4 REQUIRED)
+FIND_PACKAGE (Qt5Widgets REQUIRED)
+FIND_PACKAGE (Qt5OpenGL)
 FIND_PACKAGE (OpenGL)
 FIND_PACKAGE (Boost COMPONENTS filesystem system REQUIRED)
 
@@ -57,15 +58,13 @@ ADD_LIBRARY ( glew
 
 ADD_DEFINITIONS (${QT_DEFINITIONS})
 
-INCLUDE (${QT_USE_FILE})
-
 SET ( MainWindow_UIS
 	ui/MainWindow.ui
 	ui/RenderImageDialog.ui
 	ui/RenderImageSeriesDialog.ui
 	)
 
-QT4_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
+QT5_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
 
 SET ( MeshupApp_SRCS
 	src/main.cc
@@ -73,7 +72,7 @@ SET ( MeshupApp_SRCS
 	src/MeshupApp.cc
 	)
 
-QT4_WRAP_CPP ( MeshupApp_MOC_SRCS
+QT5_WRAP_CPP ( MeshupApp_MOC_SRCS
 	src/MeshupApp.h
 	src/RenderImageDialog.h
 	src/RenderImageSeriesDialog.h
@@ -94,6 +93,8 @@ ADD_EXECUTABLE ( meshup
 	${MeshupApp_MOC_SRCS}
 	${MainWindow_UIS_H}
 )
+
+qt5_use_modules(meshup Widgets OpenGL)
 
 INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR})
 INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR}/QtOpenGL)
@@ -143,9 +144,8 @@ INSTALL ( FILES ${mesh_files} DESTINATION share/meshup/meshes )
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_SECTION "science")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "Martin Felis <martin.felis@iwr.uni-heidelberg.de>")
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt4-opengl (>= 4:4.8), libglu1-mesa (>=8.0), libboost-filesystem1.48.0 (>= 1.48.0-1)")
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MeshUp - a visualization tool for
-multi-body systems based on skeletal animation and magic.")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libqt5opengl5, libglu1-mesa (>=8.0), libboost-filesystem1.48.0 (>= 1.48.0-1)")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MeshUp - a visualization tool for multi-body systems based on skeletal animation and magic.")
 SET(CPACK_PACKAGE_VENDOR "Martin Felis")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
