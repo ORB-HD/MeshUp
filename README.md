@@ -15,10 +15,11 @@ motions directly to videos or image sequences.
   * Loading and interpolation of keyframed animation (see sampleanimation.txt)
   * Direct rendering of videos or image sequences
 	* Lua scripting
+  * Rendering of forces and torques arrows
 
 # Usage:
 
-	meshup [model_file(s)] [animation_file(s)]
+	meshup [model_file(s)] [animation_file(s)] [force_file(s)]
 
 See meshup --help for more options.
 
@@ -98,6 +99,14 @@ the actual data as a clear .csv file or if one wants to re-use the header
 of a file.
 
 See sampleanimation.txt for an example.
+
+# Forces and Torques Files
+
+Forces and Torques Files are CSV files with the file extention ".ff". The 
+first column specifiese the time of the following data. After the time column,
+each next 9 columns represent one force/torque entry. The first 3 columns of the 9 contain the
+postion of the force and torque. The next 3 columns are the force data and the 3
+columns after are the torque data.
 
 # Notes
 

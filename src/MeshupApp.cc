@@ -21,6 +21,7 @@
 #include "glwidget.h" 
 #include "MeshupApp.h"
 #include "Animation.h"
+#include "ForcesTorques.h"
 #include "Scene.h"
 #include "Scripting.h"
 
@@ -38,7 +39,6 @@
 #include "colorscale.h"
 
 #include "Model.h"
-#include "Animation.h"
 
 using namespace std;
 
@@ -103,6 +103,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawShadows->setChecked (glWidget->draw_shadows);
 	checkBoxDrawCurves->setChecked (glWidget->draw_curves);
 	checkBoxDrawPoints->setChecked (glWidget->draw_points);
+	checkBoxDrawForces->setChecked (glWidget->draw_forces);
+	checkBoxDrawTorques->setChecked (glWidget->draw_torques);
 
 	// camera controls
 	QRegExp	coord_expr ("^\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*$");
@@ -134,6 +136,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawShadows, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_shadows(bool)));
 	connect (checkBoxDrawCurves, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_curves(bool)));
 	connect (checkBoxDrawPoints, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_points(bool)));
+	connect (checkBoxDrawForces, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_forces(bool)));	
+	connect (checkBoxDrawTorques, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_torques(bool)));	
 	connect (actionToggleWhiteBackground, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_white_mode(bool)));
 
 	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (set_front_view()));
@@ -157,6 +161,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// keyboard shortcuts
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
+	connect (actionLoadForcesAndTorques, SIGNAL ( triggered() ), this, SLOT(action_load_forces()));
 
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
@@ -235,6 +240,36 @@ void MeshupApp::loadAnimation(const char* filename) {
  	initialize_curves(); 
 }
 
+void MeshupApp::loadForcesAndTorques(const char* filename) {
+    if (glWidget->scene == NULL) {
+        force_files_queue.push_back (filename);
+        return;
+    }
+
+    if (scene->models.size() == 0 || scene-> animations.size() == 0) {
+        std::cerr << "Error: could not load Forces and Torques without a model and animation!" << std::endl;
+        abort();
+    }
+
+    if (scene->forcesTorquesQueue.size() == scene->animations.size()) {
+        std::cerr << "Error: There has to be an animation for every force file. Old animations cant be used" << std::endl;
+        abort();
+    }
+
+	unsigned int model_num = std::min(scene->models.size()-1, scene->forcesTorquesQueue.size());
+
+    ForcesTorques* forcesTorques = new ForcesTorques(scene->models[model_num]);
+
+    forcesTorques->loadFromFile (filename);
+    if( (!forcesTorques->times.empty()) != (glWidget->draw_forces || glWidget->draw_torques)){
+        glWidget->draw_forces = true;
+        glWidget->draw_torques = true;
+		checkBoxDrawForces->setChecked(glWidget->draw_forces);
+		checkBoxDrawTorques->setChecked(glWidget->draw_torques);
+    }
+    scene->forcesTorquesQueue.push_back (forcesTorques);
+}
+
 void MeshupApp::setAnimationFraction (float fraction) {
 	scene->setCurrentTime(fraction * scene->longest_animation);
 }
@@ -255,6 +290,8 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 	string scripting_file = "";
 
 	for (int i = 1; i < argc; i++) {
+
+        // check if diplaying help was part of input
 		if (string(argv[i]) == "--help"
 				|| string(argv[i]) == "-h") {
 			print_usage();
@@ -267,6 +304,7 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 		if (arg.find (".") != std::string::npos) 
 			arg_extension = arg.substr (arg.rfind(".") + 1);
 
+        // check if there is a scripting file included
 		if (arg == "-s" || arg == "--script") {
 			i++;
 			if (i == argc) {
@@ -281,13 +319,21 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 			}
 
 			scripting_file = arg;
+
+        // In case arg is model file
 		} else if (arg.size() >= 3 && arg.substr (arg.size() - 3) == "lua") {
 			string model_filename = find_model_file_by_name (arg.c_str());
 			if (model_filename.size() != 0) {
 				loadModel(model_filename.c_str());
 			}
+
+        // In case arg is animation file
 		} else if (arg.size() >= 3 && (( arg_extension == "csv") || (arg_extension == "txt"))) {
 			loadAnimation (arg.c_str());
+		
+        // In case arg is force file
+        } else if (arg.size() >= 3 && ( arg_extension == "ff")) {
+            loadForcesAndTorques (arg.c_str());     
 		}
 	}
 
@@ -331,6 +377,8 @@ void MeshupApp::saveSettings () {
 	settings_json["configuration"]["view"]["draw_shadows"] = checkBoxDrawShadows->isChecked();
 	settings_json["configuration"]["view"]["draw_curves"] = checkBoxDrawCurves->isChecked();
 	settings_json["configuration"]["view"]["draw_points"] = checkBoxDrawPoints->isChecked();
+	settings_json["configuration"]["view"]["draw_forces"] = checkBoxDrawForces->isChecked();
+	settings_json["configuration"]["view"]["draw_torques"] = checkBoxDrawTorques->isChecked();
 	settings_json["configuration"]["view"]["draw_orthographic"] = actionToggleOrthographic->isChecked();
 
 	settings_json["configuration"]["docks"]["camera_controls"]["visible"] = dockCameraControls->isVisible();
@@ -409,6 +457,8 @@ void MeshupApp::loadSettings () {
 	checkBoxDrawShadows->setChecked(settings_json["configuration"]["view"].get("draw_shadows", glWidget->draw_shadows).asBool());
 	checkBoxDrawCurves->setChecked(settings_json["configuration"]["view"].get("draw_curves", glWidget->draw_curves).asBool());
 	checkBoxDrawPoints->setChecked(settings_json["configuration"]["view"].get("draw_points", glWidget->draw_points).asBool());
+	checkBoxDrawForces->setChecked(settings_json["configuration"]["view"].get("draw_forces", glWidget->draw_forces).asBool());
+	checkBoxDrawTorques->setChecked(settings_json["configuration"]["view"].get("draw_torques", glWidget->draw_torques).asBool());
 	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->camera.orthographic).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
@@ -530,6 +580,17 @@ void MeshupApp::action_load_animation() {
 	}	
 }
 
+void MeshupApp::action_load_forces() {
+	QFileDialog file_dialog (this, "Select Force/Torque File");
+
+	file_dialog.setNameFilter(tr("MeshupForces(*.ff)"));
+	file_dialog.setFileMode(QFileDialog::ExistingFile);
+
+	if (file_dialog.exec()) {
+		loadForcesAndTorques(file_dialog.selectedFiles().at(0).toStdString().c_str());
+	}
+}
+
 void MeshupApp::action_reload_files() {
 	for (unsigned int i = 0; i < scene->models.size(); i++) {
 		string filename = scene->models[i]->model_filename;
@@ -549,6 +610,14 @@ void MeshupApp::action_reload_files() {
 
 		if (!animation->loadFromFile (animation->animation_filename.c_str(), scene->models[i]->configuration)) {
 			cerr << "Error loading animation " << scene->animations[i]->animation_filename << endl;
+		}
+	}
+
+	for (unsigned int i = 0; i < scene->forcesTorquesQueue.size(); i++){
+		ForcesTorques* forcesTorques = scene->forcesTorquesQueue[i];
+
+		if (!forcesTorques->loadFromFile(forcesTorques->forces_filename.c_str())){
+			cerr << "Error loading forces " << scene->forcesTorquesQueue[i]->forces_filename << endl;
 		}
 	}
 

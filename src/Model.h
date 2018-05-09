@@ -122,7 +122,10 @@ struct Segment {
 
 struct Point {
 	Point() :
+		pointIndex(0),
+		frameId(0),
 		name ("unnamed"),
+		parentBody ("unnamed"),
 		frame (FramePtr()),
 		coordinates (0.f, 0.f, 0.f),
 		color (1.f, 0.f, 0.f),
@@ -130,7 +133,10 @@ struct Point {
 		line_width (1.f)
 	{}
 
+	int pointIndex;
 	std::string name;
+	std::string parentBody;
+	int frameId;
 	FramePtr frame;
 	Vector3f coordinates;
 	Vector3f color;
@@ -225,7 +231,7 @@ struct MeshupModel {
 
 	void addSegment (
 			const std::string &frame_name,
-	   	const MeshPtr mesh,
+			const MeshPtr mesh,
 			const Vector3f &dimensions,
 			const Vector3f &color,
 			const Vector3f &translate,

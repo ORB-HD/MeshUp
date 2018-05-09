@@ -8,7 +8,6 @@
  */
 
 #include "GL/glew.h"
-#include "meshup_config.h"
 
 #include "Model.h"
 
@@ -849,6 +848,19 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 	// frames
 	int frame_count = model_table["frames"].length();
 
+	// Read points
+	int contact_point_count = model_table["points"].length();
+	vector<Point> contact_points;
+	for (int i = 1; i <= contact_point_count; i++) {
+		contact_points.push_back(Point());
+		contact_points[i-1].name = model_table["points"][i]["name"].get<std::string>();
+		contact_points[i-1].parentBody = model_table["points"][i]["body"].get<std::string>().c_str();
+		contact_points[i-1].coordinates = model_table["points"][i]["point"].get<Vector3f>();
+		contact_points[i-1].color = model_table["points"][i]["color"].getDefault(Vector3f (1.0, 0.5, 0.5));
+		contact_points[i-1].draw_line = model_table["points"][i]["draw_line"].getDefault(true);
+		contact_points[i-1].line_width = model_table["points"][i]["line_width"].getDefault(1.f);
+	}
+
 	for (int i = 1; i <= frame_count; i++) {
 		string parent_frame = model_table["frames"][i]["parent"].get<std::string>();
 		string frame_name = model_table["frames"][i]["name"].get<std::string>();
@@ -871,6 +883,18 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			float line_width = model_table["frames"][i]["points"][point_iter->string_value.c_str()]["line_width"].getDefault(1.f);
 
 			addPoint (point_iter->string_value, frame_name, coordinates, color, draw_line, line_width);
+		}
+
+		// Check if any points exist for current frame_name and add them
+		for (int j = 0; j < contact_points.size(); j++) {
+			if (frame_name == contact_points[j].parentBody) {
+				addPoint (contact_points[j].name, 
+					contact_points[j].parentBody, 
+					contact_points[j].coordinates, 
+					contact_points[j].color, 
+					contact_points[j].draw_line, 
+					contact_points[j].line_width);
+			}
 		}
 
 		// Read joints to create model::state_descriptor
@@ -1098,11 +1122,6 @@ bool MeshupModel::loadModelFromLuaFile (const char* filename, bool strict) {
 			addSegment (frame_name, mesh, dimensions, color, translate, rotate, scale, mesh_center);
 		}
 	}
-
-//	Print all state informations
-//	for (unsigned int i = 0; i < state_descriptor.states.size(); i++) {
-//		cout << "dof[" << i << "] = " << state_descriptor.states[i].frame_name << ":" << state_descriptor.states[i].toString() << endl;
-//	}
 
 	initDefaultFrameTransform();
 

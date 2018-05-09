@@ -640,10 +640,10 @@ MeshVBO CreateUVSphere (unsigned int rows, unsigned int segments) {
 			float a0 = (i - 0.5) * angle_d;
 			float a1 = (i + 0.5) * angle_d;
 
-	    v0 = Vector3f (r1 * cos(a0), h1, r1 * sin (a0));
-	    v1 = Vector3f (r1 * cos(a1), h1, r1 * sin (a1));
-	    v2 = Vector3f (r0 * cos(a1), h0, r0 * sin (a1));
-	    v3 = Vector3f (r0 * cos(a0), h0, r0 * sin (a0));
+		v0 = Vector3f (r1 * cos(a0), h1, r1 * sin (a0));
+		v1 = Vector3f (r1 * cos(a1), h1, r1 * sin (a1));
+		v2 = Vector3f (r0 * cos(a1), h0, r0 * sin (a1));
+		v3 = Vector3f (r0 * cos(a0), h0, r0 * sin (a0));
 
 			result.addVertex3f (v0[0], v0[1], v0[2]);
 			result.addNormalfv ((v0 * 1.f/ v0.norm()).data());
@@ -869,7 +869,7 @@ MeshVBO CreateCylinder (unsigned int segments) {
 		Vector3f p2 = normal1 + Vector3f (0., 0.,  0.5f);
 		Vector3f p3 = normal1 + Vector3f (0., 0., -0.5f);
 
-        // side triangle 1
+		// side triangle 1
 		result.addVertex3fv (p0.data());
 		result.addNormalfv (normal0.data());
 
@@ -879,7 +879,7 @@ MeshVBO CreateCylinder (unsigned int segments) {
 		result.addVertex3fv (p2.data());
 		result.addNormalfv (normal1.data());
 
-        // side triangle 2
+		// side triangle 2
 		result.addVertex3fv (p2.data());
 		result.addNormalfv (normal1.data());
 
@@ -889,30 +889,222 @@ MeshVBO CreateCylinder (unsigned int segments) {
 		result.addVertex3fv (p3.data());
 		result.addNormalfv (normal1.data());
 
-        // upper end triangle
-        Vector3f normal (0.f, 0.f, 1.f);
+		// upper end triangle
+		Vector3f normal (0.f, 0.f, 1.f);
 
-        result.addVertex3fv (p0.data());
-        result.addNormalfv (normal.data());
+		result.addVertex3fv (p0.data());
+		result.addNormalfv (normal.data());
 
-        result.addVertex3fv (p2.data());
-        result.addNormalfv (normal.data());
+		result.addVertex3fv (p2.data());
+		result.addNormalfv (normal.data());
 
-        result.addVertex3fv (Vector3f (0.f, 0.f, 0.5f).data());
-        result.addNormalfv (normal.data());
+		result.addVertex3fv (Vector3f (0.f, 0.f, 0.5f).data());
+		result.addNormalfv (normal.data());
 
-        // lower end triangle
-        normal = Vector3f(0.f, 0.f, -1.f);
+		// lower end triangle
+		normal = Vector3f(0.f, 0.f, -1.f);
 
-        result.addVertex3fv (p3.data());
-        result.addNormalfv (normal.data());
+		result.addVertex3fv (p3.data());
+		result.addNormalfv (normal.data());
 
-        result.addVertex3fv (p1.data());
-        result.addNormalfv (normal.data());
+		result.addVertex3fv (p1.data());
+		result.addNormalfv (normal.data());
 
-        result.addVertex3fv (Vector3f (0.f, 0.f, -0.5f).data());
-        result.addNormalfv (normal.data());
-    }
+		result.addVertex3fv (Vector3f (0.f, 0.f, -0.5f).data());
+		result.addNormalfv (normal.data());
+	}
+
+	result.end();
+
+	return result;
+}
+
+MeshVBO CreateCylinder (unsigned int segments, float length, float scaleRadius, Vector4f color) {
+	MeshVBO result;
+
+	length = length*0.5;
+	
+	result.begin();
+
+	float delta = 2. * M_PI / static_cast<float>(segments);
+
+	for (unsigned int i = 0; i < segments; i++) {
+		float r0 = (i ) * delta;
+		float r1 = (i + 1) * delta;
+
+		float c0 = cos (r0) * scaleRadius;
+		float s0 = sin (r0) * scaleRadius;
+
+		float c1 = cos (r1) * scaleRadius;
+		float s1 = sin (r1) * scaleRadius;
+
+		Vector3f normal0 (c0, s0, 0.f);
+		Vector3f normal1 (c1, s1, 0.f);
+
+		Vector3f p0 = normal0 + Vector3f (0., 0.,  length);
+		Vector3f p1 = normal0 + Vector3f (0., 0., -length);
+		Vector3f p2 = normal1 + Vector3f (0., 0.,  length);
+		Vector3f p3 = normal1 + Vector3f (0., 0., -length);
+
+		// side triangle 1
+		result.addVertex3fv (p0.data());
+		result.addNormalfv (normal0.data());
+
+		result.addVertex3fv (p1.data());
+		result.addNormalfv (normal0.data());
+
+		result.addVertex3fv (p2.data());
+		result.addNormalfv (normal1.data());
+
+
+		// side triangle 2
+		result.addVertex3fv (p2.data());
+		result.addNormalfv (normal1.data());
+
+		result.addVertex3fv (p1.data());
+		result.addNormalfv (normal0.data());
+
+		result.addVertex3fv (p3.data());
+		result.addNormalfv (normal1.data());
+
+
+		// upper end triangle
+		Vector3f normal (0.f, 0.f, 1.f);
+
+		result.addVertex3fv (p0.data());
+		result.addNormalfv (normal.data());
+
+		result.addVertex3fv (p2.data());
+		result.addNormalfv (normal.data());
+
+		result.addVertex3fv (Vector3f (0.f, 0.f, length).data());
+		result.addNormalfv (normal.data());
+
+
+		// lower end triangle
+		normal = Vector3f(0.f, 0.f, -1.f);
+
+		result.addVertex3fv (p3.data());
+		result.addNormalfv (normal.data());
+
+		result.addVertex3fv (p1.data());
+		result.addNormalfv (normal.data());
+
+		result.addVertex3fv (Vector3f (0.f, 0.f, -length).data());
+		result.addNormalfv (normal.data());
+	}
+
+	for(int i = 0; i < result.vertices.size(); i++){
+		result.addColor4fv(color.data());
+	}
+
+	result.end();
+
+	return result;
+}
+
+MeshVBO CreateOpenTorus(int segments, float width, float radius, Vector4f color, bool showmiddle) {
+	MeshVBO result;
+
+	int circseg = 25;
+	float torus_fraq = (4./5.) * (2 * M_PI) / segments;
+	Vector3f middle = Vector3f(-radius,0,0);
+	float circle_frac= 2*M_PI/circseg;
+	std::vector<Vector3f> current_circ(circseg);
+
+	result.begin();
+
+	if (showmiddle) {
+		Vector3f p0(middle[0]+0.04, middle[1], middle[2]);
+		Vector3f p1(middle[0], middle[1]+0.04, middle[2]);
+		Vector3f p2(middle[0], middle[1], middle[2]+0.04);
+		Vector3f p3(middle[0]-0.04, middle[1], middle[2]);
+		Vector3f p4(middle[0], middle[1]-0.04, middle[2]);
+		Vector3f p5(middle[0], middle[1], middle[2]-0.04);
+
+		Vector3f n1(1.,0.,0.);
+		Vector3f n2(0.,1.,0.);
+		Vector3f n3(0.,0.,1.);
+
+		result.addVertex3fv(p0.data());
+		result.addNormalfv(n1.data());
+		result.addVertex3fv(p1.data());
+		result.addNormalfv(n1.data());
+		result.addVertex3fv(p2.data());
+		result.addNormalfv(n2.data());
+		result.addVertex3fv(p3.data());
+		result.addNormalfv(n2.data());
+		result.addVertex3fv(p4.data());
+		result.addNormalfv(n3.data());
+		result.addVertex3fv(p5.data());
+		result.addNormalfv(n3.data());
+	}
+	for (int i=0;i<segments; i++) {
+		for(int j=0; j<circseg; j++) {
+			float r0 = (j - 0.5) * circle_frac;
+			float r1 = (j + 0.5) * circle_frac;
+			float t0 = i * torus_fraq;
+			float t1 = (i+1) * torus_fraq;
+
+			//Calculate postions on torus
+			float xall0 = radius + (width - cos(r0) * width);
+			float xall1 = radius + (width - cos(r1) * width);
+
+			float y0 = sin(r0) * width;
+			float y1 = sin(r1) * width;
+
+			float x00 = xall0 * cos(t0);
+			float x01 = xall0 * cos(t1);
+
+			float x10 = xall1 * cos(t0);
+			float x11 = xall1 * cos(t1);
+
+			float z00 = xall0 * sin(t0);
+			float z01 = xall0 * sin(t1);
+
+			float z10 = xall1 * sin(t0);
+			float z11 = xall1 * sin(t1);
+
+			Vector3f pos0(x00,y0,z00);
+			Vector3f pos1(x10,y1,z10);
+			Vector3f pos2(x01,y0,z01);
+			Vector3f pos3(x11,y1,z11);
+
+			pos0 = pos0 + middle;
+			pos1 = pos1 + middle;
+			pos2 = pos2 + middle;
+			pos3 = pos3 + middle;
+
+			//Calculate Normals for side triangle 
+			Vector3f e1 = pos0 - pos1;
+			Vector3f e2 = pos0 - pos3;
+			Vector3f e3 = pos2 - pos3;
+			Vector3f e4 = pos2 - pos1;
+
+			Vector3f n1 = SimpleMath::GL::normalizedCross(e1, e2);
+			Vector3f n2 = SimpleMath::GL::normalizedCross(e3, e4);
+
+			//Add Side Triangle 1
+			result.addVertex3fv(pos0.data());
+			result.addNormalfv(n1.data());
+			result.addVertex3fv(pos1.data());
+			result.addNormalfv(n1.data());
+			result.addVertex3fv(pos2.data());
+			result.addNormalfv(n1.data());
+
+			//Add Side Triangle 2
+			result.addVertex3fv(pos2.data());
+			result.addNormalfv(n2.data());
+			result.addVertex3fv(pos1.data());
+			result.addNormalfv(n2.data());
+			result.addVertex3fv(pos3.data());
+			result.addNormalfv(n2.data());
+		}
+	}
+
+	for(int i = 0; i < result.vertices.size(); i++){
+		result.addColor4fv(color.data());
+	}
 
 	result.end();
 
@@ -953,3 +1145,206 @@ MeshVBO CreateCapsule (unsigned int rows, unsigned int segments, float length_z,
 	return result;
 }
 
+// Method to create a 3D mesh of an arrow of a specific size that points either
+// in the X, Y or Z direction. If forces is false then the method assumes
+// that torques are to be visualized and adds a disc to the arrow.
+MeshVBO CreateUnit3DArrow(int dir, Vector4f color){
+
+	if(dir < 1 || dir > 3) {
+		cout << "Direction has to be 1 for X, 2 for Y or 3 for Z" << endl;
+		abort();
+	}
+
+	// Create tip of the arrow
+	MeshVBO tipCone = CreateCone(40, 0.2, 0.1, color);
+
+	// Bring it in right position
+	MeshVBO rotatedTip = CreateTransformedMesh(tipCone, SimpleMath::GL::RotateMat44(90, 1., 0., 0.));
+
+	// Add cylinder as shaft of arrow
+	rotatedTip.join(SimpleMath::GL::TranslateMat44(0., 0., -0.2), CreateCylinder(25, 0.4, 0.055, color));
+
+	// Bring whole arrow in right position
+	MeshVBO unitArrow = CreateTransformedMesh(rotatedTip, SimpleMath::GL::RotateMat44(270., 1., 0., 0.));
+
+	unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::TranslateMat44(0., -0.2, 0.));
+
+	// Bring arrow in right direction (or leave it if its y-direction)
+	switch (dir){
+	case 1:
+		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(270, 0., 0., 1.));
+		return unitArrow;
+		break;
+	case 2:
+		return unitArrow;
+		break;
+	case 3:
+		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(90, 1., 0., 0.));
+		return unitArrow;
+		break;
+	}
+}
+
+MeshVBO CreateUnit3DCircleArrow(int dir, Vector4f color){
+
+	if(dir < 1 || dir > 3) {
+		cout << "Direction has to be 1 for X, 2 for Y or 3 for Z" << endl;
+		abort();
+	}
+
+	// Create tip of the arrow
+	MeshVBO tipCone = CreateCone(40, 0.2, 0.1, color);
+
+	// Bring it in right position
+	MeshVBO rotatedTip = CreateTransformedMesh(tipCone, SimpleMath::GL::RotateMat44(90, -1., 0, 0));
+
+	// Add open torus to ArrowTip to create circular arrow
+	rotatedTip.join(SimpleMath::GL::TranslateMat44(-0.055, 0., 0.), CreateOpenTorus(20, 0.055, 0.2, color));
+
+	// Bring whole arrow in right position
+	MeshVBO unitArrow = CreateTransformedMesh(rotatedTip, SimpleMath::GL::RotateMat44(270., 1., 0., 0.));
+
+	unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::TranslateMat44(0., -0.2, 0.));
+
+	// Bring arrow in right direction (or leave it if its y-direction)
+	unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::TranslateMat44(0.255, 0.2, 0.));
+	if (dir==1) {
+		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(270, 0., 0., 1.));
+	} else if (dir == 3) {
+		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(90, 1., 0., 0.));
+	}
+	return unitArrow;
+}
+
+// This function can be used to create a mesh, that is the transformed version
+// of an existing mesh.
+MeshVBO CreateTransformedMesh(MeshVBO oldMesh, const Matrix44f &transformation){
+	MeshVBO transformedResult;
+
+	transformedResult.begin();
+
+	// To rotate the normals
+	Matrix33f rotation = transformation.block<3,3>(0,0);
+
+	// Transform every vertex and add to new mesh
+	for(int i = 0; i < oldMesh.vertices.size(); i++){
+		transformedResult.addVertex4fv((oldMesh.vertices[i].transpose()
+										* transformation).data());
+
+			if(oldMesh.normals.size() != 0){
+				transformedResult.addNormalfv ((oldMesh.normals[i].transpose()
+												* rotation).data());
+			}
+
+			if(oldMesh.colors.size() != 0) {
+				transformedResult.addColor4fv (oldMesh.colors[i].data());
+			}
+	}
+
+	transformedResult.end();
+
+	return transformedResult;
+}
+
+// Method to create a cone mesh
+MeshVBO CreateCone(int segments, float height, float radius, Vector4f color){
+
+	MeshVBO result;
+
+	result.begin();
+
+	float delta = 2. * M_PI / static_cast<float>(segments);
+
+	for (unsigned int i = 0; i < segments; i++) {
+		float r0 = i * delta;
+		float r1 = (i + 1) * delta;
+
+		float c0 = cos (r0) * radius;
+		float s0 = sin (r0) * radius;
+
+		float c1 = cos (r1) * radius;
+		float s1 = sin (r1) * radius;
+
+		Vector3f p0 = Vector3f (c0, 0., s0);
+		Vector3f p1 = Vector3f (c1, 0., s1);
+		Vector3f p2 = Vector3f (0., height, 0.);
+		Vector3f p3 = Vector3f (0., 0., 0.);
+
+		Vector3f side1a = Vector3f(c0-c1, 0., s0-s1);
+		Vector3f side1b = Vector3f(c1, -height, s1);
+		Vector3f normal1 = SimpleMath::GL::normalizedCross(side1b, side1a);
+
+		Vector3f side2a = Vector3f(c0-c1, 0., s0-s1);
+		Vector3f side2b = Vector3f(c1, 0., s1);
+		Vector3f normal2 = SimpleMath::GL::normalizedCross(side2b, side2a);
+
+		// Side triangle
+		result.addVertex3fv(p0.data());
+		result.addNormalfv(normal1.data());
+		result.addVertex3fv(p1.data());
+		result.addNormalfv(normal1.data());
+		result.addVertex3fv(p2.data());
+		result.addNormalfv(normal1.data());
+
+		// Ground triangle
+		result.addVertex3fv(p0.data());
+		result.addNormalfv(normal2.data());
+		result.addVertex3fv(p1.data());
+		result.addNormalfv(normal2.data());
+		result.addVertex3fv(p3.data());
+		result.addNormalfv(normal2.data());
+	}
+
+
+	// Add color to vertices
+	for(int i = 0; i < result.vertices.size(); i++){
+		result.addColor4fv(color.data());
+	}
+
+	result.end();
+
+	return result;
+}
+
+MeshVBO Create3DArrow(Vector3f& pos, Vector3f& dir, Vector4f& color, float scale) {
+	//Create Mesh that will be transforemed
+	double dirNorm = dir.norm();
+	Vector3f vecDirNormalized = SimpleMath::GL::normalizeVector(dir);
+	MeshVBO rightUnitArrowMesh = CreateUnit3DArrow(SimpleMath::GL::calculateArrowDirection(vecDirNormalized), color);
+
+	//Calculate needed transformation values
+	Vector3f rightUnitArrow = SimpleMath::GL::createUnitAxisVector(SimpleMath::GL::calculateArrowDirection(vecDirNormalized));
+	Vector3f rotAxis = SimpleMath::GL::normalizedCross(rightUnitArrow, vecDirNormalized);
+	double rotAngleRadian = SimpleMath::GL::calcAngleRadian(rightUnitArrow, vecDirNormalized);
+	double rotAngleDegree = rotAngleRadian * 180 / M_PI;
+
+	//Transform Arrow to final form
+	MeshVBO finalArrow = CreateTransformedMesh(rightUnitArrowMesh, SimpleMath::GL::ScaleMat44(dirNorm, dirNorm, dirNorm));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::ScaleMat44(scale, scale, scale));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::RotateMat44(rotAngleDegree, rotAxis[0], rotAxis[1], rotAxis[2]));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::TranslateMat44(pos[0], pos[1], pos[2]));
+
+	return finalArrow;
+}
+
+MeshVBO Create3DCircleArrow(Vector3f& pos, Vector3f& dir, Vector4f& color, float scale) {
+	//Create Mesh that will be transforemed
+	double dirNorm = dir.norm();
+	Vector3f vecDirNormalized = SimpleMath::GL::normalizeVector(dir);
+	MeshVBO rightUnitArrowMesh = CreateUnit3DCircleArrow(SimpleMath::GL::calculateArrowDirection(vecDirNormalized), color);
+
+	//Calculate needed transformation values
+	Vector3f rightUnitArrow = SimpleMath::GL::createUnitAxisVector(SimpleMath::GL::calculateArrowDirection(vecDirNormalized));
+	Vector3f rotAxis = SimpleMath::GL::normalizedCross(rightUnitArrow, vecDirNormalized);
+	double rotAngleRadian = SimpleMath::GL::calcAngleRadian(rightUnitArrow, vecDirNormalized);
+	double rotAngleDegree = rotAngleRadian * 180 / M_PI;
+
+	//Transform Arrow to final form
+	MeshVBO finalArrow = CreateTransformedMesh(rightUnitArrowMesh, SimpleMath::GL::ScaleMat44(dirNorm, dirNorm, dirNorm));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::RotateMat44(90, 1., 0, 0));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::ScaleMat44(scale, scale, scale));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::RotateMat44(rotAngleDegree, rotAxis[0], rotAxis[1], rotAxis[2]));
+	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::TranslateMat44(pos[0], pos[1], pos[2]));
+
+	return finalArrow;
+}

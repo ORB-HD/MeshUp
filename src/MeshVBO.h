@@ -117,7 +117,20 @@ inline MeshVBO CreateCube () {
 }
 
 MeshVBO CreateCylinder (unsigned int segments);
+MeshVBO CreateCylinder (unsigned int segments, float length, float scaleRadius, Vector4f color);
 
 MeshVBO CreateCapsule (unsigned int rows, unsigned int segments, float length_z, float radius);
+
+MeshVBO Create3DArrow (Vector3f& pos, Vector3f& dir, Vector4f& color, float scale);
+MeshVBO Create3DCircleArrow (Vector3f& pos, Vector3f& dir, Vector4f& color, float scale);
+
+MeshVBO CreateUnit3DArrow(int dir, Vector4f color);
+MeshVBO CreateUnit3DCircleArrow(int dir, Vector4f color);
+
+MeshVBO CreateTransformedMesh(MeshVBO oldMesh, const Matrix44f &transformation);
+
+MeshVBO CreateCone(int segments, float height, float radius, Vector4f color);
+
+MeshVBO CreateOpenTorus(int segments, float width, float radius, Vector4f color, bool showmiddle=false);
 
 #endif

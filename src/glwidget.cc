@@ -7,8 +7,8 @@
  * Licensed under the MIT license. See LICENSE for more details.
  */
 
-#include "GL/glew.h"
 
+#include "GL/glew.h"
 #include <QtGui>
 
 #ifdef __APPLE__
@@ -68,7 +68,9 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_shadows (false),
 		draw_curves (false),
 		draw_points (true),
-		white_mode (false)
+		draw_forces(true),
+		draw_torques(true),
+		white_mode (true)
 {
 	camera.poi.set (0.f, 1.f, 0.f);
 	camera.eye.set (6.f, 3.f, 6.f);
@@ -189,6 +191,14 @@ void GLWidget::toggle_draw_curves (bool status) {
 
 void GLWidget::toggle_draw_points (bool status) {
 	draw_points = status;
+}
+
+void GLWidget::toggle_draw_forces(bool status) {
+	draw_forces = status;
+}
+
+void GLWidget::toggle_draw_torques(bool status) {
+	draw_torques = status;
 }
 
 void GLWidget::toggle_draw_orthographic (bool status) {
@@ -464,39 +474,53 @@ void GLWidget::drawGrid() {
 }
 
 void GLWidget::drawScene() {
-	if (!scene)
+	if (!scene) {
 		return;
+	}
 
-	if (draw_grid)
+	if (draw_grid) {
 		drawGrid();
+	}
 
-	if (draw_floor)
+	if (draw_floor) {
 		draw_checkers_board_shaded(white_mode);
+	}
 
-	if (draw_meshes)
+	if (draw_meshes) {
 		scene->drawMeshes();
+	}
 
-	if (draw_base_axes)
+	if (draw_base_axes) {
 		scene->drawBaseFrameAxes();
-	if (draw_frame_axes)
+	}
+	if (draw_frame_axes) {
 		scene->drawFrameAxes();
+	}
 
 	bool depth_test_enabled = glIsEnabled (GL_DEPTH_TEST);
-	if (depth_test_enabled)
+	if (depth_test_enabled) {
 		glDisable (GL_DEPTH_TEST);
-
-	if (draw_points)
-		scene->drawPoints();
-
+	}
 	glDisable (GL_LIGHTING);
 
-	if (draw_curves)
+	if (draw_forces) {
+		scene->drawForces();
+	}
+	if (draw_torques) {
+		scene->drawTorques();
+	}
+	if (draw_points) {
+		scene->drawPoints();
+	}
+	if (draw_curves) {
 		scene->drawCurves();
+	}
 
 	glEnable (GL_LIGHTING);
 
-	if (depth_test_enabled)
+	if (depth_test_enabled){
 		glEnable (GL_DEPTH_TEST);
+	}
 
 	/*
 	if (draw_count % 100 == 0) {

@@ -53,6 +53,7 @@
     <addaction name="separator"/>
     <addaction name="actionLoadModel"/>
     <addaction name="actionLoadAnimation"/>
+    <addaction name="actionLoadForcesAndTorques"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
     <addaction name="separator"/>
@@ -294,6 +295,20 @@
            <widget class="QCheckBox" name="checkBoxDrawPoints">
             <property name="text">
              <string>Points</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawForces">
+            <property name="text">
+             <string>Forces</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDrawTorques">
+            <property name="text">
+             <string>Torques</string>
             </property>
            </widget>
           </item>
@@ -555,6 +570,14 @@
    </property>
    <property name="text">
     <string>White Background</string>
+   </property>
+  </action>
+  <action name="actionLoadForcesAndTorques">
+   <property name="text">
+    <string>Load Forces/Torques</string>
+   </property>
+   <property name="toolTip">
+    <string>Load Forces</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>

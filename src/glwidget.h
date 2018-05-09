@@ -43,6 +43,10 @@ class GLWidget : public QGLWidget
 		bool draw_shadows;
 		bool draw_curves;
 		bool draw_points;
+
+		bool draw_forces;
+		bool draw_torques;
+		
 		bool white_mode;
 
 		Vector4f light_position;
@@ -100,6 +104,9 @@ class GLWidget : public QGLWidget
 		void toggle_draw_points(bool status);
 		void toggle_draw_orthographic(bool status);
 		void toggle_white_mode(bool status);
+
+		void toggle_draw_forces(bool status);
+		void toggle_draw_torques(bool status);
 
 		void set_front_view ();
 		void set_side_view ();

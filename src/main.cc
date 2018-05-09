@@ -10,7 +10,7 @@
 #include <QApplication>
 
 #include "MeshupApp.h"
-#include "glwidget.h"
+//#include "glwidget.h"
 
 #include <iostream>
 

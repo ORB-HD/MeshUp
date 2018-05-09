@@ -2,6 +2,7 @@
 
 #include "Model.h"
 #include "Animation.h"
+#include "ForcesTorques.h"
 #include "GL/glew.h"
 
 #include <iostream>
@@ -105,3 +106,40 @@ void Scene::drawCurves(){
 	glPopMatrix();
 }
 
+void Scene::drawForces() {
+	Vector3f offset_start (0.f, 0.f, 0.f);
+	
+	if (models.size() > 1) {
+		offset_start = - model_displacement * models.size() * 0.5;
+	}
+
+	glPushMatrix();
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
+
+	for (int i = 0; i < forcesTorquesQueue.size(); i++) {
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
+		Matrix33f baseChange = models[i]->configuration.axes_rotation;
+		forcesTorquesQueue[i]->getForcesAtTime(current_time).draw(baseChange);
+	}
+
+	glPopMatrix();
+}
+
+void Scene::drawTorques() {
+	Vector3f offset_start (0.f, 0.f, 0.f);
+	
+	if (models.size() > 1) {
+		offset_start = - model_displacement * models.size() * 0.5;
+	}
+
+	glPushMatrix();
+	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
+
+	for (int i = 0; i < forcesTorquesQueue.size(); i++) {
+		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
+		Matrix33f baseChange = models[i]->configuration.axes_rotation;
+		forcesTorquesQueue[i]->getTorquesAtTime(current_time).draw(baseChange);
+	}
+
+	glPopMatrix();
+}

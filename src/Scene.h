@@ -7,6 +7,7 @@
 
 struct Animation;
 struct MeshupModel;
+struct ForcesTorques;
 
 struct Scene {
 	Scene() :
@@ -17,9 +18,12 @@ struct Scene {
 	float current_time;
 	float longest_animation;
 	Vector3f model_displacement;
+	bool drawingForces;
+	bool drawingTorques;
 
 	std::vector<Animation*> animations;
 	std::vector<MeshupModel*> models;
+	std::vector<ForcesTorques*> forcesTorquesQueue;
 
 	void setCurrentTime (double t);
 
@@ -28,6 +32,8 @@ struct Scene {
 	void drawFrameAxes();
 	void drawPoints();
 	void drawCurves();
+	void drawForces();
+	void drawTorques();
 };
 
 #endif

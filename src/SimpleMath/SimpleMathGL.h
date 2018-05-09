@@ -75,6 +75,79 @@ inline Matrix44f ScaleMat44 (float x, float y, float z) {
 			);
 }
 
+
+inline double dotProduct(Vector3f v1, Vector3f v2){
+	return v1[0] * v2[0] + v1[1] * v2[1] +v1[2] * v2[2];
+}
+
+inline int calculateArrowDirection(Vector3f forceVector){
+	Vector3f unitForceVector = forceVector.normalize();
+
+	Vector3f xDir(1.f,0.f,0.f);
+	Vector3f yDir(0.f,1.f,0.f);
+	Vector3f zDir(0.f,0.f,1.f);
+
+	double test1 = unitForceVector[1];
+	double test2 = xDir[0];
+
+	double xVal = abs(dotProduct(xDir, unitForceVector));
+	double yVal = abs(dotProduct(yDir, unitForceVector));
+	double zVal = abs(dotProduct(zDir, unitForceVector));
+
+	if(xVal < yVal && xVal < zVal) {
+		return 1;
+	}
+	else if(yVal < zVal){
+		return 2;
+	}
+	else {
+		return 3;
+	}
+
+	return 1;
+}
+
+// Function to calculate the angle in radians between two vectors
+inline double calcAngleRadian(Vector3f v1, Vector3f v2){
+	double dotProd = dotProduct(v1, v2);
+	double normsMultiplied = v1.norm() * v2.norm();
+	double angle = acos(dotProd/normsMultiplied);
+
+	return angle;
+}
+
+// To calculate the normalized cross product of two vectors
+inline Vector3f normalizedCross(Vector3f v1, Vector3f v2){
+	Vector3f cross = v1.cross(v2);
+	cross.normalize();
+
+	return cross;
+}
+
+// Creates an unit axis vector in the indicated direction. 1 for X, 2 for Y, 3 for Z.
+inline Vector3f createUnitAxisVector(int dir) {
+
+	if(dir < 1 || dir > 3) {
+		std::cout << "Direction has to be 1 for X, 2 for Y or 3 for Z" << std::endl;
+		abort();
+	}
+
+	if(dir == 1) {
+		return Vector3f(1.f,0.f,0.f);
+	}
+	else if(dir == 2){
+		return Vector3f(0.f,1.f,0.f);
+	}
+	else return Vector3f(0.f,0.f,1.f);
+}
+
+inline Vector3f normalizeVector (Vector3f vec){
+
+	double norm = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+
+	return Vector3f(vec[0] / norm, vec[1] / norm, vec[2] / norm);
+}
+
 /** Quaternion 
  *
  * order: x,y,z,w

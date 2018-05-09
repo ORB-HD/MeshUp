@@ -41,11 +41,13 @@ public:
 		std::vector<std::string> args;
 		std::vector<std::string> model_files_queue;
 		std::vector<std::string> animation_files_queue;
+		std::vector<std::string> force_files_queue;
 
 		void parseArguments (int argc, char* argv[]);
 		void loadModel (const char *filename);
 		void loadAnimation (const char *filename);
 		void setAnimationFraction (float fraction);
+		void loadForcesAndTorques (const char *filename);
 
 		// unix signal handler
 		static void SIGUSR1Handler(int unused);
@@ -83,6 +85,7 @@ public slots:
 
 		void action_load_model();
 		void action_load_animation();
+		void action_load_forces();
 
 		void action_reload_files ();
 		void action_quit();

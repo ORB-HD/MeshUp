@@ -87,6 +87,7 @@ ADD_EXECUTABLE ( meshup
 	src/Scene.cc
 	src/Camera.cc
 	src/Scripting.cc
+	src/ForcesTorques.cc
 	src/luatables/luatables.cc
 
 	${MeshupApp_SRCS}
@@ -94,7 +95,7 @@ ADD_EXECUTABLE ( meshup
 	${MainWindow_UIS_H}
 )
 
-qt5_use_modules(meshup Widgets OpenGL)
+qt5_use_modules(meshup Widgets Core OpenGL)
 
 INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR})
 INCLUDE_DIRECTORIES (${QT_INCLUDE_DIR}/QtOpenGL)
