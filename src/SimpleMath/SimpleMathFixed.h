@@ -892,6 +892,15 @@ inline std::ostream& operator<<(std::ostream& output, const Matrix<val_type, nro
 	return output;
 }
 
+template <typename val_type, unsigned int nrows, unsigned int ncols>
+inline double calcAngleRadian(const Matrix<val_type, nrows, ncols> &m1, const Matrix<val_type, nrows, ncols> &m2){
+	double dotProd = m1.dot(m2);
+	double normsMultiplied = m1.norm() * m2.norm();
+	double angle = acos(dotProd/normsMultiplied);
+
+	return angle;
+}
+
 }
 
 }

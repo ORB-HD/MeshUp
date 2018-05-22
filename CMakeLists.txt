@@ -84,10 +84,11 @@ ADD_EXECUTABLE ( meshup
 	src/Animation.cc
 	src/MeshVBO.cc
 	src/Curve.cc
+	src/ForcesTorques.cc
 	src/Scene.cc
 	src/Camera.cc
 	src/Scripting.cc
-	src/ForcesTorques.cc
+	src/Arrow.cc
 	src/luatables/luatables.cc
 
 	${MeshupApp_SRCS}

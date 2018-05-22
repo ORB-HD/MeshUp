@@ -102,6 +102,8 @@ struct MeshVBO {
 	std::vector<Vector4f> colors;
 
 	void join (const Matrix44f &transformation, const MeshVBO &other);
+	void transform(const Matrix44f &transformation);
+	void setColor(const Vector4f &color);
 	void center ();
 	bool loadOBJ (const char* filename, const char* object_name = NULL, bool strict = false);
 };
@@ -121,13 +123,8 @@ MeshVBO CreateCylinder (unsigned int segments, float length, float scaleRadius, 
 
 MeshVBO CreateCapsule (unsigned int rows, unsigned int segments, float length_z, float radius);
 
-MeshVBO Create3DArrow (Vector3f& pos, Vector3f& dir, Vector4f& color, float scale);
-MeshVBO Create3DCircleArrow (Vector3f& pos, Vector3f& dir, Vector4f& color, float scale);
-
-MeshVBO CreateUnit3DArrow(int dir, Vector4f color);
-MeshVBO CreateUnit3DCircleArrow(int dir, Vector4f color);
-
-MeshVBO CreateTransformedMesh(MeshVBO oldMesh, const Matrix44f &transformation);
+MeshVBO CreateUnit3DArrow(Vector4f color=Vector4f(1.f, 1.f, 1.f, 0.f));
+MeshVBO CreateUnit3DCircleArrow(Vector4f color=Vector4f(1.f, 1.f, 1.f, 0.f));
 
 MeshVBO CreateCone(int segments, float height, float radius, Vector4f color);
 

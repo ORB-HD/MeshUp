@@ -116,10 +116,29 @@ void Scene::drawForces() {
 	glPushMatrix();
 	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
+	bool blend_enabled = glIsEnabled(GL_BLEND);
+	glEnable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+
 	for (int i = 0; i < forcesTorquesQueue.size(); i++) {
 		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		Matrix33f baseChange = models[i]->configuration.axes_rotation;
-		forcesTorquesQueue[i]->getForcesAtTime(current_time).draw(baseChange);
+		ArrowList forces = forcesTorquesQueue[i]->getForcesAtTime(current_time);
+		for (int j = 0; j < forces.arrows.size(); j++) {
+			Arrow changed = forces.arrows[j]->createBaseChangedArrow(baseChange);
+			if (changed.data.norm() > forcesTorquesQueue[i]->force_threshold) {
+				MeshVBO arr = arrow_creator.createArrow(&arrow_creator.arrow3d, changed, forcesTorquesQueue[i]->force_properties);
+				glPushMatrix();
+				arr.draw(GL_TRIANGLES);
+				glPopMatrix();
+			}
+		}
+	}
+
+	glDepthMask(GL_TRUE);
+	if (!blend_enabled) {
+		glDisable(GL_BLEND);
 	}
 
 	glPopMatrix();
@@ -135,10 +154,27 @@ void Scene::drawTorques() {
 	glPushMatrix();
 	glTranslatef (offset_start[0], offset_start[1], offset_start[2]);
 
+	bool blend_enabled = glIsEnabled(GL_BLEND);
+	glEnable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+
 	for (int i = 0; i < forcesTorquesQueue.size(); i++) {
 		glTranslatef (model_displacement[0], model_displacement[1], model_displacement[2]);
 		Matrix33f baseChange = models[i]->configuration.axes_rotation;
-		forcesTorquesQueue[i]->getTorquesAtTime(current_time).draw(baseChange);
+		ArrowList torques = forcesTorquesQueue[i]->getTorquesAtTime(current_time);
+		for (int j = 0; j < torques.arrows.size(); j++) {
+			if (torques.arrows[j]->data.norm() > forcesTorquesQueue[i]->torque_threshold) {
+				glPushMatrix();
+				arrow_creator.createArrow(&arrow_creator.circle_arrow3d, torques.arrows[j]->createBaseChangedArrow(baseChange), forcesTorquesQueue[i]->torque_properties).draw(GL_TRIANGLES);
+				glPopMatrix();
+			}
+		}
+	}
+
+	glDepthMask(GL_TRUE);
+	if (!blend_enabled) {
+		glDisable(GL_BLEND);
 	}
 
 	glPopMatrix();

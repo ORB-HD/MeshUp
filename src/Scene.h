@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Math.h"
+#include "Arrow.h"
 
 struct Animation;
 struct MeshupModel;
@@ -18,6 +19,7 @@ struct Scene {
 	float current_time;
 	float longest_animation;
 	Vector3f model_displacement;
+	ArrowCreator arrow_creator;
 	bool drawingForces;
 	bool drawingTorques;
 

@@ -289,6 +289,39 @@ void MeshVBO::draw(unsigned int mode) {
 	}
 }
 
+void MeshVBO::setColor(const Vector4f &color) {
+	for(int i=0;i<colors.size();i++) {
+		colors[i] = color;
+	}
+}
+
+void MeshVBO::transform(const Matrix44f &transformation) {
+	//save current data to be transformed 
+	MeshVBO old = MeshVBO(*this);
+
+	bool have_normals = false;
+	bool have_colors = false;
+	if (normals.size() != 0)
+		have_normals = true;
+	if (colors.size() != 0)
+		have_colors = true;
+
+	//clear current data
+	vertices.clear();
+	normals.clear();
+	colors.clear();
+
+	Matrix33f rotation = transformation.block<3,3>(0,0);
+
+	for (unsigned int i = 0; i < old.vertices.size(); i++) {
+		addVertex4fv ((old.vertices[i].transpose() * transformation).data());
+		if (have_normals)
+			addNormalfv ((old.normals[i].transpose() * rotation).data());
+		if (have_colors)
+			addColor4fv (old.colors[i].data());
+	}
+}
+
 void MeshVBO::join (const Matrix44f &transformation, const MeshVBO &other) {
 	if (&other == this) {
 		cerr << "Cannot join meshes not supported!" << endl;
@@ -1081,8 +1114,8 @@ MeshVBO CreateOpenTorus(int segments, float width, float radius, Vector4f color,
 			Vector3f e3 = pos2 - pos3;
 			Vector3f e4 = pos2 - pos1;
 
-			Vector3f n1 = SimpleMath::GL::normalizedCross(e1, e2);
-			Vector3f n2 = SimpleMath::GL::normalizedCross(e3, e4);
+			Vector3f n1 = e1.cross(e2).normalize();
+			Vector3f n2 = e3.cross(e4).normalize();
 
 			//Add Side Triangle 1
 			result.addVertex3fv(pos0.data());
@@ -1145,105 +1178,45 @@ MeshVBO CreateCapsule (unsigned int rows, unsigned int segments, float length_z,
 	return result;
 }
 
-// Method to create a 3D mesh of an arrow of a specific size that points either
-// in the X, Y or Z direction. If forces is false then the method assumes
-// that torques are to be visualized and adds a disc to the arrow.
-MeshVBO CreateUnit3DArrow(int dir, Vector4f color){
-
-	if(dir < 1 || dir > 3) {
-		cout << "Direction has to be 1 for X, 2 for Y or 3 for Z" << endl;
-		abort();
-	}
-
+// Method to create a 3D Arrow Mesh with standart size and orientation
+MeshVBO CreateUnit3DArrow(Vector4f color){
 	// Create tip of the arrow
 	MeshVBO tipCone = CreateCone(40, 0.2, 0.1, color);
 
 	// Bring it in right position
-	MeshVBO rotatedTip = CreateTransformedMesh(tipCone, SimpleMath::GL::RotateMat44(90, 1., 0., 0.));
+	MeshVBO rotatedTip;
+	rotatedTip.join(SimpleMath::GL::RotateMat44(90, 1., 0., 0.), tipCone);
 
 	// Add cylinder as shaft of arrow
 	rotatedTip.join(SimpleMath::GL::TranslateMat44(0., 0., -0.2), CreateCylinder(25, 0.4, 0.055, color));
 
 	// Bring whole arrow in right position
-	MeshVBO unitArrow = CreateTransformedMesh(rotatedTip, SimpleMath::GL::RotateMat44(270., 1., 0., 0.));
+	MeshVBO unitArrow; 
+	unitArrow.join(SimpleMath::GL::RotateMat44(270., 1., 0., 0.), rotatedTip);
+	unitArrow.transform(SimpleMath::GL::TranslateMat44(0., -0.2, 0.));
 
-	unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::TranslateMat44(0., -0.2, 0.));
-
-	// Bring arrow in right direction (or leave it if its y-direction)
-	switch (dir){
-	case 1:
-		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(270, 0., 0., 1.));
-		return unitArrow;
-		break;
-	case 2:
-		return unitArrow;
-		break;
-	case 3:
-		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(90, 1., 0., 0.));
-		return unitArrow;
-		break;
-	}
+	return unitArrow;
 }
 
-MeshVBO CreateUnit3DCircleArrow(int dir, Vector4f color){
-
-	if(dir < 1 || dir > 3) {
-		cout << "Direction has to be 1 for X, 2 for Y or 3 for Z" << endl;
-		abort();
-	}
-
+// Method to create a 3D rotated Arrow Mesh with standart size and orientation
+MeshVBO CreateUnit3DCircleArrow(Vector4f color){
 	// Create tip of the arrow
 	MeshVBO tipCone = CreateCone(40, 0.2, 0.1, color);
 
 	// Bring it in right position
-	MeshVBO rotatedTip = CreateTransformedMesh(tipCone, SimpleMath::GL::RotateMat44(90, -1., 0, 0));
+	MeshVBO rotatedTip; 
+	rotatedTip.join(SimpleMath::GL::RotateMat44(90, -1., 0, 0), tipCone);
 
 	// Add open torus to ArrowTip to create circular arrow
 	rotatedTip.join(SimpleMath::GL::TranslateMat44(-0.055, 0., 0.), CreateOpenTorus(20, 0.055, 0.2, color));
 
 	// Bring whole arrow in right position
-	MeshVBO unitArrow = CreateTransformedMesh(rotatedTip, SimpleMath::GL::RotateMat44(270., 1., 0., 0.));
+	MeshVBO unitCircleArrow;
+	unitCircleArrow.join(SimpleMath::GL::RotateMat44(270., 1., 0., 0.), rotatedTip);
+	unitCircleArrow.transform(SimpleMath::GL::TranslateMat44(0.255, 0., 0.));
+	unitCircleArrow.transform(SimpleMath::GL::RotateMat44(90, 1., 0, 0));
 
-	unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::TranslateMat44(0., -0.2, 0.));
-
-	// Bring arrow in right direction (or leave it if its y-direction)
-	unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::TranslateMat44(0.255, 0.2, 0.));
-	if (dir==1) {
-		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(270, 0., 0., 1.));
-	} else if (dir == 3) {
-		unitArrow = CreateTransformedMesh(unitArrow, SimpleMath::GL::RotateMat44(90, 1., 0., 0.));
-	}
-	return unitArrow;
-}
-
-// This function can be used to create a mesh, that is the transformed version
-// of an existing mesh.
-MeshVBO CreateTransformedMesh(MeshVBO oldMesh, const Matrix44f &transformation){
-	MeshVBO transformedResult;
-
-	transformedResult.begin();
-
-	// To rotate the normals
-	Matrix33f rotation = transformation.block<3,3>(0,0);
-
-	// Transform every vertex and add to new mesh
-	for(int i = 0; i < oldMesh.vertices.size(); i++){
-		transformedResult.addVertex4fv((oldMesh.vertices[i].transpose()
-										* transformation).data());
-
-			if(oldMesh.normals.size() != 0){
-				transformedResult.addNormalfv ((oldMesh.normals[i].transpose()
-												* rotation).data());
-			}
-
-			if(oldMesh.colors.size() != 0) {
-				transformedResult.addColor4fv (oldMesh.colors[i].data());
-			}
-	}
-
-	transformedResult.end();
-
-	return transformedResult;
+	return unitCircleArrow;
 }
 
 // Method to create a cone mesh
@@ -1272,11 +1245,11 @@ MeshVBO CreateCone(int segments, float height, float radius, Vector4f color){
 
 		Vector3f side1a = Vector3f(c0-c1, 0., s0-s1);
 		Vector3f side1b = Vector3f(c1, -height, s1);
-		Vector3f normal1 = SimpleMath::GL::normalizedCross(side1b, side1a);
+		Vector3f normal1 = side1b.cross(side1a).normalize();
 
 		Vector3f side2a = Vector3f(c0-c1, 0., s0-s1);
 		Vector3f side2b = Vector3f(c1, 0., s1);
-		Vector3f normal2 = SimpleMath::GL::normalizedCross(side2b, side2a);
+		Vector3f normal2 = side2b.cross(side2a).normalize();
 
 		// Side triangle
 		result.addVertex3fv(p0.data());
@@ -1304,47 +1277,4 @@ MeshVBO CreateCone(int segments, float height, float radius, Vector4f color){
 	result.end();
 
 	return result;
-}
-
-MeshVBO Create3DArrow(Vector3f& pos, Vector3f& dir, Vector4f& color, float scale) {
-	//Create Mesh that will be transforemed
-	double dirNorm = dir.norm();
-	Vector3f vecDirNormalized = SimpleMath::GL::normalizeVector(dir);
-	MeshVBO rightUnitArrowMesh = CreateUnit3DArrow(SimpleMath::GL::calculateArrowDirection(vecDirNormalized), color);
-
-	//Calculate needed transformation values
-	Vector3f rightUnitArrow = SimpleMath::GL::createUnitAxisVector(SimpleMath::GL::calculateArrowDirection(vecDirNormalized));
-	Vector3f rotAxis = SimpleMath::GL::normalizedCross(rightUnitArrow, vecDirNormalized);
-	double rotAngleRadian = SimpleMath::GL::calcAngleRadian(rightUnitArrow, vecDirNormalized);
-	double rotAngleDegree = rotAngleRadian * 180 / M_PI;
-
-	//Transform Arrow to final form
-	MeshVBO finalArrow = CreateTransformedMesh(rightUnitArrowMesh, SimpleMath::GL::ScaleMat44(dirNorm, dirNorm, dirNorm));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::ScaleMat44(scale, scale, scale));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::RotateMat44(rotAngleDegree, rotAxis[0], rotAxis[1], rotAxis[2]));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::TranslateMat44(pos[0], pos[1], pos[2]));
-
-	return finalArrow;
-}
-
-MeshVBO Create3DCircleArrow(Vector3f& pos, Vector3f& dir, Vector4f& color, float scale) {
-	//Create Mesh that will be transforemed
-	double dirNorm = dir.norm();
-	Vector3f vecDirNormalized = SimpleMath::GL::normalizeVector(dir);
-	MeshVBO rightUnitArrowMesh = CreateUnit3DCircleArrow(SimpleMath::GL::calculateArrowDirection(vecDirNormalized), color);
-
-	//Calculate needed transformation values
-	Vector3f rightUnitArrow = SimpleMath::GL::createUnitAxisVector(SimpleMath::GL::calculateArrowDirection(vecDirNormalized));
-	Vector3f rotAxis = SimpleMath::GL::normalizedCross(rightUnitArrow, vecDirNormalized);
-	double rotAngleRadian = SimpleMath::GL::calcAngleRadian(rightUnitArrow, vecDirNormalized);
-	double rotAngleDegree = rotAngleRadian * 180 / M_PI;
-
-	//Transform Arrow to final form
-	MeshVBO finalArrow = CreateTransformedMesh(rightUnitArrowMesh, SimpleMath::GL::ScaleMat44(dirNorm, dirNorm, dirNorm));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::RotateMat44(90, 1., 0, 0));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::ScaleMat44(scale, scale, scale));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::RotateMat44(rotAngleDegree, rotAxis[0], rotAxis[1], rotAxis[2]));
-	finalArrow = CreateTransformedMesh(finalArrow, SimpleMath::GL::TranslateMat44(pos[0], pos[1], pos[2]));
-
-	return finalArrow;
 }
