@@ -127,11 +127,8 @@ void Scene::drawForces() {
 		ArrowList forces = forcesTorquesQueue[i]->getForcesAtTime(current_time);
 		for (int j = 0; j < forces.arrows.size(); j++) {
 			Arrow changed = forces.arrows[j]->createBaseChangedArrow(baseChange);
-			if (changed.data.norm() > forcesTorquesQueue[i]->force_threshold) {
-				MeshVBO arr = arrow_creator.createArrow(&arrow_creator.arrow3d, changed, forcesTorquesQueue[i]->force_properties);
-				glPushMatrix();
-				arr.draw(GL_TRIANGLES);
-				glPopMatrix();
+			if (changed.direction.norm() > forcesTorquesQueue[i]->force_threshold) {
+				arrow_creator.drawArrow(&arrow_creator.arrow3d, changed, forcesTorquesQueue[i]->force_properties);
 			}
 		}
 	}
@@ -164,10 +161,8 @@ void Scene::drawTorques() {
 		Matrix33f baseChange = models[i]->configuration.axes_rotation;
 		ArrowList torques = forcesTorquesQueue[i]->getTorquesAtTime(current_time);
 		for (int j = 0; j < torques.arrows.size(); j++) {
-			if (torques.arrows[j]->data.norm() > forcesTorquesQueue[i]->torque_threshold) {
-				glPushMatrix();
-				arrow_creator.createArrow(&arrow_creator.circle_arrow3d, torques.arrows[j]->createBaseChangedArrow(baseChange), forcesTorquesQueue[i]->torque_properties).draw(GL_TRIANGLES);
-				glPopMatrix();
+			if (torques.arrows[j]->direction.norm() > forcesTorquesQueue[i]->torque_threshold) {
+				arrow_creator.drawArrow(&arrow_creator.circle_arrow3d, torques.arrows[j]->createBaseChangedArrow(baseChange), forcesTorquesQueue[i]->torque_properties);
 			}
 		}
 	}

@@ -143,8 +143,8 @@ ArrowList ForcesTorques::getForcesAtTime(float time) {
 		// iterate over all entries and interpolate them
 		for(int i=0;i<prev->arrows.size();i++) {
 			Vector3f pos = interpolate(prev->arrows[i]->pos, next->arrows[i]->pos, time_fraction);
-			Vector3f data = interpolate(prev->arrows[i]->data, next->arrows[i]->data, time_fraction);
-			result.addArrow(pos, data);
+			Vector3f direction = interpolate(prev->arrows[i]->direction, next->arrows[i]->direction, time_fraction);
+			result.addArrow(pos, direction);
 		}
 
 		return result;
@@ -168,8 +168,8 @@ ArrowList ForcesTorques::getTorquesAtTime(float time) {
 		// iterate over all entries and interpolate them
 		for(int i=0;i<prev->arrows.size();i++) {
 			Vector3f pos = interpolate(prev->arrows[i]->pos, next->arrows[i]->pos, time_fraction);
-			Vector3f data = interpolate(prev->arrows[i]->data, next->arrows[i]->data, time_fraction);
-			result.addArrow(pos, data);
+			Vector3f direction = interpolate(prev->arrows[i]->direction, next->arrows[i]->direction, time_fraction);
+			result.addArrow(pos, direction);
 		}
 
 		return result;

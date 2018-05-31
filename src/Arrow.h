@@ -8,7 +8,7 @@
 
 struct Arrow {
 	Vector3f pos;
-	Vector3f data;
+	Vector3f direction;
 
 	Arrow createBaseChangedArrow(Matrix33f base_change);
 };
@@ -18,12 +18,12 @@ struct ArrowList{
 		arrows (std::vector<Arrow*>())
 	{}
 	std::vector<Arrow*> arrows;
-	void addArrow(const Vector3f pos,const Vector3f data);
+	void addArrow(const Vector3f pos,const Vector3f direction);
 };
 
 struct ArrowProperties {
 	ArrowProperties() {}
-	ArrowProperties(Vector3f colorp, float scalep, float transparencyp): 
+	ArrowProperties(const Vector3f& colorp, float scalep, float transparencyp): 
 		color (colorp),
 		scale (scalep),
 		transparency (transparencyp)
@@ -38,7 +38,7 @@ struct ArrowCreator {
 
 	MeshVBO arrow3d, circle_arrow3d;
 
-	MeshVBO createArrow(MeshVBO *basearrow, Arrow arrow, ArrowProperties properties);
+	void drawArrow(MeshVBO *basearrow, Arrow arrow, ArrowProperties properties);
 };
 
 #endif // Arrow_h_INCLUDED
