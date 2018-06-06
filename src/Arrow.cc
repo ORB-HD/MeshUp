@@ -1,13 +1,8 @@
 #include "Arrow.h"
 #include "GL/glew.h"
 
-enum Axis{
-	XDir,
-	YDir,
-	ZDir
-};
 
-inline Axis calculateArrowDirection(Vector3f forceVector){
+inline Axis::Axis calculateArrowDirection(Vector3f forceVector){
 	Vector3f unit_force_vector = forceVector.normalize();
 
 	Vector3f x_dir(1.f,0.f,0.f);
@@ -28,7 +23,7 @@ inline Axis calculateArrowDirection(Vector3f forceVector){
 }
 
 // Creates an unit axis vector in the indicated direction. 1 for X, 2 for Y, 3 for Z.
-inline Vector3f createUnitAxisVector(Axis dir) {
+inline Vector3f createUnitAxisVector(Axis::Axis dir) {
 
 	if(dir < Axis::XDir || dir > Axis::ZDir) {
 		std::cout << "Invalid axis direction supplied as parameter!" << std::endl;
@@ -59,7 +54,7 @@ void ArrowCreator::drawArrow(MeshVBO *basearrow, Arrow arrow, ArrowProperties pr
 	Vector3f vec_dir_normalized = arrow.direction.normalized();
 	Vector4f color(properties.color[0], properties.color[1], properties.color[2], properties.transparency);
 
-	Axis axis_dir = calculateArrowDirection(vec_dir_normalized);
+	Axis::Axis axis_dir = calculateArrowDirection(vec_dir_normalized);
 	Vector3f axis_vec = createUnitAxisVector(axis_dir);
 
 	Vector3f rot_axis = axis_vec.cross(vec_dir_normalized).normalize();
