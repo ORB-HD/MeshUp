@@ -40,6 +40,7 @@ FIND_PACKAGE (Boost COMPONENTS filesystem system REQUIRED)
 INCLUDE_DIRECTORIES ( 
 	vendor/glew/include 
 	vendor/lua-5.1/src/
+	vendor/QTFFmpegWrapper/
 	src/luatables
 	${CMAKE_CURRENT_BINARY_DIR}/src/
 	)
@@ -48,6 +49,7 @@ SUBDIRS (
 	tests/ 
 	vendor/jsoncpp/
 	vendor/lua-5.1/
+	vendor/QTFFmpegWrapper/
 	)
 
 ADD_LIBRARY ( glew
@@ -126,6 +128,7 @@ TARGET_LINK_LIBRARIES ( meshup
 	lua-static
 	glew
 	json
+	qtffmpeg
 )
 
 # Installation
