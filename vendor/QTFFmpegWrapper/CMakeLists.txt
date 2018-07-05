@@ -16,11 +16,11 @@ INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR})
 INCLUDE_DIRECTORIES (${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 SET ( QTFFMPEG_HDR
-	#src/QVideoDecoder.h
+	src/QVideoDecoder.h
 	src/QVideoEncoder.h
 )
 SET ( QTFFMPEG_SRC
-	#src/QVideoDecoder.cpp
+	src/QVideoDecoder.cpp
 	src/QVideoEncoder.cpp
 )
 

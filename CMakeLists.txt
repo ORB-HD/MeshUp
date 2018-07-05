@@ -40,7 +40,7 @@ FIND_PACKAGE (Boost COMPONENTS filesystem system REQUIRED)
 INCLUDE_DIRECTORIES ( 
 	vendor/glew/include 
 	vendor/lua-5.1/src/
-	vendor/QTFFmpegWrapper/
+	vendor/QTFFmpegWrapper/src/
 	src/luatables
 	${CMAKE_CURRENT_BINARY_DIR}/src/
 	)
