@@ -5,6 +5,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace SimpleMath;
 
 const float TEST_PREC = 1.0e-6;
 

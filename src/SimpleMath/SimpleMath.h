@@ -7,4 +7,6 @@
 #include "SimpleMathQR.h"
 #include "SimpleMathCommaInitializer.h"
 
+typedef SimpleMath::Dynamic::Matrix<double> VectorNd;
+
 #endif /* _SIMPLEMATH_H */

@@ -64,6 +64,7 @@ SET ( MainWindow_UIS
 	ui/MainWindow.ui
 	ui/RenderImageDialog.ui
 	ui/RenderImageSeriesDialog.ui
+	ui/RenderVideoDialog.ui
 	)
 
 QT5_WRAP_UI (MainWindow_UIS_H ${MainWindow_UIS})
@@ -78,6 +79,7 @@ QT5_WRAP_CPP ( MeshupApp_MOC_SRCS
 	src/MeshupApp.h
 	src/RenderImageDialog.h
 	src/RenderImageSeriesDialog.h
+	src/RenderVideoDialog.h
 	src/glwidget.h
 	)
 
@@ -89,6 +91,7 @@ ADD_EXECUTABLE ( meshup
 	src/ForcesTorques.cc
 	src/Scene.cc
 	src/Camera.cc
+	src/CameraAnimate.cc
 	src/Scripting.cc
 	src/Arrow.cc
 	src/luatables/luatables.cc
