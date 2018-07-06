@@ -162,6 +162,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (actionLoadModel, SIGNAL ( triggered() ), this, SLOT(action_load_model()));
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
 	connect (actionLoadForcesAndTorques, SIGNAL ( triggered() ), this, SLOT(action_load_forces()));
+	connect (pushButtonLoadCameraFile, SIGNAL (clicked()), this, SLOT (action_load_camera()));
 
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
@@ -241,33 +242,39 @@ void MeshupApp::loadAnimation(const char* filename) {
 }
 
 void MeshupApp::loadForcesAndTorques(const char* filename) {
-    if (glWidget->scene == NULL) {
-        force_files_queue.push_back (filename);
-        return;
-    }
+	 if (glWidget->scene == NULL) {
+		force_files_queue.push_back (filename);
+		return;
+	 }
 
-    if (scene->models.size() == 0 || scene-> animations.size() == 0) {
-        std::cerr << "Error: could not load Forces and Torques without a model and animation!" << std::endl;
-        abort();
-    }
+	 if (scene->models.size() == 0 || scene-> animations.size() == 0) {
+		std::cerr << "Error: could not load Forces and Torques without a model and animation!" << std::endl;
+		abort();
+	 }
 
-    if (scene->forcesTorquesQueue.size() == scene->animations.size()) {
-        std::cerr << "Error: There has to be an animation for every force file. Old animations cant be used" << std::endl;
-        abort();
-    }
+	 if (scene->forcesTorquesQueue.size() == scene->animations.size()) {
+		std::cerr << "Error: There has to be an animation for every force file. Old animations cant be used" << std::endl;
+		abort();
+	 }
 
 	unsigned int model_num = std::min(scene->models.size()-1, scene->forcesTorquesQueue.size());
 
-    ForcesTorques* forcesTorques = new ForcesTorques(scene->models[model_num]);
+	 ForcesTorques* forcesTorques = new ForcesTorques(scene->models[model_num]);
 
-    forcesTorques->loadFromFile (filename);
-    if( (!forcesTorques->times.empty()) != (glWidget->draw_forces || glWidget->draw_torques)){
-        glWidget->draw_forces = true;
-        glWidget->draw_torques = true;
+	 forcesTorques->loadFromFile (filename);
+	 if( (!forcesTorques->times.empty()) != (glWidget->draw_forces || glWidget->draw_torques)){
+		glWidget->draw_forces = true;
+		glWidget->draw_torques = true;
 		checkBoxDrawForces->setChecked(glWidget->draw_forces);
 		checkBoxDrawTorques->setChecked(glWidget->draw_torques);
-    }
-    scene->forcesTorquesQueue.push_back (forcesTorques);
+	 }
+	 scene->forcesTorquesQueue.push_back (forcesTorques);
+}
+
+void MeshupApp::loadCamera(const char* filename) {
+	if (glWidget->scene != NULL) {
+		glWidget->camera_op.loadFromFile(filename); 
+	}
 }
 
 void MeshupApp::setAnimationFraction (float fraction) {
@@ -278,10 +285,10 @@ void print_usage() {
 	cout << "Usage: meshup [model_file(s)] [animation_file(s)] [-s script.lua [args] ] " << endl
 		<< "Visualization tool for multi-body systems based on skeletal animation and magic." << endl
 		<< endl
-		<< "-s, --script FILE    use the provided FILE as script. See doc/scripting/" << endl
-		<< "                     for examples and documentation. Note that any re-" << endl
-		<< "                     maining arguments will be sent to the meshup.load(args)" << endl
-		<< "                     script function." << endl
+		<< "-s, --script FILE	 use the provided FILE as script. See doc/scripting/" << endl
+		<< "				 for examples and documentation. Note that any re-" << endl
+		<< "				 maining arguments will be sent to the meshup.load(args)" << endl
+		<< "				 script function." << endl
 		<< endl
 		<< "Report bugs to <martin.felis@iwr.uni-heidelberg.de>" << endl;
 }
@@ -291,7 +298,7 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 
 	for (int i = 1; i < argc; i++) {
 
-        // check if diplaying help was part of input
+		// check if diplaying help was part of input
 		if (string(argv[i]) == "--help"
 				|| string(argv[i]) == "-h") {
 			print_usage();
@@ -304,7 +311,7 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 		if (arg.find (".") != std::string::npos) 
 			arg_extension = arg.substr (arg.rfind(".") + 1);
 
-        // check if there is a scripting file included
+		// check if there is a scripting file included
 		if (arg == "-s" || arg == "--script") {
 			i++;
 			if (i == argc) {
@@ -320,20 +327,20 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 
 			scripting_file = arg;
 
-        // In case arg is model file
+		// In case arg is model file
 		} else if (arg.size() >= 3 && arg.substr (arg.size() - 3) == "lua") {
 			string model_filename = find_model_file_by_name (arg.c_str());
 			if (model_filename.size() != 0) {
 				loadModel(model_filename.c_str());
 			}
 
-        // In case arg is animation file
+		// In case arg is animation file
 		} else if (arg.size() >= 3 && (( arg_extension == "csv") || (arg_extension == "txt"))) {
 			loadAnimation (arg.c_str());
 		
-        // In case arg is force file
-        } else if (arg.size() >= 3 && ( arg_extension == "ff")) {
-            loadForcesAndTorques (arg.c_str());     
+		// In case arg is force file
+		} else if (arg.size() >= 3 && ( arg_extension == "ff")) {
+			loadForcesAndTorques (arg.c_str());	
 		}
 	}
 
@@ -394,13 +401,13 @@ void MeshupApp::saveSettings () {
 
 	settings_json["configuration"]["render"]["width"]  = renderImageSeriesDialog->WidthSpinBox->value();
 	settings_json["configuration"]["render"]["height"] = renderImageSeriesDialog->HeightSpinBox->value();
-	settings_json["configuration"]["render"]["fps"]    = renderImageSeriesDialog->FpsSpinBox->value();
+	settings_json["configuration"]["render"]["fps"]	 = renderImageSeriesDialog->FpsSpinBox->value();
 
-	settings_json["configuration"]["render"]["fps_mode"]         = renderImageSeriesDialog->fpsModeRadioButton->isChecked();
+	settings_json["configuration"]["render"]["fps_mode"]		 = renderImageSeriesDialog->fpsModeRadioButton->isChecked();
 	settings_json["configuration"]["render"]["frame_count_mode"] = renderImageSeriesDialog->frameCountModeRadioButton->isChecked();
-	settings_json["configuration"]["render"]["mencoder"]         = renderImageSeriesDialog->mencoderBox->isChecked();
-	settings_json["configuration"]["render"]["composite"]        = renderImageSeriesDialog->compositeBox->isChecked();
-	settings_json["configuration"]["render"]["transparent"]      = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
+	settings_json["configuration"]["render"]["mencoder"]		 = renderImageSeriesDialog->mencoderBox->isChecked();
+	settings_json["configuration"]["render"]["composite"]		= renderImageSeriesDialog->compositeBox->isChecked();
+	settings_json["configuration"]["render"]["transparent"]	 = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
 
 	string home_dir = getenv("HOME");
 
@@ -459,7 +466,7 @@ void MeshupApp::loadSettings () {
 	checkBoxDrawPoints->setChecked(settings_json["configuration"]["view"].get("draw_points", glWidget->draw_points).asBool());
 	checkBoxDrawForces->setChecked(settings_json["configuration"]["view"].get("draw_forces", glWidget->draw_forces).asBool());
 	checkBoxDrawTorques->setChecked(settings_json["configuration"]["view"].get("draw_torques", glWidget->draw_torques).asBool());
-	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->camera.orthographic).asBool());
+	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->camera_op.current_cam->orthographic).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
 	dockCameraControls->setVisible(settings_json["configuration"]["docks"]["camera_controls"].get("visible", false).asBool());
@@ -583,11 +590,22 @@ void MeshupApp::action_load_animation() {
 void MeshupApp::action_load_forces() {
 	QFileDialog file_dialog (this, "Select Force/Torque File");
 
-	file_dialog.setNameFilter(tr("MeshupForces(*.ff)"));
+	file_dialog.setNameFilter(tr("MeshupForces (*.ff)"));
 	file_dialog.setFileMode(QFileDialog::ExistingFile);
 
 	if (file_dialog.exec()) {
 		loadForcesAndTorques(file_dialog.selectedFiles().at(0).toStdString().c_str());
+	}
+}
+
+void MeshupApp::action_load_camera() {
+	QFileDialog file_dialog (this, "Select Camera File");
+
+	file_dialog.setNameFilter(tr("MeshupCamera (*.cam)"));
+	file_dialog.setFileMode(QFileDialog::ExistingFile);
+
+	if (file_dialog.exec()) {
+		loadCamera(file_dialog.selectedFiles().at(0).toStdString().c_str());
 	}
 }
 
@@ -902,24 +920,24 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 
 void MeshupApp::SIGUSR1Handler(int)
  {
-     char a = 1;
-     size_t length = ::write(sigusr1Fd[0], &a, sizeof(a));
+	char a = 1;
+	size_t length = ::write(sigusr1Fd[0], &a, sizeof(a));
  }
 
 int setup_unix_signal_handlers()
  {
-     struct sigaction usr1;
+	struct sigaction usr1;
 
-     usr1.sa_handler = MeshupApp::SIGUSR1Handler;
-     sigemptyset(&usr1.sa_mask);
-     usr1.sa_flags = 0;
-     usr1.sa_flags |= SA_RESTART;
+	usr1.sa_handler = MeshupApp::SIGUSR1Handler;
+	sigemptyset(&usr1.sa_mask);
+	usr1.sa_flags = 0;
+	usr1.sa_flags |= SA_RESTART;
 
-     if (sigaction(SIGUSR1, &usr1, 0) > 0)
-        return 1;
+	if (sigaction(SIGUSR1, &usr1, 0) > 0)
+		return 1;
 
   
-     return 0;
+	return 0;
  }
 
  void MeshupApp::handleSIGUSR1() {

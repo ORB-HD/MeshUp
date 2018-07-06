@@ -48,6 +48,7 @@ public:
 		void loadAnimation (const char *filename);
 		void setAnimationFraction (float fraction);
 		void loadForcesAndTorques (const char *filename);
+		void loadCamera(const char *filename);
 
 		// unix signal handler
 		static void SIGUSR1Handler(int unused);
@@ -86,6 +87,7 @@ public slots:
 		void action_load_model();
 		void action_load_animation();
 		void action_load_forces();
+		void action_load_camera();
 
 		void action_reload_files ();
 		void action_quit();

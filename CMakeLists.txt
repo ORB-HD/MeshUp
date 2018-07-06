@@ -91,7 +91,7 @@ ADD_EXECUTABLE ( meshup
 	src/ForcesTorques.cc
 	src/Scene.cc
 	src/Camera.cc
-	src/CameraAnimate.cc
+	src/CameraOperator.cc
 	src/Scripting.cc
 	src/Arrow.cc
 	src/luatables/luatables.cc

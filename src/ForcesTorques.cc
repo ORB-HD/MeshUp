@@ -1,6 +1,5 @@
 #include "ForcesTorques.h"
 #include "GL/glew.h"
-#include "MeshVBO.h"
 #include "string_utils.h"
 #include <iostream>
 #include <fstream>
@@ -218,31 +217,4 @@ void ForcesTorques::addForcesTorques(VectorNd data) {
 	forces.push_back(f);
 	torques.push_back(t);
 }
-
-//void Forces::draw(Matrix33f base_change) {
-//	bool blend_enabled = glIsEnabled(GL_BLEND);
-//	glEnable(GL_BLEND);
-//	glDepthMask(GL_FALSE);
-//	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
-//
-//	for(int i=0;i<pos.size();i++) {
-//		// only draw force if force is bigger than threshold
-//		if (data[i].norm() > draw_threshold) {
-//			Vector4f forceColor(color[0], color[1], color[2], transparency);
-//			Vector3f vecPos = base_change.transpose() * pos[i];
-//			Vector3f vecData = base_change.transpose() * data[i];
-//			MeshVBO forceArrow = Create3DArrow(vecPos, vecData, forceColor, scale);
-//
-//			glPushMatrix();
-//			forceArrow.draw(GL_TRIANGLES);
-//			glPopMatrix();
-//
-//		}
-//	}
-//
-//	glDepthMask(GL_TRUE);
-//	if (!blend_enabled) {
-//		glDisable(GL_BLEND);
-//	}
-//}
 

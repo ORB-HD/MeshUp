@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1055</width>
-    <height>660</height>
+    <width>1569</width>
+    <height>1008</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,8 +41,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1055</width>
-     <height>25</height>
+     <width>1569</width>
+     <height>20</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -93,7 +93,7 @@
    <property name="minimumSize">
     <size>
      <width>206</width>
-     <height>148</height>
+     <height>255</height>
     </size>
    </property>
    <property name="floating">
@@ -107,6 +107,31 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_6">
+     <item>
+      <widget class="QCheckBox" name="checkBoxCameraFixed">
+       <property name="text">
+        <string>Camera Fixed</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QPushButton" name="pushButtonLoadCameraFile">
+         <property name="text">
+          <string>Load</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="exportCameraFile">
+         <property name="text">
+          <string>Export</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_6">
        <item>

@@ -15,6 +15,7 @@
 #include <iostream>
 
 #include "Camera.h"
+#include "CameraOperator.h"
 
 struct Scene;
 
@@ -33,7 +34,7 @@ class GLWidget : public QGLWidget
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		Camera camera;
+		CameraOperator camera_op;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;
@@ -46,7 +47,7 @@ class GLWidget : public QGLWidget
 
 		bool draw_forces;
 		bool draw_torques;
-		
+
 		bool white_mode;
 
 		Vector4f light_position;
