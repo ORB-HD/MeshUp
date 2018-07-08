@@ -138,6 +138,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawPoints, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_points(bool)));
 	connect (checkBoxDrawForces, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_forces(bool)));	
 	connect (checkBoxDrawTorques, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_torques(bool)));	
+	connect (checkBoxCameraFixed, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_camera_fix(bool)));	
 	connect (actionToggleWhiteBackground, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_white_mode(bool)));
 
 	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (set_front_view()));
@@ -498,6 +499,7 @@ void MeshupApp::loadSettings () {
 void MeshupApp::camera_changed() {
 	Vector3f center = glWidget->getCameraPoi();	
 	Vector3f eye = glWidget->getCameraEye();	
+	bool fixed = glWidget->camera_op.fixed;
 
 	unsigned int digits = 2;
 
@@ -509,6 +511,7 @@ void MeshupApp::camera_changed() {
 
 	lineEditCameraEye->setText (eye_stream.str().c_str());
 	lineEditCameraCenter->setText (center_stream.str().c_str());
+	checkBoxCameraFixed->setChecked(fixed);
 }
 
 Vector3f parse_vec3_string (const std::string vec3_string) {

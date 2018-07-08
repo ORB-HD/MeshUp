@@ -201,6 +201,10 @@ void GLWidget::toggle_draw_torques(bool status) {
 	draw_torques = status;
 }
 
+void GLWidget::toggle_camera_fix(bool status) {
+	camera_op.setFixed(status);
+}
+
 void GLWidget::toggle_draw_orthographic (bool status) {
 	camera_op.current_cam->orthographic = status;
 

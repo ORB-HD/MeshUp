@@ -269,7 +269,7 @@ bool CameraOperator::updateCamera(float current_time) {
 	Camera* old = current_cam;
 	//if camera is fixed do not update camera
 	if (!fixed) {
-		int frame_index;
+		int frame_index = 0;
 		// Determine the right camera entry
 		for(int i=0; i<times.size(); i++) {
 			frame_index = i;

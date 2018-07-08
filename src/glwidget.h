@@ -104,6 +104,7 @@ class GLWidget : public QGLWidget
 		void toggle_draw_curves(bool status);
 		void toggle_draw_points(bool status);
 		void toggle_draw_orthographic(bool status);
+		void toggle_camera_fix(bool status);
 		void toggle_white_mode(bool status);
 
 		void toggle_draw_forces(bool status);

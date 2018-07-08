@@ -25,6 +25,7 @@ struct CameraOperator{
 	    mobile_cam = new Camera();
 	    cams.push_back(cam0);
 	    current_cam = cams[0];
+	    times.push_back(0.0);
 	}
 	~CameraOperator() {
 		for(int i=0;i<cams.size();i++) {
