@@ -37,6 +37,7 @@
 
 #include "json/json.h"
 #include "colorscale.h"
+#include "QVideoEncoder.h"
 
 #include "Model.h"
 
@@ -126,6 +127,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
 	connect (actionRenderSeriesImage, SIGNAL (triggered()), this, SLOT (actionRenderSeriesAndSaveToFile()));
+	connect (actionRenderVideo, SIGNAL(triggered()), this, SLOT(actionRenderVideoAndSaveToFile()));
 
 	// view stettings
 	connect (checkBoxDrawBaseAxes, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_base_axes(bool)));
@@ -233,7 +235,6 @@ void MeshupApp::loadAnimation(const char* filename) {
 	// TODO: gracefully ignore erroneous files
 	animation->loadFromFile (filename, scene->models[scene->models.size() - 1]->configuration);
 	scene->animations.push_back (animation);
-
 	scene->longest_animation = std::max (scene->longest_animation, animation->duration);
 
 	unsigned int i = scene->animations.size() - 1;
@@ -918,6 +919,11 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 		}
 	}
 	
+}
+
+void MeshupApp::actionRenderVideoAndSaveToFile () {
+	cout << "TODO" << endl;
+	//TODO implment this
 }
 //Signal handling stuff
 

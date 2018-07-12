@@ -17,6 +17,7 @@
 #include "ui_MainWindow.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
+#include "RenderVideoDialog.h"
 
 extern "C" {
 #include <lua.h>
@@ -103,6 +104,7 @@ public slots:
 
 		void actionRenderAndSaveToFile ();
 		void actionRenderSeriesAndSaveToFile ();
+		void actionRenderVideoAndSaveToFile ();
 
 	private:
 		static int sigusr1Fd[2];

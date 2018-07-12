@@ -78,6 +78,7 @@
     </property>
     <addaction name="actionRenderImage"/>
     <addaction name="actionRenderSeriesImage"/>
+    <addaction name="actionRenderVideo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuControl_Panels"/>
@@ -107,6 +108,9 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_6">
+     <item>
+      <widget class="QListWidget" name="listWidgetCameraList"/>
+     </item>
      <item>
       <widget class="QCheckBox" name="checkBoxCameraFixed">
        <property name="text">
@@ -603,6 +607,11 @@
    </property>
    <property name="toolTip">
     <string>Load Forces</string>
+   </property>
+  </action>
+  <action name="actionRenderVideo">
+   <property name="text">
+    <string>Video</string>
    </property>
   </action>
   <zorder>dockPlayerControls</zorder>
