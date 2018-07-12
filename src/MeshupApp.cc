@@ -37,6 +37,7 @@
 
 #include "json/json.h"
 #include "colorscale.h"
+
 #include "QVideoEncoder.h"
 
 #include "Model.h"
@@ -66,6 +67,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	renderImageDialog = new RenderImageDialog(this);
 	renderImageSeriesDialog = new RenderImageSeriesDialog(this);
+	renderVideoDialog = new RenderVideoDialog(this);
 
 	// this is NOT the default value,
 	//  its just an initialization of the memory with something
@@ -922,8 +924,48 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 }
 
 void MeshupApp::actionRenderVideoAndSaveToFile () {
-	cout << "TODO" << endl;
-	//TODO implment this
+	unsigned width;
+	unsigned height;
+	unsigned fps;
+	unsigned length;
+	QString filename;
+
+	int result = renderVideoDialog->exec();
+
+	if (result == QDialog::Rejected)
+		return;
+
+	width = renderVideoDialog->WidthSpinBox->value();
+	height = renderVideoDialog->HeightSpinBox->value();
+	fps = renderVideoDialog->FpsSpinBox->value();
+	length = renderVideoDialog->TimeSpinBox->value(); 
+	filename = renderVideoDialog->videoName->text();
+
+	float duration = scene->longest_animation;
+	unsigned frame_count = fps * length;
+	float timestep = duration / frame_count;
+	unsigned bitrate = static_cast<unsigned>(ceil(width * height * fps * 4 * 0.07 / 1000));
+	unsigned gop = 12;
+
+	static_cast<int>(floor(duration / timestep));
+
+	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, frame_count, this);
+	pbar.setMinimumDuration(0);
+	pbar.show();
+	QVideoEncoder encoder;
+	encoder.createFile(filename, width, height, bitrate, gop, fps);
+
+	for(int i = 0; i < frame_count; i++) {
+		pbar.setValue(i);
+		pbar.show();
+
+		float current_time = (float) i * timestep;
+		scene->setCurrentTime (current_time);
+
+		QImage image = glWidget->renderContentOffscreen (width, height, false);
+		encoder.encodeImage(image);
+	}
+	encoder.close();
 }
 //Signal handling stuff
 

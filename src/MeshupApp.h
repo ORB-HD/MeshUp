@@ -65,6 +65,7 @@ protected:
 		bool playerPaused;
 		RenderImageDialog* renderImageDialog;
 		RenderImageSeriesDialog* renderImageSeriesDialog;
+		RenderVideoDialog* renderVideoDialog;
 
 public slots:
 		virtual void closeEvent(QCloseEvent *event);

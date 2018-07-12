@@ -35,14 +35,28 @@
      <x>40</x>
      <y>10</y>
      <width>431</width>
-     <height>71</height>
+     <height>116</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout_4">
+    <item row="2" column="1">
+     <widget class="QSpinBox" name="FpsSpinBox">
+      <property name="maximum">
+       <number>60</number>
+      </property>
+     </widget>
+    </item>
     <item row="0" column="0">
      <widget class="QLabel" name="label_4">
       <property name="text">
        <string>Width</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="label_5">
+      <property name="text">
+       <string>Height</string>
       </property>
      </widget>
     </item>
@@ -56,10 +70,10 @@
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="label_5">
+    <item row="2" column="0">
+     <widget class="QLabel" name="label_2">
       <property name="text">
-       <string>Height</string>
+       <string>FPS</string>
       </property>
      </widget>
     </item>
@@ -70,52 +84,24 @@
       </property>
      </widget>
     </item>
-   </layout>
-  </widget>
-  <widget class="QGroupBox" name="groupBox">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>90</y>
-     <width>298</width>
-     <height>58</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Frame rate / Frame count</string>
-   </property>
-   <layout class="QHBoxLayout" name="horizontalLayout">
-    <item>
-     <widget class="QRadioButton" name="fpsModeRadioButton">
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_3">
       <property name="text">
-       <string>frames per second</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
+       <string>Video Length in s</string>
       </property>
      </widget>
     </item>
-    <item>
-     <widget class="QRadioButton" name="frameCountModeRadioButton">
-      <property name="text">
-       <string>frame count</string>
+    <item row="3" column="1">
+     <widget class="QSpinBox" name="TimeSpinBox">
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>3600</number>
       </property>
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QSpinBox" name="FpsSpinBox">
-   <property name="geometry">
-    <rect>
-     <x>370</x>
-     <y>110</y>
-     <width>91</width>
-     <height>27</height>
-    </rect>
-   </property>
-   <property name="maximum">
-    <number>60</number>
-   </property>
   </widget>
   <widget class="QLineEdit" name="videoName">
    <property name="enabled">
