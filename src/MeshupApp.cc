@@ -926,8 +926,8 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 void MeshupApp::actionRenderVideoAndSaveToFile () {
 	unsigned width;
 	unsigned height;
-	unsigned fps;
 	unsigned length;
+	unsigned fps = 25;
 	QString filename;
 
 	int result = renderVideoDialog->exec();
@@ -937,27 +937,23 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 
 	width = renderVideoDialog->WidthSpinBox->value();
 	height = renderVideoDialog->HeightSpinBox->value();
-	fps = renderVideoDialog->FpsSpinBox->value();
 	length = renderVideoDialog->TimeSpinBox->value(); 
 	filename = renderVideoDialog->videoName->text();
 
 	float duration = scene->longest_animation;
 	unsigned frame_count = fps * length;
 	float timestep = duration / frame_count;
-	unsigned bitrate = static_cast<unsigned>(ceil(width * height * fps * 4 * 0.07 / 1000));
-	unsigned gop = 12;
 
 	static_cast<int>(floor(duration / timestep));
 
 	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, frame_count, this);
-	pbar.setMinimumDuration(0);
+	pbar.setMinimumDuration(1);
 	pbar.show();
 	QVideoEncoder encoder;
-	encoder.createFile(filename, width, height, bitrate, gop, fps);
+	encoder.createFile(filename, width, height, fps);
 
 	for(int i = 0; i < frame_count; i++) {
 		pbar.setValue(i);
-		pbar.show();
 
 		float current_time = (float) i * timestep;
 		scene->setCurrentTime (current_time);

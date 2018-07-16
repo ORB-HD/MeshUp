@@ -42,8 +42,7 @@ class QVideoEncoder
 {
    protected:
       unsigned Width,Height;
-      unsigned Bitrate;
-      unsigned Gop;
+      unsigned iframe;
       bool ok;
 
       // FFmpeg stuff
@@ -51,7 +50,6 @@ class QVideoEncoder
       AVOutputFormat *pOutputFormat;
       AVCodecContext *pCodecCtx;
       AVStream *pVideoStream;
-      AVCodec *pCodec;
       // Frame data
       AVFrame *ppicture;
       uint8_t *picture_buf;
@@ -91,7 +89,7 @@ class QVideoEncoder
       QVideoEncoder();
       virtual ~QVideoEncoder();
 
-      bool createFile(QString filename,unsigned width,unsigned height,unsigned bitrate,unsigned gop,unsigned fps=25);
+      bool createFile(QString filename,unsigned width,unsigned height,unsigned fps=25);
       virtual bool close();
 
       virtual int encodeImage(const QImage &);
