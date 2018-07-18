@@ -917,7 +917,7 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 	filename = renderVideoDialog->videoName->text();
 
 	float duration = scene->longest_animation;
-	unsigned frame_count = fps * length;
+	unsigned frame_count = fps * length + 27;
 	float timestep = duration / frame_count;
 
 	static_cast<int>(floor(duration / timestep));
