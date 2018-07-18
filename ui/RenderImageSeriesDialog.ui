@@ -96,13 +96,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QCheckBox" name="mencoderBox">
-      <property name="text">
-       <string>Use MEncoder to produce .avi</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QCheckBox" name="compositeBox">
       <property name="text">
        <string>Use composite (from imagick) to produce overlayed picture</string>

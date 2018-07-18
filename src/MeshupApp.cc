@@ -409,7 +409,6 @@ void MeshupApp::saveSettings () {
 
 	settings_json["configuration"]["render"]["fps_mode"]		 = renderImageSeriesDialog->fpsModeRadioButton->isChecked();
 	settings_json["configuration"]["render"]["frame_count_mode"] = renderImageSeriesDialog->frameCountModeRadioButton->isChecked();
-	settings_json["configuration"]["render"]["mencoder"]		 = renderImageSeriesDialog->mencoderBox->isChecked();
 	settings_json["configuration"]["render"]["composite"]		= renderImageSeriesDialog->compositeBox->isChecked();
 	settings_json["configuration"]["render"]["transparent"]	 = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
 
@@ -483,7 +482,6 @@ void MeshupApp::loadSettings () {
 
 	renderImageSeriesDialog->fpsModeRadioButton->setChecked(settings_json["configuration"]["render"].get("fps_mode", true).asBool());
 	renderImageSeriesDialog->frameCountModeRadioButton->setChecked(settings_json["configuration"]["render"].get("frame_count_mode", false).asBool());
-	renderImageSeriesDialog->mencoderBox->setChecked(settings_json["configuration"]["render"].get("mencoder", false).asBool());
 	renderImageSeriesDialog->compositeBox->setChecked(settings_json["configuration"]["render"].get("composite", false).asBool());
 	renderImageSeriesDialog->transparentBackgroundCheckBox->setChecked(settings_json["configuration"]["render"].get("transparent", true).asBool());
 
@@ -820,7 +818,6 @@ void MeshupApp::actionRenderAndSaveToFile () {
 void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	int fps;
 	bool fps_mode;
-	bool doMencoder;
 	bool doComposite;
 	bool render_transparent;
 	int width;
@@ -840,7 +837,6 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	else
 		fps_mode = false;
 
-	doMencoder = renderImageSeriesDialog->mencoderBox->isChecked();
 	doComposite = renderImageSeriesDialog->compositeBox->isChecked();
 	render_transparent = renderImageSeriesDialog->transparentBackgroundCheckBox->isChecked();
 	
@@ -901,26 +897,6 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 			}
 		}
 	}
-	if (doMencoder) {
-		cout << "running mencoder to produce a movie" << endl;
-		stringstream mencoder;
-		mencoder << "mencoder mf://"  << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-"<< "*.png ";
-		mencoder << "-mf w=" << width << ":h="<< height << ":fps=" << fps << ":type=png ";
-		mencoder << "-ovc x264 -x264encopts bitrate=1500:vbv_maxrate=1500:vbv_bufsize=2000:nocabac:level_idc=13:global_header:keyint=25 -of lavf -lavfopts format=mp4 -o ";
-		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".mp4";
-
-//		mencoder << "-ovc lavc -lavcopts vcodec=mpeg4:mbd=2:trell -oac copy -o ";
-//		mencoder << figure_name << "_" << setw(3) << setfill('0') << series_nr << ".avi";
-		
-		cout << mencoder.str() << endl;
-		
-		if (system(mencoder.str().c_str()) == -1) {
-			cerr << "Error occured when running command:" << endl;
-			cerr << "  " << mencoder.str()<< endl;
-			abort();
-		}
-	}
-	
 }
 
 void MeshupApp::actionRenderVideoAndSaveToFile () {
