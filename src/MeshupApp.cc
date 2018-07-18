@@ -866,14 +866,14 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 	}
 
 	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, image_count, this);
+	pbar.setWindowModality(Qt::WindowModal);
 	pbar.setMinimumDuration(0);
-	pbar.show();
+
 	stringstream overlayFilename;
 	overlayFilename << figure_name << "_" << setw(3) << setfill('0') << series_nr << "-overlay.png";
 
 	for(int i = 0; i < image_count; i++) {
 		pbar.setValue(i);
-		pbar.show();
 
 		float current_time = (float) i * timestep;
 
@@ -896,7 +896,12 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 				abort();
 			}
 		}
+		if (pbar.wasCanceled()) {
+			qDebug() << "canceled!";
+			return;
+		}
 	}
+	pbar.setValue(image_count);
 }
 
 void MeshupApp::actionRenderVideoAndSaveToFile () {
@@ -923,8 +928,8 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 	static_cast<int>(floor(duration / timestep));
 
 	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, frame_count, this);
-	pbar.setMinimumDuration(1);
-	pbar.show();
+	pbar.setWindowModality(Qt::WindowModal);
+	pbar.setMinimumDuration(0);
 	QVideoEncoder encoder;
 	encoder.createFile(filename, width, height, fps);
 
@@ -936,7 +941,14 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 
 		QImage image = glWidget->renderContentOffscreen (width, height, false);
 		encoder.encodeImage(image);
+
+		if (pbar.wasCanceled()) {
+			qDebug() << "canceled!";
+			return;
+		}
 	}
+	pbar.setValue(frame_count);
+
 	encoder.close();
 }
 //Signal handling stuff
