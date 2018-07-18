@@ -120,7 +120,9 @@ bool QVideoEncoder::createFile(QString fileName,unsigned width,unsigned height,u
 		printf("could not open codec\n");
 		return false;
 	}
+	#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(57,40,101)
 	avcodec_parameters_from_context(pVideoStream->codecpar, pCodecCtx);
+	#endif
 
 	// Allocate memory for output
 	if(!initOutputBuf())
