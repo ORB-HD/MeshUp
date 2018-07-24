@@ -40,14 +40,7 @@ struct CameraOperator{
         cam_pos (std::vector<CameraPosition*>())
     {
 	    fixed = true;
-	    Camera* cam0 = new Camera();
 	    mobile_cam = new Camera();
-	    CameraPosition* campos = new CameraPosition();
-	    campos->cam = cam0;
-	    campos->time = 0.0;
-	    campos->moving = false;
-	    cam_pos.push_back(campos);
-	    current_cam = campos->cam;
 	}
 	~CameraOperator() {
 		for(int i=0;i<cam_pos.size();i++) {
@@ -69,6 +62,7 @@ struct CameraOperator{
     bool loadFromFile (const char* filename, bool strict = true);
     void addCameraPos (VectorNd data);
     void addCamera(float time, Camera* cam, bool moving);
+    void setFixAtCam(Camera* cam);
     bool updateCamera (float current_time);
     void setFixed(bool status);
     void exportToFile(const char* filename);

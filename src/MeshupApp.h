@@ -15,6 +15,7 @@
 #include <QTimeLine>
 #include <QSocketNotifier>
 #include "ui_MainWindow.h"
+#include "CameraOperator.h"
 #include "RenderImageDialog.h"
 #include "RenderImageSeriesDialog.h"
 #include "RenderVideoDialog.h"
@@ -39,6 +40,7 @@ public:
 		lua_State *L;
 		Scene* scene;
 		CameraOperator* cam_operator;
+		CameraListItem* selected_cam;
 
 		std::vector<std::string> args;
 		std::vector<std::string> model_files_queue;
@@ -85,6 +87,8 @@ public slots:
 		void set_camera_pos ();
 		void update_camera ();
 		void toggle_camera_fix (bool status);
+		void select_camera (QListWidgetItem* current, QListWidgetItem* previous);
+		void camera_clicked(QListWidgetItem* item);
 
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);

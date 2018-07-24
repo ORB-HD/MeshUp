@@ -74,6 +74,8 @@ GLWidget::GLWidget(QWidget *parent)
 		white_mode (true)
 {
 	cam = new Camera();
+	cam->width = width();
+	cam->height = height();
 	camera = &cam;
 	(*camera)->poi.set (0.f, 1.f, 0.f);
 	(*camera)->eye.set (6.f, 3.f, 6.f);
@@ -718,7 +720,7 @@ void GLWidget::paintGL() {
 
 void GLWidget::resizeGL(int width, int height)
 {
-//	qDebug() << "resizing to" << width << "x" << height;
+	//qDebug() << "resizing to" << width << "x" << height;
 
 	if (height == 0)
 		height = 1;

@@ -24,6 +24,8 @@ bool CameraOperator::loadFromFile (const char* filename, bool strict) {
 	}
 
 	// configuration = frame_config;
+	width = current_cam->width;
+	height = current_cam->height;
 
 	double force_fps_previous_frame = 0.;
 	int force_fps_frame_count = 0;
@@ -77,7 +79,7 @@ bool CameraOperator::loadFromFile (const char* filename, bool strict) {
 			}
 			state_values[ci] = value;
 		}
-		state_time = state_value[0];
+		state_time = state_values[0];
 		addCameraPos(state_values);
 
 		force_fps_previous_frame = state_time;
@@ -100,12 +102,10 @@ void CameraOperator::addCameraPos(VectorNd data) {
 	Vector3f eye(data[4], data[5], data[6]);
 
 	Camera* cam = new Camera();
-	cam->height = height;
-	cam->width = width;
 	cam->poi = poi;
 	cam->eye = eye;
-	cam->width = width;
-	cam->height = height;
+	cam->width = this->width;
+	cam->height = this->height;
 	cam->updateSphericalCoordinates();
 
 	addCamera(time, cam, true);
@@ -131,6 +131,7 @@ void CameraOperator::setCamHeight(int height) {
 	for ( int i=0; i<cam_pos.size(); i++) {
 		cam_pos[i]->cam->height = height;
 	}
+	mobile_cam->height = height;
 }
 
 void CameraOperator::setCamWidth(int width) {
@@ -138,6 +139,7 @@ void CameraOperator::setCamWidth(int width) {
 	for ( int i=0; i<cam_pos.size(); i++) {
 		cam_pos[i]->cam->width = width;
 	}
+	mobile_cam->width = width;
 }
 
 bool CameraOperator::updateCamera(float current_time) {
@@ -179,6 +181,11 @@ bool CameraOperator::updateCamera(float current_time) {
 		return false;
 	}
 	return true;
+}
+
+void CameraOperator::setFixAtCam(Camera* cam) {
+	fixed = true;
+	current_cam = cam;
 }
 
 void CameraOperator::setFixed(bool status) {

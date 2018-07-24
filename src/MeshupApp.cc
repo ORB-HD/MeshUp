@@ -52,6 +52,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 {
 	setupUi(this); // this sets up GUI
 
+	selected_cam = NULL;
 	scene = new Scene;
 
 	//setting up the socket pair for signal handling
@@ -131,6 +132,10 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	// the sceneRefreshTimer is used to continously redraw the OpenGL widget
 	connect (sceneRefreshTimer, SIGNAL(timeout()), this , SLOT(drawScene()));
+
+	//camera interaction
+	connect (listWidgetCameraList, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(select_camera(QListWidgetItem*, QListWidgetItem*)));
+	connect (listWidgetCameraList, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(camera_clicked(QListWidgetItem*)));
 
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
@@ -290,7 +295,12 @@ void MeshupApp::loadCamera(const char* filename) {
 }
 
 void MeshupApp::setAnimationFraction (float fraction) {
-	scene->setCurrentTime(fraction * scene->longest_animation);
+	float set_time = fraction * scene->longest_animation;
+	scene->setCurrentTime(set_time);
+	if (selected_cam != NULL && !playerPaused) {
+		selected_cam->camera_data->time = set_time;
+		selected_cam->data_changed();
+	}
 }
 
 void print_usage() {
@@ -561,6 +571,24 @@ void MeshupApp::update_camera() {
 
 void MeshupApp::toggle_camera_fix(bool status) {
 	cam_operator->setFixed(status);
+}
+
+void MeshupApp::select_camera(QListWidgetItem* current, QListWidgetItem* previous){
+	selected_cam = (CameraListItem*) current;
+	CameraPosition* cam_data = selected_cam->camera_data;
+	cam_operator->setFixAtCam(cam_data->cam);
+	camera_changed();
+	scene->setCurrentTime(cam_data->time);
+	toggle_play_animation(false);
+	update_time_widgets();
+}
+
+void MeshupApp::camera_clicked(QListWidgetItem* item) {
+	CameraListItem* clicked_item = (CameraListItem*) item;
+	if ( clicked_item == selected_cam) {
+		selected_cam = NULL;
+		item->setSelected(false);
+	}
 }
 
 void MeshupApp::toggle_play_animation (bool status) {
