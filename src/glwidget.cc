@@ -10,6 +10,7 @@
 
 #include "GL/glew.h"
 #include <QtGui>
+#include "MeshupApp.h"
 
 #ifdef __APPLE__
 #include <QtOpenGL/QGLFrameBufferObjectFormat>
@@ -72,10 +73,12 @@ GLWidget::GLWidget(QWidget *parent)
 		draw_torques(true),
 		white_mode (true)
 {
-	camera_op.current_cam->poi.set (0.f, 1.f, 0.f);
-	camera_op.current_cam->eye.set (6.f, 3.f, 6.f);
+	cam = new Camera();
+	camera = &cam;
+	(*camera)->poi.set (0.f, 1.f, 0.f);
+	(*camera)->eye.set (6.f, 3.f, 6.f);
 
-	camera_op.current_cam->updateSphericalCoordinates();
+	(*camera)->updateSphericalCoordinates();
 
 	delta_time_sec = -1.;
 
@@ -134,22 +137,22 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 }
 
 Vector3f GLWidget::getCameraPoi() {
-	return camera_op.current_cam->poi;
+	return (*camera)->poi;
 }
 
 Vector3f GLWidget::getCameraEye() {
-	return camera_op.current_cam->eye;
+	return (*camera)->eye;
 }
 
 void GLWidget::setCameraPoi (const Vector3f values) {
-	camera_op.current_cam->poi = values;
-	camera_op.current_cam->updateSphericalCoordinates();
+	(*camera)->poi = values;
+	(*camera)->updateSphericalCoordinates();
 	emit camera_changed();
 }
 
 void GLWidget::setCameraEye (const Vector3f values) {
-	camera_op.current_cam->eye = values;
-	camera_op.current_cam->updateSphericalCoordinates();
+	(*camera)->eye = values;
+	(*camera)->updateSphericalCoordinates();
 	emit camera_changed();
 }
 
@@ -201,12 +204,8 @@ void GLWidget::toggle_draw_torques(bool status) {
 	draw_torques = status;
 }
 
-void GLWidget::toggle_camera_fix(bool status) {
-	camera_op.setFixed(status);
-}
-
 void GLWidget::toggle_draw_orthographic (bool status) {
-	camera_op.current_cam->orthographic = status;
+	(*camera)->orthographic = status;
 
 	resizeGL (windowWidth, windowHeight);
 }
@@ -224,17 +223,17 @@ void GLWidget::toggle_white_mode (bool status) {
 }
 
 void GLWidget::set_front_view () {
-	camera_op.current_cam->setFrontView();
+	(*camera)->setFrontView();
 	emit camera_changed();
 }
 
 void GLWidget::set_side_view () {
-	camera_op.current_cam->setSideView();
+	(*camera)->setSideView();
 	emit camera_changed();
 }
 
 void GLWidget::set_top_view () {
-	camera_op.current_cam->setTopView();
+	(*camera)->setTopView();
 	emit camera_changed();
 }
 
@@ -338,33 +337,26 @@ void GLWidget::initializeGL()
 
 	glEnable(GL_DEPTH_CLAMP);
 
-	camera_op.setCamWidth(width());
-	camera_op.setCamHeight(height());
 
 	emit opengl_initialized();
 }
-
-//TODO
-//void GLWidget::updateCamera() {
-//
-//}
 
 void GLWidget::updateLightingMatrices () {
 	//Calculate & save matrices
 	glPushMatrix();
 
 	glLoadIdentity();
-	gluPerspective(camera_op.current_cam->fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
+	gluPerspective((*camera)->fov, (float)windowWidth/windowHeight, 1.0f, 100.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_projection_matrix.data());
 
 	glLoadIdentity();
-	gluLookAt(camera_op.current_cam->eye[0], camera_op.current_cam->eye[1], camera_op.current_cam->eye[2],
-			camera_op.current_cam->poi[0], camera_op.current_cam->poi[1], camera_op.current_cam->poi[2],
-			camera_op.current_cam->up[0], camera_op.current_cam->up[1], camera_op.current_cam->up[2]);
+	gluLookAt((*camera)->eye[0], (*camera)->eye[1], (*camera)->eye[2],
+			(*camera)->poi[0], (*camera)->poi[1], (*camera)->poi[2],
+			(*camera)->up[0], (*camera)->up[1], (*camera)->up[2]);
 	glGetFloatv(GL_MODELVIEW_MATRIX, camera_view_matrix.data());
 
 	glLoadIdentity();
-	gluPerspective(camera_op.current_cam->fov, 1.0f, 1.0f, 20.0f);
+	gluPerspective((*camera)->fov, 1.0f, 1.0f, 20.0f);
 	glGetFloatv(GL_MODELVIEW_MATRIX, light_projection_matrix.data());
 
 	glLoadIdentity();
@@ -486,9 +478,7 @@ void GLWidget::drawScene() {
 	if (!scene) {
 		return;
 	}
-	if (camera_op.updateCamera(scene->current_time)) {
-		emit camera_changed();
-	}
+	emit start_draw();
 
 	if (draw_grid) {
 		drawGrid();
@@ -691,7 +681,7 @@ void GLWidget::paintGL() {
 	glMatrixMode (GL_MODELVIEW);
 	glLoadIdentity();
 
-	camera_op.current_cam->update();
+	(*camera)->update();
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -741,8 +731,9 @@ void GLWidget::resizeGL(int width, int height)
 	windowWidth = width;
 	windowHeight = height;
 
-	camera_op.current_cam->width = width;
-	camera_op.current_cam->height = height;
+	(*camera)->width = width;
+	(*camera)->height = height;
+	emit camera_changed();
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
@@ -764,24 +755,17 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 	float dx = static_cast<float>(event->x() - lastMousePos.x());
 	float dy = static_cast<float>(event->y() - lastMousePos.y());
 
-#if QT_VERSION <= 0x040700
-	if (event->buttons().testFlag(Qt::MidButton)
-			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
-#else
-	if (event->buttons().testFlag(Qt::MiddleButton)
-			|| ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
-#endif
-		camera_op.setFixed(true);
-		camera_op.current_cam->move (dx, dy);
-
+	if (event->buttons().testFlag(Qt::MiddleButton) || ( event->buttons().testFlag(Qt::LeftButton) && event->buttons().testFlag(Qt::RightButton))) {
+		emit toggle_camera_fix(true);
+		(*camera)->move (dx, dy);
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::LeftButton)) {
-		camera_op.setFixed(true);
-		camera_op.current_cam->rotate (dx, dy);
+		emit toggle_camera_fix(true);
+		(*camera)->rotate (dx, dy);
 		emit camera_changed();
 	} else if (event->buttons().testFlag(Qt::RightButton)) {
-		camera_op.setFixed(true);
-		camera_op.current_cam->zoom (dy);
+		emit toggle_camera_fix(true);
+		(*camera)->zoom (dy);
 		emit camera_changed();
 	}
 

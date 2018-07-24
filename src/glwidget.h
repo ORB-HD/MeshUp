@@ -34,7 +34,8 @@ class GLWidget : public QGLWidget
 
 		QImage renderContentOffscreen (int image_width, int image_height, bool use_alpha);
 
-		CameraOperator camera_op;
+		Camera* cam;
+		Camera** camera;
 
 		bool draw_base_axes;
 		bool draw_frame_axes;
@@ -74,7 +75,6 @@ class GLWidget : public QGLWidget
 		void mouseMoveEvent(QMouseEvent *event);
 
 	private:
-		void updateCamera();
 		void updateLightingMatrices();
 
 		void shadowMapSetupPass1();
@@ -104,7 +104,6 @@ class GLWidget : public QGLWidget
 		void toggle_draw_curves(bool status);
 		void toggle_draw_points(bool status);
 		void toggle_draw_orthographic(bool status);
-		void toggle_camera_fix(bool status);
 		void toggle_white_mode(bool status);
 
 		void toggle_draw_forces(bool status);
@@ -119,6 +118,8 @@ class GLWidget : public QGLWidget
 
 	signals:
 		void camera_changed();
+		void start_draw();
+		void toggle_camera_fix(bool status);
 		void opengl_initialized();
 };
 

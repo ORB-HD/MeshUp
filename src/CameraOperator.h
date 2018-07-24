@@ -5,52 +5,71 @@
 #define _CAMERAANIMATE_H
 
 #include <vector>
+#include <QWidget>
+#include <QListWidgetItem>
 
 #include "SimpleMath/SimpleMath.h"
 #include "Camera.h"
 
+struct CameraPosition {
+	float time;
+	Camera* cam;
+	bool moving;
+};
+
+// A Class to diplay Cameras in a ListView
+
+class CameraListItem : public QListWidgetItem {
+	public:
+		CameraListItem(CameraPosition* campos, QListWidget* parent=0): camera_data(campos)
+		{
+			data_changed();
+		}
+
+		CameraPosition* camera_data;
+
+		void data_changed();
+};
+
 // This class is used to Manage multiple camera postions within an animation
 
 struct CameraOperator{
-    CameraOperator() :
+    CameraOperator(QListWidget* camera_display) :
         camera_filename(""),
-        times (std::vector<float>()),
-        pois (std::vector<Vector3f>()),
-        eyes (std::vector<Vector3f>()),
-        smooth (std::vector<bool>()),
-        cams (std::vector<Camera*>())
+        camera_display(camera_display),
+        cam_pos (std::vector<CameraPosition*>())
     {
 	    fixed = true;
 	    Camera* cam0 = new Camera();
 	    mobile_cam = new Camera();
-	    cams.push_back(cam0);
-	    current_cam = cams[0];
-	    times.push_back(0.0);
+	    CameraPosition* campos = new CameraPosition();
+	    campos->cam = cam0;
+	    campos->time = 0.0;
+	    campos->moving = false;
+	    cam_pos.push_back(campos);
+	    current_cam = campos->cam;
 	}
 	~CameraOperator() {
-		for(int i=0;i<cams.size();i++) {
-			delete cams[i];
+		for(int i=0;i<cam_pos.size();i++) {
+			delete cam_pos[i]->cam;
+			delete cam_pos[i];
 		}
 	}
 
     std::string camera_filename;
     float duration;
-	std::vector<float> times;
-    std::vector<Vector3f> pois;
-    std::vector<Vector3f> eyes;
-    std::vector<bool> smooth;
-    std::vector<Camera*> cams;
+    std::vector<CameraPosition*> cam_pos;
     bool fixed;
     int height, width;
 
     Camera* current_cam;
     Camera* mobile_cam;
+    QListWidget* camera_display;
 
     bool loadFromFile (const char* filename, bool strict = true);
     void addCameraPos (VectorNd data);
+    void addCamera(float time, Camera* cam, bool moving);
     bool updateCamera (float current_time);
-    void reset();
-    void store();
     void setFixed(bool status);
     void exportToFile(const char* filename);
     void setCamHeight(int height);

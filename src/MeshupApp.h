@@ -38,6 +38,7 @@ public:
 		char** main_argv;
 		lua_State *L;
 		Scene* scene;
+		CameraOperator* cam_operator;
 
 		std::vector<std::string> args;
 		std::vector<std::string> model_files_queue;
@@ -81,7 +82,9 @@ public slots:
 		void loadSettings ();
 
 		void camera_changed ();
+		void set_camera_pos ();
 		void update_camera ();
+		void toggle_camera_fix (bool status);
 
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);

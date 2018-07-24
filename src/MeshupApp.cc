@@ -109,6 +109,12 @@ MeshupApp::MeshupApp(QWidget *parent)
 	checkBoxDrawForces->setChecked (glWidget->draw_forces);
 	checkBoxDrawTorques->setChecked (glWidget->draw_torques);
 
+	//Setup Camera Operator
+	cam_operator = new CameraOperator(listWidgetCameraList);
+	cam_operator->addCamera(0.0, glWidget->cam, false);
+	cam_operator->current_cam = glWidget->cam;
+	glWidget->camera = &cam_operator->current_cam;
+
 	// camera controls
 	QRegExp	coord_expr ("^\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*$");
 	QRegExpValidator *coord_validator_eye = new QRegExpValidator (coord_expr, lineEditCameraEye);
@@ -142,7 +148,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (checkBoxDrawPoints, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_points(bool)));
 	connect (checkBoxDrawForces, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_forces(bool)));	
 	connect (checkBoxDrawTorques, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_draw_torques(bool)));	
-	connect (checkBoxCameraFixed, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_camera_fix(bool)));	
+	connect (checkBoxCameraFixed, SIGNAL (toggled(bool)), this, SLOT (toggle_camera_fix(bool)));	
 	connect (actionToggleWhiteBackground, SIGNAL (toggled(bool)), glWidget, SLOT (toggle_white_mode(bool)));
 
 	connect (actionFrontView, SIGNAL (triggered()), glWidget, SLOT (set_front_view()));
@@ -171,11 +177,13 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
-	connect (glWidget, SIGNAL (camera_changed()), this, SLOT (camera_changed()));
-	connect (lineEditCameraEye, SIGNAL (editingFinished()), this, SLOT (update_camera()));
-	connect (lineEditCameraCenter, SIGNAL (editingFinished()), this, SLOT (update_camera()));
+	connect (glWidget, SIGNAL (camera_changed()), this, SLOT (camera_changed()));	
+	connect (glWidget, SIGNAL (toggle_camera_fix(bool)), this, SLOT (toggle_camera_fix(bool)));	
+	connect (glWidget, SIGNAL (start_draw()), this, SLOT (update_camera()));
+	connect (lineEditCameraEye, SIGNAL (editingFinished()), this, SLOT (set_camera_pos()));
+	connect (lineEditCameraCenter, SIGNAL (editingFinished()), this, SLOT (set_camera_pos()));
 
-	connect (pushButtonUpdateCamera, SIGNAL (clicked()), this, SLOT (update_camera()));
+	connect (pushButtonUpdateCamera, SIGNAL (clicked()), this, SLOT (set_camera_pos()));
 
 	connect (glWidget, SIGNAL (opengl_initialized()), this, SLOT (opengl_initialized()));
 
@@ -277,7 +285,7 @@ void MeshupApp::loadForcesAndTorques(const char* filename) {
 
 void MeshupApp::loadCamera(const char* filename) {
 	if (glWidget->scene != NULL) {
-		glWidget->camera_op.loadFromFile(filename); 
+		cam_operator->loadFromFile(filename); 
 	}
 }
 
@@ -469,7 +477,7 @@ void MeshupApp::loadSettings () {
 	checkBoxDrawPoints->setChecked(settings_json["configuration"]["view"].get("draw_points", glWidget->draw_points).asBool());
 	checkBoxDrawForces->setChecked(settings_json["configuration"]["view"].get("draw_forces", glWidget->draw_forces).asBool());
 	checkBoxDrawTorques->setChecked(settings_json["configuration"]["view"].get("draw_torques", glWidget->draw_torques).asBool());
-	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", glWidget->camera_op.current_cam->orthographic).asBool());
+	glWidget->toggle_draw_orthographic(settings_json["configuration"]["view"].get("draw_orthographic", (*glWidget->camera)->orthographic).asBool());
 
 	dockViewSettings->setVisible(settings_json["configuration"]["docks"]["view_settings"].get("visible", false).asBool());
 	dockCameraControls->setVisible(settings_json["configuration"]["docks"]["camera_controls"].get("visible", false).asBool());
@@ -500,7 +508,9 @@ void MeshupApp::loadSettings () {
 void MeshupApp::camera_changed() {
 	Vector3f center = glWidget->getCameraPoi();	
 	Vector3f eye = glWidget->getCameraEye();	
-	bool fixed = glWidget->camera_op.fixed;
+	bool fixed = cam_operator->fixed;
+	cam_operator->setCamHeight((*glWidget->camera)->height);
+	cam_operator->setCamWidth((*glWidget->camera)->width);
 
 	unsigned int digits = 2;
 
@@ -534,7 +544,7 @@ Vector3f parse_vec3_string (const std::string vec3_string) {
 	return result;
 }
 
-void MeshupApp::update_camera() {
+void MeshupApp::set_camera_pos() {
 	string center_string = lineEditCameraCenter->text().toStdString();
 	Vector3f poi = parse_vec3_string (center_string);
 
@@ -543,6 +553,14 @@ void MeshupApp::update_camera() {
 
 	glWidget->setCameraPoi(poi);
 	glWidget->setCameraEye(eye);
+}
+
+void MeshupApp::update_camera() {
+	cam_operator->updateCamera(scene->current_time);
+}
+
+void MeshupApp::toggle_camera_fix(bool status) {
+	cam_operator->setFixed(status);
 }
 
 void MeshupApp::toggle_play_animation (bool status) {

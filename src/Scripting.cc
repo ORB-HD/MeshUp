@@ -608,7 +608,7 @@ static int meshup_loadModel (lua_State *L) {
 // @function meshup.getCamera
 // @return camera object that is currently used for rendering
 static int meshup_getCamera (lua_State *L) {
-	push_userdata (L, &(*(app_ptr->glWidget->camera_op.current_cam)), "meshup_camera");
+	push_userdata (L, &(*(*app_ptr->glWidget->camera)), "meshup_camera");
 
 	return 1;
 }
@@ -718,8 +718,8 @@ static int meshup_setLightPosition (lua_State *L) {
 static int meshup_saveScreenshot (lua_State *L) {
 	string filename = luaL_checkstring (L, 1);
 
-	int width = app_ptr->glWidget->camera_op.current_cam->width;
-	int height = app_ptr->glWidget->camera_op.current_cam->height;
+	int width = (*app_ptr->glWidget->camera)->width;
+	int height = (*app_ptr->glWidget->camera)->height;
 	bool transparency = false;
 
 	if (lua_gettop(L) > 1 && !lua_isnil(L, 2))
