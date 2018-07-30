@@ -5,6 +5,7 @@
 #include "MeshVBO.h"
 #include "string_utils.h"
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -111,19 +112,34 @@ void CameraOperator::addCameraPos(VectorNd data) {
 	addCamera(time, cam, true);
 }
 
-void CameraOperator::addCamera(float time, Camera* cam, bool moving) {
+QListWidgetItem* CameraOperator::addCamera(float time, Camera* cam, bool moving) {
 	CameraPosition* camdata = new CameraPosition();
 	camdata->cam = cam;
 	camdata->time = time;
 	camdata->moving = moving;
-	cam_pos.push_back(camdata);
+	int position = 0;
+	std::vector<CameraPosition*>::iterator it;
+	it = cam_pos.begin();
+	for (;position<cam_pos.size(); position++) {
+		if ( cam_pos[position]->time > time) {
+			break;
+		}
+		it++;
+	}
+	cam_pos.insert(it, camdata);
+
+	if (position == 0) {
+		camdata->moving = false;
+	}
 
 	CameraListItem* display = new CameraListItem(camdata, camera_display);
-	camera_display->addItem(display);
+	camera_display->insertItem(position, display);
 
 	if (cam_pos.size() > 1) {
 		fixed = false;
 	}
+
+	return camera_display->item(position);
 }
 
 void CameraOperator::setCamHeight(int height) {
@@ -188,6 +204,27 @@ void CameraOperator::setFixAtCam(Camera* cam) {
 	current_cam = cam;
 }
 
+void CameraOperator::deleteCameraPos(CameraPosition* pos) {
+	if (cam_pos.size() > 1) {
+		int item_pos = 0;
+		vector<CameraPosition*>::iterator it = cam_pos.begin();
+		// Determine the right camera entry
+		for(;item_pos<cam_pos.size(); item_pos++) {
+			if (pos == cam_pos[item_pos] ) {
+				cout << item_pos << endl;
+				break;
+			}
+			it++;
+		}
+		camera_display->takeItem(item_pos);
+		cam_pos.erase(it);
+		if (item_pos > 0) {
+			item_pos--;
+		}
+		current_cam = cam_pos[item_pos]->cam;
+	}
+}
+
 void CameraOperator::setFixed(bool status) {
 	if (fixed != status) {
 		if (status) {
@@ -209,7 +246,7 @@ void CameraListItem::data_changed() {
 	} else {
 		mov = "static";
 	}
-	display << "Camera" << "\t" << camera_data->time << "\t" << mov;
+	display << "Camera" << "\t" << std::setprecision(3) << camera_data->time << "\t" << mov;
 	setText(display.str().c_str());
 }
 

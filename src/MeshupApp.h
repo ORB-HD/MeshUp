@@ -85,10 +85,12 @@ public slots:
 
 		void camera_changed ();
 		void set_camera_pos ();
+		void add_camera_pos ();
+		void delete_camera_pos ();
 		void update_camera ();
 		void toggle_camera_fix (bool status);
-		void select_camera (QListWidgetItem* current, QListWidgetItem* previous);
-		void camera_clicked(QListWidgetItem* item);
+		void toggle_camera_pos_moving (bool status);
+		void select_camera (QListWidgetItem* current);
 
 		void toggle_play_animation (bool status);
 		void toggle_loop_animation (bool status);

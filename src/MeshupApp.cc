@@ -134,8 +134,10 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (sceneRefreshTimer, SIGNAL(timeout()), this , SLOT(drawScene()));
 
 	//camera interaction
-	connect (listWidgetCameraList, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(select_camera(QListWidgetItem*, QListWidgetItem*)));
-	connect (listWidgetCameraList, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(camera_clicked(QListWidgetItem*)));
+	connect (listWidgetCameraList, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(select_camera(QListWidgetItem*)));
+	connect (movingCameraCheckBox, SIGNAL(toggled(bool)), this, SLOT(toggle_camera_pos_moving(bool)));
+	connect (addCameraButton, SIGNAL(clicked()), this, SLOT(add_camera_pos()));
+	connect (deleteCameraButton, SIGNAL(clicked()), this, SLOT(delete_camera_pos()));
 
 	// render dialogs
 	connect (actionRenderImage, SIGNAL (triggered()), this, SLOT (actionRenderAndSaveToFile()));
@@ -292,6 +294,7 @@ void MeshupApp::loadCamera(const char* filename) {
 	if (glWidget->scene != NULL) {
 		cam_operator->loadFromFile(filename); 
 	}
+	camera_changed();
 }
 
 void MeshupApp::setAnimationFraction (float fraction) {
@@ -533,6 +536,16 @@ void MeshupApp::camera_changed() {
 	lineEditCameraEye->setText (eye_stream.str().c_str());
 	lineEditCameraCenter->setText (center_stream.str().c_str());
 	checkBoxCameraFixed->setChecked(fixed);
+
+	if (selected_cam != NULL) {
+		movingCameraCheckBox->setDisabled(false);
+		deleteCameraButton->setDisabled(false);
+		movingCameraCheckBox->setChecked(selected_cam->camera_data->moving);
+	} else {
+		movingCameraCheckBox->setDisabled(true);
+		deleteCameraButton->setDisabled(true);
+		movingCameraCheckBox->setChecked(false);
+	}
 }
 
 Vector3f parse_vec3_string (const std::string vec3_string) {
@@ -569,25 +582,53 @@ void MeshupApp::update_camera() {
 	cam_operator->updateCamera(scene->current_time);
 }
 
+void MeshupApp::add_camera_pos() {
+	Camera* cam = new Camera();
+	cam->poi = cam_operator->current_cam->poi;
+	cam->eye = cam_operator->current_cam->eye;
+	cam->width = cam_operator->width;
+	cam->height = cam_operator->height;
+
+	QListWidgetItem* item = cam_operator->addCamera(scene->current_time, cam, false);
+	item->setSelected(true);
+}
+
+void MeshupApp::delete_camera_pos() {
+	if (selected_cam != NULL) {
+		cam_operator->deleteCameraPos(selected_cam->camera_data);
+		camera_changed();
+	}
+}
+
+void MeshupApp::toggle_camera_pos_moving(bool status) {
+	if ( selected_cam != NULL ) {
+		selected_cam->camera_data->moving = status;
+		selected_cam->data_changed();
+	}
+}
+
 void MeshupApp::toggle_camera_fix(bool status) {
 	cam_operator->setFixed(status);
-}
-
-void MeshupApp::select_camera(QListWidgetItem* current, QListWidgetItem* previous){
-	selected_cam = (CameraListItem*) current;
-	CameraPosition* cam_data = selected_cam->camera_data;
-	cam_operator->setFixAtCam(cam_data->cam);
-	camera_changed();
-	scene->setCurrentTime(cam_data->time);
-	toggle_play_animation(false);
-	update_time_widgets();
-}
-
-void MeshupApp::camera_clicked(QListWidgetItem* item) {
-	CameraListItem* clicked_item = (CameraListItem*) item;
-	if ( clicked_item == selected_cam) {
+	if (!status) {
+		if (listWidgetCameraList->currentItem() != NULL){
+			listWidgetCameraList->currentItem()->setSelected(false);
+		}
 		selected_cam = NULL;
-		item->setSelected(false);
+		camera_changed();
+	}
+}
+
+void MeshupApp::select_camera(QListWidgetItem* current){
+	if (current != NULL) {
+		selected_cam = (CameraListItem*) current;
+		CameraPosition* cam_data = selected_cam->camera_data;
+		cam_operator->setFixAtCam(cam_data->cam);
+		camera_changed();
+		scene->setCurrentTime(cam_data->time);
+		toggle_play_animation(false);
+		update_time_widgets();
+	} else {
+		selected_cam = NULL;
 	}
 }
 

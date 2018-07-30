@@ -61,7 +61,8 @@ struct CameraOperator{
 
     bool loadFromFile (const char* filename, bool strict = true);
     void addCameraPos (VectorNd data);
-    void addCamera(float time, Camera* cam, bool moving);
+    void deleteCameraPos (CameraPosition* pos);
+    QListWidgetItem* addCamera(float time, Camera* cam, bool moving);
     void setFixAtCam(Camera* cam);
     bool updateCamera (float current_time);
     void setFixed(bool status);
