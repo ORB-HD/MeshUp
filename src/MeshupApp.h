@@ -50,7 +50,7 @@ public:
 		void parseArguments (int argc, char* argv[]);
 		void loadModel (const char *filename);
 		void loadAnimation (const char *filename);
-		void setAnimationFraction (float fraction);
+		void setAnimationFraction (float fraction, bool editingTime=false);
 		void loadForcesAndTorques (const char *filename);
 		void loadCamera(const char *filename);
 

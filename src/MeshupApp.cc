@@ -297,12 +297,14 @@ void MeshupApp::loadCamera(const char* filename) {
 	camera_changed();
 }
 
-void MeshupApp::setAnimationFraction (float fraction) {
+void MeshupApp::setAnimationFraction (float fraction, bool editingTime) {
 	float set_time = fraction * scene->longest_animation;
 	scene->setCurrentTime(set_time);
-	if (selected_cam != NULL && !playerPaused) {
-		selected_cam->camera_data->time = set_time;
-		selected_cam->data_changed();
+	if (selected_cam != NULL && !playerPaused && editingTime) {
+		CameraPosition* campos = selected_cam->camera_data;
+		int row = cam_operator->setCameraPosTime(campos, set_time);
+		select_camera(listWidgetCameraList->item(row));
+		listWidgetCameraList->item(row)->setSelected(true);
 	}
 }
 
@@ -584,19 +586,21 @@ void MeshupApp::update_camera() {
 
 void MeshupApp::add_camera_pos() {
 	Camera* cam = new Camera();
-	cam->poi = cam_operator->current_cam->poi;
-	cam->eye = cam_operator->current_cam->eye;
+	cam->poi = (*glWidget->camera)->poi;
+	cam->eye = (*glWidget->camera)->eye;
 	cam->width = cam_operator->width;
 	cam->height = cam_operator->height;
+	cam->updateSphericalCoordinates();
 
 	QListWidgetItem* item = cam_operator->addCamera(scene->current_time, cam, false);
 	item->setSelected(true);
+	select_camera(item);
 }
 
 void MeshupApp::delete_camera_pos() {
 	if (selected_cam != NULL) {
 		cam_operator->deleteCameraPos(selected_cam->camera_data);
-		camera_changed();
+		toggle_camera_fix(false);
 	}
 }
 
@@ -819,7 +823,7 @@ void MeshupApp::timeline_frame_changed (int frame_index) {
 	if (!repeat_gate) {
 		repeat_gate = true;
 
-		setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
+		setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration, true);
 		
 		update_time_widgets();
 
@@ -843,7 +847,7 @@ void MeshupApp::timeline_set_frame (int frame_index) {
 
 		repeat_gate = false;
 	}
-	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
+	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration, true);
 }
 
 void MeshupApp::timeslider_value_changed (int frame_index) {
@@ -856,7 +860,7 @@ void MeshupApp::timeslider_value_changed (int frame_index) {
 	time_string << num_seconds << "." << setw(3) << setfill('0') << num_milliseconds;
 	timeLabel->setText(time_string.str().c_str());
 
-	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
+	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration, true);
 }
 
 void MeshupApp::update_time_widgets () {

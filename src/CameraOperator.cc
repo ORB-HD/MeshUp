@@ -211,7 +211,6 @@ void CameraOperator::deleteCameraPos(CameraPosition* pos) {
 		// Determine the right camera entry
 		for(;item_pos<cam_pos.size(); item_pos++) {
 			if (pos == cam_pos[item_pos] ) {
-				cout << item_pos << endl;
 				break;
 			}
 			it++;
@@ -222,7 +221,78 @@ void CameraOperator::deleteCameraPos(CameraPosition* pos) {
 			item_pos--;
 		}
 		current_cam = cam_pos[item_pos]->cam;
+		delete pos->cam;
+		delete pos;
 	}
+}
+
+int CameraOperator::setCameraPosTime(CameraPosition* pos, float time) {
+	pos->time = time;
+	int item_pos = 0;
+	vector<CameraPosition*>::iterator it = cam_pos.begin();
+	// Determine the right camera entry
+	for(;it != cam_pos.end(); it++) {
+		if (pos == *it ) {
+			break;
+		}
+		item_pos++;
+	}
+	bool position_corrected = false;
+	if (cam_pos.size() != 2) {
+		while ( !position_corrected ) {
+			position_corrected = true;
+			if ( it == cam_pos.begin() ) {
+				if ( (it+1) != cam_pos.end() && (*it)->time > (*(it+1))->time ) {
+					cam_pos.insert(it+2, pos);
+					cam_pos.erase(it);
+					it++;
+					item_pos++;
+					position_corrected = false;
+				}
+			} else if ( it == cam_pos.end()-1 ) {
+				if ( it != cam_pos.begin() && (*it)->time < (*(it-1))->time ){
+					cam_pos.insert(it-1, pos);
+					cam_pos.erase(it+1);
+					it--;
+					item_pos--;
+					position_corrected = false;
+				}
+			} else if ( (it+1) != cam_pos.end() && (*it)->time > (*(it+1))->time ) {
+				cam_pos.insert(it+2, pos);
+				cam_pos.erase(it);
+				it++;
+				item_pos++;
+				position_corrected = false;
+			} else if ( it != cam_pos.begin() && (*it)->time < (*(it-1))->time ){
+				cam_pos.insert(it-1, pos);
+				cam_pos.erase(it+1);
+				it--;
+				item_pos--;
+				position_corrected = false;
+			}
+		}
+	} else {
+		if ( it == cam_pos.begin() ) {
+			if ( (*it)->time > (*(it+1))->time ) {
+				*it = *(it+1);
+				*(it+1) = pos;
+				item_pos++;
+			}
+		} else if ( it == cam_pos.end()-1 ) {
+			if ( (*it)->time < (*(it-1))->time ) {
+				*it = *(it-1);
+				*(it-1) = pos;
+				item_pos--;
+			}
+		}
+	}
+
+	for(int i=0; i<cam_pos.size(); i++) {
+		CameraListItem* item = (CameraListItem*)camera_display->item(i);
+		item->camera_data = cam_pos[i];
+		item->data_changed();
+	}
+	return item_pos;
 }
 
 void CameraOperator::setFixed(bool status) {
