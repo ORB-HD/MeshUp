@@ -181,6 +181,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	connect (actionLoadAnimation, SIGNAL ( triggered() ), this, SLOT(action_load_animation()));
 	connect (actionLoadForcesAndTorques, SIGNAL ( triggered() ), this, SLOT(action_load_forces()));
 	connect (pushButtonLoadCameraFile, SIGNAL (clicked()), this, SLOT (action_load_camera()));
+	connect (exportCameraFile, SIGNAL (clicked()), this, SLOT(actionCameraMovementSaveToFile()));
 
 	connect (actionReloadFiles, SIGNAL ( triggered() ), this, SLOT(action_reload_files()));
 
@@ -593,8 +594,8 @@ void MeshupApp::add_camera_pos() {
 	cam->updateSphericalCoordinates();
 
 	QListWidgetItem* item = cam_operator->addCamera(scene->current_time, cam, false);
-	item->setSelected(true);
 	select_camera(item);
+	item->setSelected(true);
 }
 
 void MeshupApp::delete_camera_pos() {
@@ -1042,6 +1043,17 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 
 	encoder.close();
 }
+
+void MeshupApp::actionCameraMovementSaveToFile() {
+	QFileDialog file_dialog (this, "Select Camera File");
+
+	file_dialog.setNameFilter(tr("MeshupCamera (*.cam)"));
+
+	if (file_dialog.exec()) {
+		cam_operator->saveToFile(file_dialog.selectedFiles().at(0).toStdString().c_str());
+	}
+}
+
 //Signal handling stuff
 
 void MeshupApp::SIGUSR1Handler(int)

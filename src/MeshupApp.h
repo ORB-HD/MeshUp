@@ -115,6 +115,7 @@ public slots:
 		void actionRenderAndSaveToFile ();
 		void actionRenderSeriesAndSaveToFile ();
 		void actionRenderVideoAndSaveToFile ();
+		void actionCameraMovementSaveToFile ();
 
 	private:
 		static int sigusr1Fd[2];

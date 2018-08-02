@@ -60,6 +60,7 @@ struct CameraOperator{
     QListWidget* camera_display;
 
     bool loadFromFile (const char* filename, bool strict = true);
+    void saveToFile(const char* filename);
     void addCameraPos (VectorNd data);
     void deleteCameraPos (CameraPosition* pos);
     int setCameraPosTime(CameraPosition* pos, float time);

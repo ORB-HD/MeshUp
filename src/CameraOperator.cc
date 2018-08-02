@@ -97,10 +97,28 @@ bool CameraOperator::loadFromFile (const char* filename, bool strict) {
 	return true;
 }
 
+void CameraOperator::saveToFile(const char* filename) {
+	ofstream file_out;
+	file_out.open(filename, ios::out);
+	for (std::vector<CameraPosition*>::iterator it = cam_pos.begin(); it != cam_pos.end(); it++) {
+		file_out << (float) (*it)->time << ", ";
+		file_out << (float) (*it)->cam->poi[0] << ", ";
+		file_out << (float) (*it)->cam->poi[1] << ", ";
+		file_out << (float) (*it)->cam->poi[2] << ", ";
+		file_out << (float) (*it)->cam->eye[0] << ", ";
+		file_out << (float) (*it)->cam->eye[1] << ", ";
+		file_out << (float) (*it)->cam->eye[2] << ", ";
+		file_out << (float) (*it)->moving << endl;
+	}
+	file_out.close();
+	cout << "Camera file written to " << filename << endl;
+}
+
 void CameraOperator::addCameraPos(VectorNd data) {
 	float time = data[0];
 	Vector3f poi(data[1], data[2], data[3]);
 	Vector3f eye(data[4], data[5], data[6]);
+	bool moving = false;
 
 	Camera* cam = new Camera();
 	cam->poi = poi;
@@ -109,7 +127,11 @@ void CameraOperator::addCameraPos(VectorNd data) {
 	cam->height = this->height;
 	cam->updateSphericalCoordinates();
 
-	addCamera(time, cam, true);
+	if ( data.size() > 7 && data[7] != 0 ) {
+		moving = true;
+	}
+
+	addCamera(time, cam, moving);
 }
 
 QListWidgetItem* CameraOperator::addCamera(float time, Camera* cam, bool moving) {
@@ -139,7 +161,7 @@ QListWidgetItem* CameraOperator::addCamera(float time, Camera* cam, bool moving)
 		fixed = false;
 	}
 
-	return camera_display->item(position);
+	return display;
 }
 
 void CameraOperator::setCamHeight(int height) {
