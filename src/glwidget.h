@@ -112,6 +112,7 @@ class GLWidget : public QGLWidget
 		void set_front_view ();
 		void set_side_view ();
 		void set_top_view ();
+		void set_light_source(Vector4f pos);
 
 		void actionRenderImage();
 		void actionRenderSeriesImage();

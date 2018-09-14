@@ -118,10 +118,13 @@ MeshupApp::MeshupApp(QWidget *parent)
 
 	// camera controls
 	QRegExp	coord_expr ("^\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*$");
+	QRegExp	coord_expr4 ("^\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*,\\s*-?\\d*(\\.|\\.\\d+)?\\s*$");
 	QRegExpValidator *coord_validator_eye = new QRegExpValidator (coord_expr, lineEditCameraEye);
 	QRegExpValidator *coord_validator_center = new QRegExpValidator (coord_expr, lineEditCameraCenter);
+	QRegExpValidator *coord_validator_light = new QRegExpValidator(coord_expr4, lineEditLightPos);
 	lineEditCameraEye->setValidator (coord_validator_eye);
 	lineEditCameraCenter->setValidator (coord_validator_center);
+	lineEditCameraEye->setValidator(coord_validator_light);
 
 	// player is paused on startup
 	playerPaused = true;
@@ -524,6 +527,7 @@ void MeshupApp::loadSettings () {
 void MeshupApp::camera_changed() {
 	Vector3f center = glWidget->getCameraPoi();	
 	Vector3f eye = glWidget->getCameraEye();	
+	Vector4f light = glWidget->light_position;
 	bool fixed = cam_operator->fixed;
 	cam_operator->setCamHeight((*glWidget->camera)->height);
 	cam_operator->setCamWidth((*glWidget->camera)->width);
@@ -536,8 +540,12 @@ void MeshupApp::camera_changed() {
 	stringstream eye_stream ("");
 	eye_stream << std::fixed << std::setprecision(digits) << eye[0] << ", " << eye[1] << ", " << eye[2];
 
+	stringstream light_stream ("");
+	light_stream << std::fixed << std::setprecision(digits) << light[0] << ", " << light[1] << ", " << light[2] << ", " << light[3];
+
 	lineEditCameraEye->setText (eye_stream.str().c_str());
 	lineEditCameraCenter->setText (center_stream.str().c_str());
+	lineEditLightPos->setText(light_stream.str().c_str());
 	checkBoxCameraFixed->setChecked(fixed);
 
 	if (selected_cam != NULL) {
@@ -565,7 +573,22 @@ Vector3f parse_vec3_string (const std::string vec3_string) {
 		token_end = vec3_string.find (", ", token_start);
 	}
 
-//	cout << "Parsed '" << vec3_string << "' to " << result.transpose() << endl;
+	return result;
+}
+
+Vector4f parse_vec4_string (const std::string vec3_string) {
+	Vector4f result;
+
+	unsigned int token_start = 0;
+	unsigned int token_end = vec3_string.find(",");
+	for (unsigned int i = 0; i < 4; i++) {
+		string token = vec3_string.substr (token_start, token_end - token_start);
+
+		result[i] = static_cast<float>(atof(token.c_str()));
+
+		token_start = token_end + 1;
+		token_end = vec3_string.find (", ", token_start);
+	}
 
 	return result;
 }
@@ -577,8 +600,14 @@ void MeshupApp::set_camera_pos() {
 	string eye_string = lineEditCameraEye->text().toStdString();
 	Vector3f eye = parse_vec3_string (eye_string);
 
+	string light_string = lineEditLightPos->text().toStdString();
+	Vector4f light = parse_vec4_string(light_string);
+
 	glWidget->setCameraPoi(poi);
 	glWidget->setCameraEye(eye);
+	glWidget->set_light_source(light);
+
+	camera_changed();
 }
 
 void MeshupApp::update_camera() {

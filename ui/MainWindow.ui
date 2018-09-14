@@ -18,16 +18,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0">
-    <property name="leftMargin">
-     <number>0</number>
-    </property>
-    <property name="topMargin">
-     <number>0</number>
-    </property>
-    <property name="rightMargin">
-     <number>0</number>
-    </property>
-    <property name="bottomMargin">
+    <property name="margin">
      <number>0</number>
     </property>
     <item>
@@ -103,7 +94,7 @@
    <property name="minimumSize">
     <size>
      <width>305</width>
-     <height>325</height>
+     <height>344</height>
     </size>
    </property>
    <property name="floating">
@@ -118,18 +109,28 @@
    <widget class="QWidget" name="dockWidgetContents">
     <layout class="QVBoxLayout" name="verticalLayout_6">
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <widget class="QListWidget" name="listWidgetCameraList"/>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_8">
        <item>
-        <widget class="QPushButton" name="pushButtonLoadCameraFile">
+        <widget class="QPushButton" name="deleteCameraButton">
          <property name="text">
-          <string>Load</string>
+          <string>Add Camera</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="exportCameraFile">
+        <widget class="QPushButton" name="addCameraButton">
          <property name="text">
-          <string>Export</string>
+          <string>Delete Camera</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="movingCameraCheckBox">
+         <property name="text">
+          <string>Moving</string>
          </property>
         </widget>
        </item>
@@ -143,28 +144,18 @@
       </widget>
      </item>
      <item>
-      <widget class="QListWidget" name="listWidgetCameraList"/>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
-        <widget class="QPushButton" name="addCameraButton">
+        <widget class="QPushButton" name="pushButtonLoadCameraFile">
          <property name="text">
-          <string>Add Camera</string>
+          <string>Load</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="deleteCameraButton">
+        <widget class="QPushButton" name="exportCameraFile">
          <property name="text">
-          <string>Delete Camera</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="movingCameraCheckBox">
-         <property name="text">
-          <string>Moving</string>
+          <string>Export</string>
          </property>
         </widget>
        </item>
@@ -232,6 +223,24 @@
          <property name="text">
           <string>0,0,0</string>
          </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Light Source:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditLightPos">
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>

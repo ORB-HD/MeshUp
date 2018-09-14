@@ -22,6 +22,7 @@ class RenderVideoDialog : public QDialog, public Ui::RenderVideoDialog {
 			setupUi(this);
 			connect(HeightSpinBox, SIGNAL(valueChanged(int)), this, SLOT(checkValues()));
 			connect(WidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(checkValues()));
+			checkValues();
 		}
 
 	public slots:

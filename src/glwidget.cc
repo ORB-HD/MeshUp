@@ -239,6 +239,11 @@ void GLWidget::set_top_view () {
 	emit camera_changed();
 }
 
+void GLWidget::set_light_source(Vector4f pos) {
+	light_position = pos;
+	glLightfv (GL_LIGHT0, GL_POSITION, light_position.data());
+}
+
 void GLWidget::update_timer() {
 	struct timeval clock_value;
 	gettimeofday (&clock_value, NULL);
@@ -302,7 +307,7 @@ void GLWidget::initializeGL()
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
 	glClearDepth(1.0f);
-  glDepthFunc(GL_LEQUAL);
+	glDepthFunc(GL_LEQUAL);
 	glEnable (GL_DEPTH_TEST);
 	
 	//Disabled, to see the flipped vertices in model
@@ -323,8 +328,8 @@ void GLWidget::initializeGL()
 
 	glColorMaterial (GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
 	glEnable (GL_COLOR_MATERIAL);
-  glMaterialfv(GL_FRONT, GL_SPECULAR, Vector4f (1.f, 1.f, 1.f, 1.f).data());
-  glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, Vector4f (1.f, 1.f, 1.f, 1.f).data());
+	glMaterialf(GL_FRONT, GL_SHININESS, 16.0f);
 
 	// initialize lights
 	glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ka.data());
