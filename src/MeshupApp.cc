@@ -1028,10 +1028,11 @@ void MeshupApp::actionRenderSeriesAndSaveToFile () {
 void MeshupApp::actionRenderVideoAndSaveToFile () {
 	unsigned width;
 	unsigned height;
-	unsigned length;
+	double length;
 	unsigned fps = 25;
 	QString filename;
 
+	renderVideoDialog->set_video_lenght(scene->longest_animation);
 	int result = renderVideoDialog->exec();
 
 	if (result == QDialog::Rejected)

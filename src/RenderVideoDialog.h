@@ -24,6 +24,9 @@ class RenderVideoDialog : public QDialog, public Ui::RenderVideoDialog {
 			connect(WidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(checkValues()));
 			checkValues();
 		}
+		void set_video_lenght(double len) {
+			TimeSpinBox->setValue(len);
+		}
 
 	public slots:
 		void checkValues() {
