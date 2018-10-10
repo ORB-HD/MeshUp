@@ -18,7 +18,16 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0">
-    <property name="margin">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
      <number>0</number>
     </property>
     <item>
@@ -114,14 +123,14 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_8">
        <item>
-        <widget class="QPushButton" name="deleteCameraButton">
+        <widget class="QPushButton" name="addCameraButton">
          <property name="text">
           <string>Add Camera</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="addCameraButton">
+        <widget class="QPushButton" name="deleteCameraButton">
          <property name="text">
           <string>Delete Camera</string>
          </property>

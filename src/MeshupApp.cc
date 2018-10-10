@@ -1075,7 +1075,7 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 }
 
 void MeshupApp::actionCameraMovementSaveToFile() {
-	QFileDialog file_dialog (this, "Select Camera File");
+	QFileDialog file_dialog (this, "Select Camera File to write camera data to");
 
 	file_dialog.setNameFilter(tr("MeshupCamera (*.cam)"));
 
