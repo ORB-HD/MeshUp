@@ -1,44 +1,6 @@
 #include "Arrow.h"
 #include "GL/glew.h"
 
-
-inline Axis::Axis calculateArrowDirection(Vector3f forceVector){
-	Vector3f unit_force_vector = forceVector.normalize();
-
-	Vector3f x_dir(1.f,0.f,0.f);
-	Vector3f y_dir(0.f,1.f,0.f);
-	Vector3f z_dir(0.f,0.f,1.f);
-
-	double x_val = abs(x_dir.dot(unit_force_vector));
-	double y_val = abs(y_dir.dot(unit_force_vector));
-	double z_val = abs(z_dir.dot(unit_force_vector));
-
-	if(x_val < y_val && x_val < z_val) {
-		return Axis::XDir;
-	}
-	else if(y_val < z_val){
-		return Axis::YDir;
-	}
-	return Axis::ZDir;
-}
-
-// Creates an unit axis vector in the indicated direction. 1 for X, 2 for Y, 3 for Z.
-inline Vector3f createUnitAxisVector(Axis::Axis dir) {
-
-	if(dir < Axis::XDir || dir > Axis::ZDir) {
-		std::cout << "Invalid axis direction supplied as parameter!" << std::endl;
-		abort();
-	}
-
-	if(dir == Axis::XDir) {
-		return Vector3f(1.f,0.f,0.f);
-	}
-	else if(dir == Axis::YDir) {
-		return Vector3f(0.f,1.f,0.f);
-	}
-	return Vector3f(0.f,0.f,1.f);
-}
-
 ArrowCreator::ArrowCreator() {
 	arrow3d = CreateUnit3DArrow();
 	arrow3d.colors.clear();
@@ -54,24 +16,30 @@ void ArrowCreator::drawArrow(MeshVBO *basearrow, Arrow arrow, ArrowProperties pr
 	Vector3f vec_dir_normalized = arrow.direction.normalized();
 	Vector4f color(properties.color[0], properties.color[1], properties.color[2], properties.transparency);
 
-	Axis::Axis axis_dir = calculateArrowDirection(vec_dir_normalized);
-	Vector3f axis_vec = createUnitAxisVector(axis_dir);
+	Vector3f unit_axis_vec = Vector3f(0., 1., 0.);
+	Vector3f v = unit_axis_vec.cross(vec_dir_normalized);
 
-	Vector3f rot_axis = axis_vec.cross(vec_dir_normalized).normalize();
-	double rot_angle_radian = SimpleMath::Fixed::calcAngleRadian(axis_vec, vec_dir_normalized);
+	double rot_angle_radian = SimpleMath::Fixed::calcAngleRadian(unit_axis_vec, vec_dir_normalized);
 	double rot_angle_degree = rot_angle_radian * 180 / M_PI;
+
+	if (v.norm() < 0.00001){
+		if (fabs(rot_angle_degree - 180.) < 0.1){
+			v = Vector3f(1., 0., 0.);
+			rot_angle_degree = 180.;
+		}
+		else{
+			v = unit_axis_vec;
+			rot_angle_degree = 0.;
+		}
+	}	
+	v = v.normalize();
 
 	// Add Transformation Matricies
 	glPushMatrix();
 		// Translate
 		glTranslatef(arrow.pos[0], arrow.pos[1], arrow.pos[2]);
 		// Rotate
-		if ( axis_dir == Axis::XDir ) {
-			glMultMatrixf(SimpleMath::GL::RotateMat44(270, 0., 0., 1.).data());
-		} else if ( axis_dir == Axis::ZDir ) {
-			glMultMatrixf(SimpleMath::GL::RotateMat44(90, 1., 0., 0.).data());
-		}
-		glMultMatrixf(SimpleMath::GL::RotateMat44(rot_angle_degree, rot_axis[0], rot_axis[1], rot_axis[2]).data());
+		glMultMatrixf(SimpleMath::GL::RotateMat44(rot_angle_degree, v[0], v[1], v[2]).data());
 		// Scale
 		glMultMatrixf(SimpleMath::GL::ScaleMat44(total_scale, total_scale, total_scale).data());
 		// Set Drawing Color 

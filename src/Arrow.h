@@ -6,14 +6,6 @@
 #include "Math.h"
 #include "MeshVBO.h"
 
-namespace Axis {
-	enum Axis{
-		XDir,
-		YDir,
-		ZDir
-	};
-}
-
 struct Arrow {
 	Vector3f pos;
 	Vector3f direction;
