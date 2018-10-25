@@ -25,7 +25,13 @@ inline std::string strip_comments (const std::string &line) {
 inline std::string strip_whitespaces (const std::string &line, std::string whitespaces = whitespaces_std) {
 	std::string result (line);
 	if (result.find_first_of (whitespaces) != std::string::npos) {
-		result = result.substr (result.find_first_not_of (whitespaces), result.size());
+		int first_non_whitespace_char_pos = result.find_first_not_of (whitespaces);
+		//if no non whitespaces character can be found return an empty string
+		if (first_non_whitespace_char_pos == std::string::npos) {
+			result = "";
+			return result;
+		}
+		result = result.substr (first_non_whitespace_char_pos, result.size());
 	}
 
 	while (whitespaces.find (result[result.size() - 1]) != std::string::npos) {
