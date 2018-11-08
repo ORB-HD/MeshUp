@@ -42,19 +42,7 @@ QVideoEncoder::QVideoEncoder()
 
 QVideoEncoder::~QVideoEncoder()
 {
-	//avcodec_parameters_free(&pVideoStream->codecpar);
 	close();
-	/*if(Initmodefile)
-	{
-		writeFooter();
-		Outdev->close();
-		delete Outdev;
-		Outdev=0;
-	}
-	else
-	{
-		// nothing to do
-	}*/
 }
 
 bool QVideoEncoder::createFile(QString fileName,unsigned width,unsigned height,unsigned fps)
@@ -90,7 +78,7 @@ bool QVideoEncoder::createFile(QString fileName,unsigned width,unsigned height,u
 
 	// find the video encoder
 	AVCodec* codec = NULL;
-	codec = avcodec_find_encoder_by_name("libx265");
+	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec)
 	{
 		printf("codec not found\n");
@@ -110,6 +98,8 @@ bool QVideoEncoder::createFile(QString fileName,unsigned width,unsigned height,u
 	pCodecCtx->time_base = (AVRational){ 1, 25 };
 	pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
 	pCodecCtx->max_b_frames = 0;
+	pCodecCtx->gop_size = 0;
+	pCodecCtx->bit_rate = 5000000; 
 	// some formats want stream headers to be separate
 	if(pFormatCtx->oformat->flags & AVFMT_GLOBALHEADER)
 		pCodecCtx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -139,7 +129,7 @@ bool QVideoEncoder::createFile(QString fileName,unsigned width,unsigned height,u
 	}
 
 	// open_video
-	//pVideoStream->time_base = (AVRational){ 1, 25 };
+	pVideoStream->time_base = (AVRational){ 1, 25 };
 	av_dump_format(pFormatCtx, 0, fileName.toStdString().c_str(), 1);
 	if (avio_open(&pFormatCtx->pb, fileName.toStdString().c_str(), AVIO_FLAG_WRITE) < 0)
 	{
@@ -262,8 +252,10 @@ bool QVideoEncoder::initCodec()
 **/
 int QVideoEncoder::encodeImage_p(const QImage &img,bool custompts, unsigned pts)
 {
-	if(!isOk())
+	if(!isOk()) {
+		printf("?\n");
 		return -1;
+	}
 
 	//convertImage(img);		 // Custom conversion routine
 	convertImage_sws(img);	  // SWS conversion
