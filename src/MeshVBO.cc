@@ -283,7 +283,6 @@ void MeshVBO::draw(unsigned int mode) {
 			if (normals.size() != 0)
 				glNormal3fv (normals[vi].data());
 			glVertex3fv (vertices[vi].data());
-
 		}
 		glEnd();
 	}

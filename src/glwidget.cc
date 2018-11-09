@@ -582,7 +582,7 @@ void GLWidget::shadowMapSetupPass2 () {
 
 	// setup dim light
 	glLightfv(GL_LIGHT0, GL_POSITION, light_position.data());
-//	glLightfv(GL_LIGHT0, GL_AMBIENT,  (light_ka * 0.1f).data());
+	//glLightfv(GL_LIGHT0, GL_AMBIENT,  (light_ka * 0.1f).data());
 	glLightfv(GL_LIGHT0, GL_DIFFUSE,  (light_kd * 0.1f).data());
 	glLightfv(GL_LIGHT0, GL_SPECULAR, Vector4f (0.f, 0.f, 0.f, 0.f).data());
 
