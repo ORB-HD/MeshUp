@@ -1044,24 +1044,26 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 	filename = renderVideoDialog->videoName->text();
 
 	float duration = scene->longest_animation;
-	unsigned frame_count = fps * length + 27;
+	unsigned frame_count = fps * (length);
 	float timestep = duration / frame_count;
 
-	static_cast<int>(floor(duration / timestep));
+	static_cast<int>(ceil(duration / timestep));
 
 	QProgressDialog pbar("Rendering offscreen", "Abort Render", 0, frame_count, this);
 	pbar.setWindowModality(Qt::WindowModal);
 	pbar.setMinimumDuration(0);
 	QVideoEncoder encoder;
 	encoder.createFile(filename, width, height, fps);
+	stringstream filename_stream;
+	QImage image;
 
-	for(int i = 0; i < frame_count; i++) {
+	for(int i = 0; i <= frame_count; i++) {
 		pbar.setValue(i);
 
 		float current_time = (float) i * timestep;
 		scene->setCurrentTime (current_time);
 
-		QImage image = glWidget->renderContentOffscreen (width, height, false);
+		image = glWidget->renderContentOffscreen (width, height, false);
 		encoder.encodeImage(image);
 
 		if (pbar.wasCanceled()) {
@@ -1070,6 +1072,9 @@ void MeshupApp::actionRenderVideoAndSaveToFile () {
 		}
 	}
 	pbar.setValue(frame_count);
+	for(int i=0;i<7;i++) {
+		encoder.encodeImage(image);
+	}
 
 	encoder.close();
 }
