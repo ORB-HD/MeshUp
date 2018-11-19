@@ -372,6 +372,8 @@ void MeshupApp::parseArguments (int argc, char* argv[]) {
 		// In case arg is force file
 		} else if (arg.size() >= 3 && ( arg_extension == "ff")) {
 			loadForcesAndTorques (arg.c_str());	
+		} else {
+			cerr << "Warning: Couldn't determine filetype of " << arg.c_str() << "! Ignoring argument!" << endl;
 		}
 	}
 
