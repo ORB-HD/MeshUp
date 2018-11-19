@@ -100,6 +100,7 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 	bool last_line = false;
 	bool csv_mode = false;
 	raw_values.clear();
+	duration = 0;
 
 	string filename_str (filename);
 

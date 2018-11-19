@@ -750,12 +750,14 @@ void MeshupApp::action_reload_files() {
 		}
 	}
 
+	scene->longest_animation = 0;
 	for (unsigned int i = 0; i < scene->animations.size(); i++) {
 		Animation* animation = scene->animations[i];
 
 		if (!animation->loadFromFile (animation->animation_filename.c_str(), scene->models[i]->configuration)) {
 			cerr << "Error loading animation " << scene->animations[i]->animation_filename << endl;
 		}
+		scene->longest_animation = std::max(scene->longest_animation, animation->duration);	
 	}
 
 	for (unsigned int i = 0; i < scene->forcesTorquesQueue.size(); i++){
