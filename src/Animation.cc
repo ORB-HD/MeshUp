@@ -336,6 +336,7 @@ bool Animation::loadFromFile (const char* filename, const FrameConfig &frame_con
 				abort();
 			}
 
+
 			assert (columns.size() >= state_descriptor.states.size());
 
 			float state_time;
@@ -494,6 +495,12 @@ void ModelApplyKeyFrame (MeshupModelPtr model, KeyFrame &keyframe) {
 void UpdateModelFromAnimation (MeshupModelPtr model, AnimationPtr animation, float time) {
 	// Use model state descriptor if the animation does not have one
 	if (animation->state_descriptor.states.size() == 0) {
+		//if no state_descriptor where defined in column_section check that there are enough values in the columns for all model state_descriptors
+		if (animation->raw_values[0].rows() < model->state_descriptor.states.size()) {
+			cerr << "Error: only found " << animation->raw_values[0].rows() << " data columns in file" 
+				<< animation->animation_filename << ", but " << model->state_descriptor.states.size() << " columns were specified by the Model if less are required please add a COLUMNS section to your animation file!" << endl;
+			abort();
+		}
 		animation->state_descriptor = model->state_descriptor;
 		animation->configuration = model->configuration;
 	}
