@@ -808,7 +808,8 @@ void MeshupApp::initialize_curves() {
 	for (unsigned int i = 0; i < scene->animations.size(); i++) {
 		float current_time = 0.f;
 		float duration = scene->animations[i]->duration;
-		float time_step = duration / curve_frame_rate;
+		int curvepointcount = ceil(duration * curve_frame_rate);
+		float time_step = duration / curvepointcount;
 
 		while (1) {
 			float fraction = current_time / duration * 2.f - 1.f;
