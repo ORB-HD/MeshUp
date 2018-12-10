@@ -760,6 +760,7 @@ void MeshupApp::action_reload_files() {
 			cerr << "Error loading animation " << scene->animations[i]->animation_filename << endl;
 		}
 		scene->longest_animation = std::max(scene->longest_animation, animation->duration);	
+		animation_speed_changed(spinBoxSpeed->value());
 	}
 
 	for (unsigned int i = 0; i < scene->forcesTorquesQueue.size(); i++){
