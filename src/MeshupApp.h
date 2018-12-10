@@ -58,6 +58,7 @@ public:
 		static void SIGUSR1Handler(int unused);
 		
 protected:
+		unsigned int AnimationFrameCount;
 		QTime updateTime;
 		QTimer *sceneRefreshTimer;
 		QTimeLine *timeLine;
@@ -108,7 +109,7 @@ public slots:
 
 		void timeline_frame_changed (int frame_index);
 		void timeline_set_frame (int frame_index);
-		void timeslider_value_changed (int frame_index);
+		void animation_speed_changed(int speed_percent);
 
 		void update_time_widgets ();
 

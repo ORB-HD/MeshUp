@@ -51,6 +51,7 @@ const double TimeLineDuration = 1000.;
 MeshupApp::MeshupApp(QWidget *parent)
 {
 	setupUi(this); // this sets up GUI
+	AnimationFrameCount = 1000;
 
 	selected_cam = NULL;
 	scene = new Scene;
@@ -88,7 +89,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 		timeLine->setLoopCount(1);
 
 	timeLine->setUpdateInterval(20);
-	timeLine->setFrameRange(0, 1000);
+	timeLine->setFrameRange(0, AnimationFrameCount);
 	
 	spinBoxSpeed->setMinimum(1);
 	spinBoxSpeed->setMaximum(1000);
@@ -96,7 +97,7 @@ MeshupApp::MeshupApp(QWidget *parent)
 	spinBoxSpeed->setSingleStep(5);
 
 	horizontalSliderTime->setMinimum(0);
-	horizontalSliderTime->setMaximum(TimeLineDuration);
+	horizontalSliderTime->setMaximum(AnimationFrameCount);
 	horizontalSliderTime->setSingleStep(1);
 
 	checkBoxDrawBaseAxes->setChecked (glWidget->draw_base_axes);
@@ -169,8 +170,8 @@ MeshupApp::MeshupApp(QWidget *parent)
 	// timeline & timeSlider
 	connect (timeLine, SIGNAL(frameChanged(int)), this, SLOT(timeline_frame_changed(int)));
 	connect (horizontalSliderTime, SIGNAL(sliderMoved(int)), this, SLOT(timeline_set_frame(int)));
-	connect (horizontalSliderTime, SIGNAL(valueChanged(int)), this, SLOT(timeslider_value_changed(int)));
 	connect (timeLine, SIGNAL(finished()), toolButtonPlay, SLOT (click()));
+	connect (spinBoxSpeed, SIGNAL(valueChanged(int)), this, SLOT(animation_speed_changed(int)));
 
 	// pausing and playing button
 	connect (toolButtonPlay, SIGNAL (clicked(bool)), this, SLOT (toggle_play_animation(bool)));
@@ -260,6 +261,7 @@ void MeshupApp::loadAnimation(const char* filename) {
 
 	unsigned int i = scene->animations.size() - 1;
 	UpdateModelFromAnimation (scene->models[i], scene->animations[i], scene->current_time);
+	animation_speed_changed(spinBoxSpeed->value());
 
  	initialize_curves(); 
 }
@@ -669,7 +671,7 @@ void MeshupApp::select_camera(QListWidgetItem* current){
 }
 
 void MeshupApp::toggle_play_animation (bool status) {
-	playerPaused = status;
+	playerPaused = !status;
 
 	if (status) {
 		// if we are at the end of the time, we have to restart
@@ -851,14 +853,14 @@ void MeshupApp::initialize_curves() {
 /** \brief Modifies the widgets to show the current time
  */
 void MeshupApp::timeline_frame_changed (int frame_index) {
-//	qDebug () << __func__ << " frame_index = " << frame_index;
+	//qDebug () << __func__ << " frame_index = " << frame_index;
 
 	static bool repeat_gate = false;
 
 	if (!repeat_gate) {
 		repeat_gate = true;
 
-		setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration, true);
+		setAnimationFraction (static_cast<float>(frame_index) / AnimationFrameCount, true);
 		
 		update_time_widgets();
 
@@ -870,7 +872,7 @@ void MeshupApp::timeline_frame_changed (int frame_index) {
  * horizontalSliderTime
  */
 void MeshupApp::timeline_set_frame (int frame_index) {
-//	qDebug () << __func__ << " frame_index = " << frame_index;
+	//qDebug () << __func__ << " frame_index = " << frame_index;
 	static bool repeat_gate = false;
 
 	if (!repeat_gate) {
@@ -878,35 +880,46 @@ void MeshupApp::timeline_set_frame (int frame_index) {
 
 		// this automatically calls timeline_frame_changed and thus updates
 		// the horizontal slider
-		timeLine->setCurrentTime (frame_index * scene->longest_animation);
+		timeLine->setCurrentTime (frame_index * (timeLine->duration()/AnimationFrameCount));
 
 		repeat_gate = false;
 	}
-	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration, true);
-}
-
-void MeshupApp::timeslider_value_changed (int frame_index) {
-	float current_time = static_cast<float>(frame_index) / TimeLineDuration * scene->longest_animation;
-	
-	int num_seconds = static_cast<int>(floor(current_time));
-	int num_milliseconds = static_cast<int>(round((current_time - num_seconds) * 1000.f));
-
-	stringstream time_string("");
-	time_string << num_seconds << "." << setw(3) << setfill('0') << num_milliseconds;
-	timeLabel->setText(time_string.str().c_str());
-
-	setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration, true);
+	setAnimationFraction (static_cast<float>(frame_index) / AnimationFrameCount, true);
 }
 
 void MeshupApp::update_time_widgets () {
-//	qDebug() << __func__;
 	if (scene->animations.size() > 0 && scene->longest_animation > 0.) {
 		double time_fraction = scene->current_time / scene->longest_animation;
-		int frame_index = static_cast<int>(round(time_fraction * TimeLineDuration));
-
+		int frame_index = static_cast<int>(round(time_fraction * AnimationFrameCount));
 		horizontalSliderTime->setValue (frame_index);
-		timeLine->setDuration (scene->longest_animation * TimeLineDuration / (spinBoxSpeed->value() / 100.0));
-		setAnimationFraction (static_cast<float>(frame_index) / TimeLineDuration);
+
+		float current_time = static_cast<float>(frame_index) / AnimationFrameCount * scene->longest_animation;
+	
+		stringstream time_string("");
+		time_string << setprecision(3) << fixed << current_time;
+		timeLabel->setText(time_string.str().c_str());
+	}
+}
+
+void MeshupApp::animation_speed_changed(int speed_percent) {
+	bool played = !playerPaused;
+	if (played) {
+		toggle_play_animation(false);
+	}
+	if (scene->animations.size() > 0 && scene->longest_animation > 0.) {
+		double time_fraction = scene->current_time / scene->longest_animation;
+		double duration = scene->longest_animation * TimeLineDuration / (speed_percent / 100.0);
+		AnimationFrameCount = duration/1000 * 25;
+		int frame_index = static_cast<int>(round(time_fraction * AnimationFrameCount));
+
+		timeLine->setFrameRange(0, AnimationFrameCount);
+		horizontalSliderTime->setMaximum(AnimationFrameCount);
+
+		timeLine->setDuration (duration);
+		timeline_set_frame(frame_index);
+	}
+	if (played) {
+		toggle_play_animation(true);
 	}
 }
 
