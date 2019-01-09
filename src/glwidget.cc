@@ -83,6 +83,7 @@ GLWidget::GLWidget(QWidget *parent)
 	(*camera)->updateSphericalCoordinates();
 
 	delta_time_sec = -1.;
+	white_mode = false;
 
 	setFocusPolicy(Qt::StrongFocus);
 	setMouseTracking(true);
@@ -105,8 +106,14 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 
 	// set up the actual format (alpha channel, depth buffer)
 	QOpenGLFramebufferObjectFormat buffer_format;
-	if (use_alpha)
+	if (use_alpha) {
 		buffer_format.setInternalTextureFormat(GL_RGBA);
+		if (white_mode) {
+			glClearColor (1.f, 1.f, 1.f, 0.f);
+		} else {
+			glClearColor (0.f, 0.f, 0.f, 0.f);
+		}
+	}
 	else
 		buffer_format.setInternalTextureFormat(GL_RGB);
 	buffer_format.setAttachment (QOpenGLFramebufferObject::Depth );
@@ -128,7 +135,13 @@ QImage GLWidget::renderContentOffscreen (int image_width, int image_height, bool
 
 	fb->release();
 
+	//reset render parameters
 	resizeGL (old_width, old_height);
+	if (white_mode) {
+		glClearColor (1.f, 1.f, 1.f, 1.f);
+	} else {
+		glClearColor (0.f, 0.f, 0.f, 1.f);
+	}
 
 	// now grab the buffer
 	QImage result = fb->toImage();
