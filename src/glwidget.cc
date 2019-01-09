@@ -215,7 +215,7 @@ void GLWidget::toggle_draw_orthographic (bool status) {
 void GLWidget::toggle_white_mode (bool status) {
 	white_mode = status;
 
-	qDebug() << "white mode is " << white_mode;
+	//qDebug() << "white mode is " << white_mode;
 
 	if (white_mode) {
 		glClearColor (1.f, 1.f, 1.f, 1.f);
