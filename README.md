@@ -23,7 +23,18 @@ motions directly to videos or image sequences.
 
 See meshup --help for more options.
 
-# Dependencies and Required Programs
+# Installation
+
+## Prepackaged versions
+
+  * [for Arch Linux, there is a package available in the AUR](https://aur.archlinux.org/packages/meshup/)
+
+## Building from source
+
+### Dependencies and Required Programs
+
+For Ubuntu the following packages are required:
+
 	* cmake
 	* qt5-default
 	* libboost-dev
@@ -31,7 +42,7 @@ See meshup --help for more options.
 	* libboost-system-dev
 	* libavcodec-dev libavformat-dev libswresample-dev libswscale-dev
 
-# Build
+### Build
 	* clone repository 
 		* (github) -> https://github.com/ORB-HD/MeshUp
 		* (git rhodecode) -> https://[username]@orb.iwr.uni-heidelberg.de/code/software/meshup/meshup
@@ -41,7 +52,7 @@ In build Directory
 	* cmake ..
 	* make
 
-# Install
+### Install
 	* make install
 
 # File Format Documentation
