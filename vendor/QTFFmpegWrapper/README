@@ -1,3 +1,8 @@
+This is an altered version of the QTFFmpegWrapper, that can be used with cmake.
+
+
+Original README
+----
 	QTFFmpegWrapper - QT FFmpeg Wrapper Class
 	http://code.google.com/p/qtffmpegwrapper
 	
